@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- A stylised sail: the Vela mark. -->
+    <path
+        android:fillColor="#7FD7FF"
+        android:pathData="M54,22 L54,74 L30,74 C36,58 44,40 54,22 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M58,30 L58,74 L82,74 C76,60 68,46 58,30 Z" />
+    <path
+        android:fillColor="#3D7BFF"
+        android:pathData="M26,80 L86,80 L80,88 L32,88 Z" />
+</vector>
