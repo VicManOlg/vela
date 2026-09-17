@@ -46,18 +46,6 @@ data class MetadataProviderInfo(
     val website: String,
 )
 
-/** Which provider does what; user-configurable in Settings > Scraping. */
-data class ScrapingPreferences(
-    val metadataProviderId: String = "libretro",
-    val artworkProviderIds: List<String> = listOf("libretro"),
-    val preferredRegions: List<String> = listOf("eu", "us", "wor", "jp"),
-    val language: String = "en",
-    val downloadVideos: Boolean = false,
-    val overwriteExisting: Boolean = false,
-    val autoScrapeNewGames: Boolean = true,
-    val wifiOnly: Boolean = true,
-)
-
 data class InstalledApp(
     val packageName: String,
     val label: String,
