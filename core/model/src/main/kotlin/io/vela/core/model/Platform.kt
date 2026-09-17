@@ -45,6 +45,7 @@ data class Platform(
     /** libretro-thumbnails system directory name. */
     val libretroName: String? = null,
     /** Accent colour (ARGB) used by the theme for platform tiles. */
+    @Serializable(with = ArgbHexSerializer::class)
     val accentColor: Long = 0xFF3D7BFF,
     val sortOrder: Int = 1000,
 ) {

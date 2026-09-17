@@ -1,0 +1,24 @@
+{
+  "id": "vela-mono",
+  "name": "Vela Mono",
+  "author": "Vela",
+  "colors": {
+    "background": "#FF000000",
+    "surface": "#FF111111",
+    "surfaceElevated": "#FF1E1E1E",
+    "accent": "#FFFFFFFF",
+    "accentSecondary": "#FFBDBDBD",
+    "onBackground": "#FFFFFFFF",
+    "onSurface": "#FFEDEDED",
+    "muted": "#FF8C8C8C",
+    "focusRing": "#FFFFFFFF",
+    "danger": "#FFFF5C6C",
+    "success": "#FF5CE0A8",
+    "scrim": "#B3000000"
+  },
+  "typography": { "displayFamily": "outfit", "bodyFamily": "manrope" },
+  "shapes": { "cardRadius": 4, "tileRadius": 6, "focusBorderWidth": 2 },
+  "motion": { "focusScale": 1.04, "parallax": false },
+  "background": { "mode": "static", "blurRadius": 0, "dim": 1.0, "saturation": 0, "staticColor": "#FF000000" },
+  "effects": { "glassPanels": false, "panelAlpha": 1.0, "cardShadow": false, "focusGlow": false, "videoPreviews": false }
+}

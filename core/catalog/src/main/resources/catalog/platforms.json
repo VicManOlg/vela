@@ -1,0 +1,304 @@
+[
+  {
+    "id": "nes", "name": "Nintendo Entertainment System", "shortName": "NES", "manufacturer": "Nintendo", "releaseYear": 1983,
+    "family": "NINTENDO", "extensions": ["nes", "fds", "unf", "unif", "zip", "7z"],
+    "folderAliases": ["nes", "famicom", "fc", "nintendo entertainment system", "nintendo"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 3, "igdbId": 18,
+    "libretroName": "Nintendo - Nintendo Entertainment System", "accentColor": "#FFE4002B", "sortOrder": 10
+  },
+  {
+    "id": "snes", "name": "Super Nintendo Entertainment System", "shortName": "SNES", "manufacturer": "Nintendo", "releaseYear": 1990,
+    "family": "NINTENDO", "extensions": ["sfc", "smc", "fig", "swc", "bs", "st", "zip", "7z"],
+    "folderAliases": ["snes", "sfc", "superfamicom", "super nintendo", "super nintendo entertainment system"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 4, "igdbId": 19,
+    "libretroName": "Nintendo - Super Nintendo Entertainment System", "accentColor": "#FF6C5CE7", "sortOrder": 20
+  },
+  {
+    "id": "n64", "name": "Nintendo 64", "shortName": "N64", "manufacturer": "Nintendo", "releaseYear": 1996,
+    "family": "NINTENDO", "extensions": ["n64", "v64", "z64", "ndd", "u1", "zip", "7z"],
+    "folderAliases": ["n64", "nintendo 64", "nintendo64"],
+    "defaultPlayers": ["mupen64fz", "retroarch"], "screenScraperId": 14, "igdbId": 4,
+    "libretroName": "Nintendo - Nintendo 64", "accentColor": "#FF00A651", "sortOrder": 30
+  },
+  {
+    "id": "gc", "name": "Nintendo GameCube", "shortName": "GameCube", "manufacturer": "Nintendo", "releaseYear": 2001,
+    "family": "NINTENDO", "extensions": ["iso", "gcm", "gcz", "rvz", "ciso", "wbfs", "dol", "elf", "m3u"],
+    "folderAliases": ["gc", "gamecube", "ngc", "nintendo gamecube"],
+    "defaultPlayers": ["dolphin", "dolphin_mmjr"], "screenScraperId": 13, "igdbId": 21,
+    "libretroName": "Nintendo - GameCube", "accentColor": "#FF6A5ACD", "sortOrder": 40
+  },
+  {
+    "id": "wii", "name": "Nintendo Wii", "shortName": "Wii", "manufacturer": "Nintendo", "releaseYear": 2006,
+    "family": "NINTENDO", "extensions": ["iso", "wbfs", "wad", "rvz", "gcz", "ciso", "wia", "dol", "elf"],
+    "folderAliases": ["wii", "nintendo wii"],
+    "defaultPlayers": ["dolphin", "dolphin_mmjr"], "screenScraperId": 16, "igdbId": 5,
+    "libretroName": "Nintendo - Wii", "accentColor": "#FF5FB4E8", "sortOrder": 50
+  },
+  {
+    "id": "gb", "name": "Nintendo Game Boy", "shortName": "Game Boy", "manufacturer": "Nintendo", "releaseYear": 1989,
+    "family": "NINTENDO", "extensions": ["gb", "dmg", "sgb", "zip", "7z"],
+    "folderAliases": ["gb", "gameboy", "game boy"],
+    "defaultPlayers": ["retroarch", "pizzaboy_gbc"], "screenScraperId": 9, "igdbId": 33,
+    "libretroName": "Nintendo - Game Boy", "accentColor": "#FF8BAC0F", "sortOrder": 60
+  },
+  {
+    "id": "gbc", "name": "Nintendo Game Boy Color", "shortName": "GBC", "manufacturer": "Nintendo", "releaseYear": 1998,
+    "family": "NINTENDO", "extensions": ["gbc", "gb", "sgb", "zip", "7z"],
+    "folderAliases": ["gbc", "gameboycolor", "game boy color"],
+    "defaultPlayers": ["retroarch", "pizzaboy_gbc"], "screenScraperId": 10, "igdbId": 22,
+    "libretroName": "Nintendo - Game Boy Color", "accentColor": "#FFB84DFF", "sortOrder": 70
+  },
+  {
+    "id": "gba", "name": "Nintendo Game Boy Advance", "shortName": "GBA", "manufacturer": "Nintendo", "releaseYear": 2001,
+    "family": "NINTENDO", "extensions": ["gba", "agb", "bin", "zip", "7z"],
+    "folderAliases": ["gba", "gameboyadvance", "game boy advance"],
+    "defaultPlayers": ["retroarch", "pizzaboy_gba"], "screenScraperId": 12, "igdbId": 24,
+    "libretroName": "Nintendo - Game Boy Advance", "accentColor": "#FF4A3CDB", "sortOrder": 80
+  },
+  {
+    "id": "nds", "name": "Nintendo DS", "shortName": "NDS", "manufacturer": "Nintendo", "releaseYear": 2004,
+    "family": "NINTENDO", "extensions": ["nds", "dsi", "ids", "zip", "7z"],
+    "folderAliases": ["nds", "ds", "nintendo ds", "nintendods"],
+    "defaultPlayers": ["melonds", "drastic", "retroarch"], "screenScraperId": 15, "igdbId": 20,
+    "libretroName": "Nintendo - Nintendo DS", "accentColor": "#FFB6B6B6", "sortOrder": 90
+  },
+  {
+    "id": "n3ds", "name": "Nintendo 3DS", "shortName": "3DS", "manufacturer": "Nintendo", "releaseYear": 2011,
+    "family": "NINTENDO", "extensions": ["3ds", "3dsx", "cci", "cxi", "cia", "app", "axf", "elf"],
+    "folderAliases": ["3ds", "n3ds", "nintendo 3ds"],
+    "defaultPlayers": ["azahar", "citra_mmj"], "screenScraperId": 17, "igdbId": 37,
+    "libretroName": "Nintendo - Nintendo 3DS", "accentColor": "#FFD62828", "sortOrder": 100
+  },
+  {
+    "id": "switch", "name": "Nintendo Switch", "shortName": "Switch", "manufacturer": "Nintendo", "releaseYear": 2017,
+    "family": "NINTENDO", "extensions": ["nsp", "xci", "nca", "nso", "nro", "kip"],
+    "folderAliases": ["switch", "nintendo switch", "nsw"],
+    "defaultPlayers": ["eden", "sudachi", "citron"], "screenScraperId": 225, "igdbId": 130,
+    "accentColor": "#FFE60012", "sortOrder": 110
+  },
+  {
+    "id": "virtualboy", "name": "Nintendo Virtual Boy", "shortName": "Virtual Boy", "manufacturer": "Nintendo", "releaseYear": 1995,
+    "family": "NINTENDO", "extensions": ["vb", "vboy", "bin", "zip", "7z"],
+    "folderAliases": ["virtualboy", "vb", "virtual boy"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 11,
+    "libretroName": "Nintendo - Virtual Boy", "accentColor": "#FFFF1E1E", "sortOrder": 120
+  },
+  {
+    "id": "psx", "name": "Sony PlayStation", "shortName": "PS1", "manufacturer": "Sony", "releaseYear": 1994,
+    "family": "SONY", "extensions": ["chd", "cue", "pbp", "iso", "img", "bin", "m3u", "ecm", "mds", "toc", "ccd"],
+    "folderAliases": ["psx", "ps1", "playstation", "sony playstation"],
+    "defaultPlayers": ["duckstation", "retroarch", "epsxe"], "screenScraperId": 57, "igdbId": 7,
+    "libretroName": "Sony - PlayStation", "accentColor": "#FF9B9B9B", "sortOrder": 200
+  },
+  {
+    "id": "ps2", "name": "Sony PlayStation 2", "shortName": "PS2", "manufacturer": "Sony", "releaseYear": 2000,
+    "family": "SONY", "extensions": ["chd", "iso", "cso", "zso", "bin", "gz", "elf", "mdf", "nrg", "m3u"],
+    "folderAliases": ["ps2", "playstation 2", "playstation2", "sony playstation 2"],
+    "defaultPlayers": ["nethersx2", "play"], "screenScraperId": 58, "igdbId": 8,
+    "libretroName": "Sony - PlayStation 2", "accentColor": "#FF2E5BFF", "sortOrder": 210
+  },
+  {
+    "id": "psp", "name": "Sony PlayStation Portable", "shortName": "PSP", "manufacturer": "Sony", "releaseYear": 2004,
+    "family": "SONY", "extensions": ["iso", "cso", "chd", "pbp", "elf", "prx"],
+    "folderAliases": ["psp", "playstation portable"],
+    "defaultPlayers": ["ppsspp", "retroarch"], "screenScraperId": 61, "igdbId": 38,
+    "libretroName": "Sony - PlayStation Portable", "accentColor": "#FF1F1F1F", "sortOrder": 220
+  },
+  {
+    "id": "psvita", "name": "Sony PlayStation Vita", "shortName": "PS Vita", "manufacturer": "Sony", "releaseYear": 2011,
+    "family": "SONY", "extensions": ["vpk", "psvita"],
+    "folderAliases": ["psvita", "vita", "playstation vita"],
+    "defaultPlayers": ["vita3k"], "screenScraperId": 62, "igdbId": 46,
+    "libretroName": "Sony - PlayStation Vita", "accentColor": "#FF0072CE", "sortOrder": 230
+  },
+  {
+    "id": "dreamcast", "name": "Sega Dreamcast", "shortName": "Dreamcast", "manufacturer": "Sega", "releaseYear": 1998,
+    "family": "SEGA", "extensions": ["chd", "cdi", "gdi", "cue", "iso", "elf", "m3u"],
+    "folderAliases": ["dreamcast", "dc", "sega dreamcast"],
+    "defaultPlayers": ["flycast", "redream", "retroarch"], "screenScraperId": 23, "igdbId": 23,
+    "libretroName": "Sega - Dreamcast", "accentColor": "#FFFF6B00", "sortOrder": 300
+  },
+  {
+    "id": "megadrive", "name": "Sega Mega Drive / Genesis", "shortName": "Mega Drive", "manufacturer": "Sega", "releaseYear": 1988,
+    "family": "SEGA", "extensions": ["md", "smd", "gen", "bin", "sg", "68k", "zip", "7z"],
+    "folderAliases": ["megadrive", "genesis", "md", "mega drive", "sega genesis", "sega mega drive"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 1, "igdbId": 29,
+    "libretroName": "Sega - Mega Drive - Genesis", "accentColor": "#FF1D1D1D", "sortOrder": 310
+  },
+  {
+    "id": "mastersystem", "name": "Sega Master System", "shortName": "Master System", "manufacturer": "Sega", "releaseYear": 1985,
+    "family": "SEGA", "extensions": ["sms", "sg", "bin", "zip", "7z"],
+    "folderAliases": ["mastersystem", "sms", "master system", "sega master system"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 2, "igdbId": 64,
+    "libretroName": "Sega - Master System - Mark III", "accentColor": "#FFD92B2B", "sortOrder": 320
+  },
+  {
+    "id": "gamegear", "name": "Sega Game Gear", "shortName": "Game Gear", "manufacturer": "Sega", "releaseYear": 1990,
+    "family": "SEGA", "extensions": ["gg", "bin", "sms", "zip", "7z"],
+    "folderAliases": ["gamegear", "gg", "game gear"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 21,
+    "libretroName": "Sega - Game Gear", "accentColor": "#FF2B2B2B", "sortOrder": 330
+  },
+  {
+    "id": "segacd", "name": "Sega Mega-CD / Sega CD", "shortName": "Mega-CD", "manufacturer": "Sega", "releaseYear": 1991,
+    "family": "SEGA", "extensions": ["chd", "cue", "iso", "bin", "m3u"],
+    "folderAliases": ["segacd", "megacd", "sega cd", "mega cd", "mega-cd"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 20,
+    "libretroName": "Sega - Mega-CD - Sega CD", "accentColor": "#FF0B2545", "sortOrder": 340
+  },
+  {
+    "id": "sega32x", "name": "Sega 32X", "shortName": "32X", "manufacturer": "Sega", "releaseYear": 1994,
+    "family": "SEGA", "extensions": ["32x", "bin", "md", "zip", "7z"],
+    "folderAliases": ["sega32x", "32x"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 19,
+    "libretroName": "Sega - 32X", "accentColor": "#FF333333", "sortOrder": 350
+  },
+  {
+    "id": "saturn", "name": "Sega Saturn", "shortName": "Saturn", "manufacturer": "Sega", "releaseYear": 1994,
+    "family": "SEGA", "extensions": ["chd", "cue", "iso", "bin", "mds", "ccd", "m3u"],
+    "folderAliases": ["saturn", "sega saturn"],
+    "defaultPlayers": ["yabasanshiro", "retroarch"], "screenScraperId": 22, "igdbId": 32,
+    "libretroName": "Sega - Saturn", "accentColor": "#FF3A3A3A", "sortOrder": 360
+  },
+  {
+    "id": "arcade", "name": "Arcade", "shortName": "Arcade", "manufacturer": "Various", "releaseYear": 1971,
+    "family": "ARCADE", "extensions": ["zip", "7z", "chd"],
+    "folderAliases": ["arcade", "mame", "fbneo", "fba", "neogeo", "cps1", "cps2", "cps3"],
+    "defaultPlayers": ["retroarch", "mame4droid"], "screenScraperId": 75, "igdbId": 52,
+    "libretroName": "MAME", "accentColor": "#FFFFC300", "sortOrder": 400
+  },
+  {
+    "id": "neogeo", "name": "SNK Neo Geo", "shortName": "Neo Geo", "manufacturer": "SNK", "releaseYear": 1990,
+    "family": "SNK", "extensions": ["zip", "7z"],
+    "folderAliases": ["neogeo", "neo geo", "neo-geo"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 142, "igdbId": 80,
+    "libretroName": "SNK - Neo Geo", "accentColor": "#FF1C4E9C", "sortOrder": 410
+  },
+  {
+    "id": "neogeocd", "name": "SNK Neo Geo CD", "shortName": "Neo Geo CD", "manufacturer": "SNK", "releaseYear": 1994,
+    "family": "SNK", "extensions": ["chd", "cue", "iso", "zip"],
+    "folderAliases": ["neogeocd", "neo geo cd"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 70,
+    "libretroName": "SNK - Neo Geo CD", "accentColor": "#FF23407A", "sortOrder": 420
+  },
+  {
+    "id": "ngpc", "name": "SNK Neo Geo Pocket Color", "shortName": "NGPC", "manufacturer": "SNK", "releaseYear": 1999,
+    "family": "SNK", "extensions": ["ngc", "ngp", "zip", "7z"],
+    "folderAliases": ["ngpc", "ngp", "neo geo pocket", "neo geo pocket color"],
+    "defaultPlayers": ["retroarch"],
+    "libretroName": "SNK - Neo Geo Pocket Color", "accentColor": "#FF2F8F9D", "sortOrder": 430
+  },
+  {
+    "id": "pcengine", "name": "NEC PC Engine / TurboGrafx-16", "shortName": "PC Engine", "manufacturer": "NEC", "releaseYear": 1987,
+    "family": "NEC", "extensions": ["pce", "sgx", "bin", "zip", "7z"],
+    "folderAliases": ["pcengine", "tg16", "turbografx16", "pc engine", "turbografx-16"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 31, "igdbId": 86,
+    "libretroName": "NEC - PC Engine - TurboGrafx 16", "accentColor": "#FFE85D04", "sortOrder": 500
+  },
+  {
+    "id": "pcenginecd", "name": "NEC PC Engine CD / TurboGrafx-CD", "shortName": "PC Engine CD", "manufacturer": "NEC", "releaseYear": 1988,
+    "family": "NEC", "extensions": ["chd", "cue", "iso", "ccd", "m3u"],
+    "folderAliases": ["pcenginecd", "tg-cd", "turbografxcd", "pc engine cd"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 114,
+    "libretroName": "NEC - PC Engine CD - TurboGrafx-CD", "accentColor": "#FFBF4904", "sortOrder": 510
+  },
+  {
+    "id": "atari2600", "name": "Atari 2600", "shortName": "2600", "manufacturer": "Atari", "releaseYear": 1977,
+    "family": "ATARI", "extensions": ["a26", "bin", "zip", "7z"],
+    "folderAliases": ["atari2600", "2600", "atari 2600"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 26, "igdbId": 59,
+    "libretroName": "Atari - 2600", "accentColor": "#FF8B5A2B", "sortOrder": 600
+  },
+  {
+    "id": "atari7800", "name": "Atari 7800", "shortName": "7800", "manufacturer": "Atari", "releaseYear": 1986,
+    "family": "ATARI", "extensions": ["a78", "bin", "zip", "7z"],
+    "folderAliases": ["atari7800", "7800", "atari 7800"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 41,
+    "libretroName": "Atari - 7800", "accentColor": "#FF6B4423", "sortOrder": 610
+  },
+  {
+    "id": "lynx", "name": "Atari Lynx", "shortName": "Lynx", "manufacturer": "Atari", "releaseYear": 1989,
+    "family": "ATARI", "extensions": ["lnx", "o", "zip", "7z"],
+    "folderAliases": ["lynx", "atarilynx", "atari lynx"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 28,
+    "libretroName": "Atari - Lynx", "accentColor": "#FFE0A100", "sortOrder": 620
+  },
+  {
+    "id": "jaguar", "name": "Atari Jaguar", "shortName": "Jaguar", "manufacturer": "Atari", "releaseYear": 1993,
+    "family": "ATARI", "extensions": ["j64", "jag", "rom", "abs", "cof", "bin", "zip", "7z"],
+    "folderAliases": ["jaguar", "atarijaguar", "atari jaguar"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 27,
+    "libretroName": "Atari - Jaguar", "accentColor": "#FFC1121F", "sortOrder": 630
+  },
+  {
+    "id": "wonderswancolor", "name": "Bandai WonderSwan Color", "shortName": "WonderSwan", "manufacturer": "Bandai", "releaseYear": 2000,
+    "family": "OTHER", "extensions": ["wsc", "ws", "pc2", "zip", "7z"],
+    "folderAliases": ["wonderswancolor", "wonderswan", "wsc", "ws"],
+    "defaultPlayers": ["retroarch"],
+    "libretroName": "Bandai - WonderSwan Color", "accentColor": "#FF4361EE", "sortOrder": 700
+  },
+  {
+    "id": "msx", "name": "MSX", "shortName": "MSX", "manufacturer": "Microsoft", "releaseYear": 1983,
+    "family": "COMPUTER", "extensions": ["rom", "mx1", "mx2", "dsk", "cas", "col", "zip", "7z"],
+    "folderAliases": ["msx", "msx1", "msx2"],
+    "defaultPlayers": ["retroarch"],
+    "libretroName": "Microsoft - MSX", "accentColor": "#FF2A9D8F", "sortOrder": 710
+  },
+  {
+    "id": "c64", "name": "Commodore 64", "shortName": "C64", "manufacturer": "Commodore", "releaseYear": 1982,
+    "family": "COMPUTER", "extensions": ["d64", "t64", "prg", "crt", "tap", "g64", "x64", "zip", "7z"],
+    "folderAliases": ["c64", "commodore64", "commodore 64"],
+    "defaultPlayers": ["retroarch"],
+    "libretroName": "Commodore - 64", "accentColor": "#FF6F4E37", "sortOrder": 720
+  },
+  {
+    "id": "amiga", "name": "Commodore Amiga", "shortName": "Amiga", "manufacturer": "Commodore", "releaseYear": 1985,
+    "family": "COMPUTER", "extensions": ["adf", "adz", "dms", "ipf", "hdf", "hdz", "lha", "m3u", "uae", "zip", "7z"],
+    "folderAliases": ["amiga", "amiga500", "amiga1200", "commodore amiga"],
+    "defaultPlayers": ["retroarch"],
+    "libretroName": "Commodore - Amiga", "accentColor": "#FFB5651D", "sortOrder": 730
+  },
+  {
+    "id": "dos", "name": "MS-DOS", "shortName": "DOS", "manufacturer": "Microsoft", "releaseYear": 1981,
+    "family": "COMPUTER", "extensions": ["bat", "com", "exe", "conf", "dosz", "zip", "7z", "iso", "cue", "m3u"],
+    "folderAliases": ["dos", "msdos", "ms-dos", "pc"],
+    "defaultPlayers": ["retroarch"], "screenScraperId": 135,
+    "libretroName": "DOS", "accentColor": "#FF000080", "sortOrder": 740
+  },
+  {
+    "id": "scummvm", "name": "ScummVM", "shortName": "ScummVM", "manufacturer": "ScummVM Team", "releaseYear": 2001,
+    "family": "COMPUTER", "extensions": ["scummvm", "svm"],
+    "folderAliases": ["scummvm"],
+    "defaultPlayers": ["scummvm", "retroarch"], "screenScraperId": 123,
+    "libretroName": "ScummVM", "accentColor": "#FFDC7A00", "sortOrder": 750
+  },
+  {
+    "id": "3do", "name": "3DO Interactive Multiplayer", "shortName": "3DO", "manufacturer": "The 3DO Company", "releaseYear": 1993,
+    "family": "OTHER", "extensions": ["chd", "cue", "iso", "bin"],
+    "folderAliases": ["3do"],
+    "defaultPlayers": ["retroarch"],
+    "libretroName": "The 3DO Company - 3DO", "accentColor": "#FF6C757D", "sortOrder": 760
+  },
+  {
+    "id": "colecovision", "name": "ColecoVision", "shortName": "ColecoVision", "manufacturer": "Coleco", "releaseYear": 1982,
+    "family": "OTHER", "extensions": ["col", "cv", "bin", "rom", "zip", "7z"],
+    "folderAliases": ["colecovision", "coleco"],
+    "defaultPlayers": ["retroarch"],
+    "libretroName": "Coleco - ColecoVision", "accentColor": "#FF7B2CBF", "sortOrder": 770
+  },
+  {
+    "id": "android", "name": "Android Games", "shortName": "Android", "manufacturer": "Google", "releaseYear": 2008,
+    "family": "ANDROID", "kind": "ANDROID", "extensions": [], "folderAliases": [],
+    "defaultPlayers": [], "screenScraperId": 63, "igdbId": 34, "accentColor": "#FF3DDC84", "sortOrder": 900
+  },
+  {
+    "id": "android_apps", "name": "Apps", "shortName": "Apps", "manufacturer": "Google", "releaseYear": 2008,
+    "family": "ANDROID", "kind": "ANDROID", "extensions": [], "folderAliases": [],
+    "defaultPlayers": [], "accentColor": "#FF8AB4F8", "sortOrder": 910
+  },
+  {
+    "id": "pc", "name": "PC Games", "shortName": "PC", "manufacturer": "Various", "releaseYear": 1981,
+    "family": "PC", "kind": "PC", "extensions": ["desktop", "exe", "lnk", "bat"], "folderAliases": ["windows", "winlator", "pcgames", "steam"],
+    "defaultPlayers": ["winlator_cmod", "gamenative"], "screenScraperId": 138, "igdbId": 6, "accentColor": "#FF1B2838", "sortOrder": 920
+  }
+]
