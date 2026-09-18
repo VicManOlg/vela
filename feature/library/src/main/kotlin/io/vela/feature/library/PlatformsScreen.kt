@@ -34,6 +34,8 @@ import io.vela.core.ui.components.EmptyState
 import io.vela.core.ui.components.PlatformTile
 import io.vela.core.ui.components.color
 import io.vela.core.ui.components.focusBleed
+import io.vela.core.ui.components.rememberAutoFocus
+import androidx.compose.ui.focus.focusRequester
 import io.vela.core.ui.theme.VelaTheme
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -82,9 +84,10 @@ fun PlatformsScreen(
             )
             return@Column
         }
+        val autoFocus = rememberAutoFocus(keys = arrayOf(platforms.isNotEmpty()))
         LazyVerticalGrid(
             columns = GridCells.Adaptive(VelaTheme.dimens.cardWidth * 1.35f),
-            modifier = Modifier.fillMaxSize().focusRestorer().focusGroup(),
+            modifier = Modifier.fillMaxSize().focusRequester(autoFocus).focusRestorer().focusGroup(),
             contentPadding = PaddingValues(start = VelaTheme.dimens.screenPadding, end = VelaTheme.dimens.screenPadding, top = focusBleed(), bottom = 90.dp),
             horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
             verticalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
@@ -105,8 +108,8 @@ fun PlatformsScreen(
             }
             items(platforms, key = { it.id.value }) { entry ->
                 PlatformTile(
-                    name = entry.platform.manufacturer,
-                    shortName = entry.displayName,
+                    name = entry.displayName,
+                    shortName = entry.platform.shortName,
                     count = entry.gameCount,
                     accent = entry.platform.color(),
                     onClick = { onOpenPlatform(entry.id) },

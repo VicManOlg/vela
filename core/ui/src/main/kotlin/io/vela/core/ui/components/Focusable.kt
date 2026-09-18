@@ -8,6 +8,10 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -132,3 +136,20 @@ fun Modifier.focusScale(focused: Boolean, durationMs: Int, scale: Float): Modifi
 /** Spacing that keeps a scaled card from being clipped by its rail. */
 @Composable
 fun focusBleed(): Dp = (VelaTheme.dimens.cardWidth.value * (VelaTheme.motion.focusScale - 1f) / 2f + 6f).dp
+
+
+/**
+ * Focus requester that fires once the composable is on screen. Attach it to a focus group (grid,
+ * row, list) and focus lands on its first child, or to a single focusable.
+ */
+@Composable
+fun rememberAutoFocus(enabled: Boolean = true, vararg keys: Any?): FocusRequester {
+    val requester = remember { FocusRequester() }
+    LaunchedEffect(enabled, *keys) {
+        if (!enabled) return@LaunchedEffect
+        withFrameNanos { }
+        withFrameNanos { }
+        runCatching { requester.requestFocus() }
+    }
+    return requester
+}

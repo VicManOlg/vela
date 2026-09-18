@@ -46,6 +46,8 @@ import io.vela.core.model.ScanProgress
 import io.vela.core.model.StorageMode
 import io.vela.core.scraper.ScrapeProgress
 import io.vela.core.ui.components.ConfirmDialog
+import io.vela.core.ui.components.rememberAutoFocus
+import androidx.compose.ui.focus.focusRequester
 import io.vela.core.ui.components.MenuOption
 import io.vela.core.ui.components.SectionHeader
 import io.vela.core.ui.components.SettingRow
@@ -88,7 +90,8 @@ fun SettingsScreen(
                 Text("Vela ${viewModel.appVersion}", style = VelaTheme.typography.caption, color = colors.muted)
             }
             Spacer(Modifier.height(12.dp))
-            LazyColumn(Modifier.focusRestorer().focusGroup(), verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = 80.dp)) {
+            val autoFocus = rememberAutoFocus()
+            LazyColumn(Modifier.focusRequester(autoFocus).focusRestorer().focusGroup(), verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = 80.dp)) {
                 items(SettingsSection.entries, key = { it.name }) { s ->
                     SettingRow(
                         title = s.title,

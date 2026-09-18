@@ -24,8 +24,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -75,7 +73,6 @@ fun HomeScreen(
     val spotlight by viewModel.spotlight.collectAsStateWithLifecycle()
     val menuState by viewModel.menuState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
-    val firstRailFocus = remember { FocusRequester() }
 
     LaunchedEffect(spotlight) { onSpotlightChanged(spotlight) }
 
@@ -111,12 +108,13 @@ fun HomeScreen(
         ) {
             item(key = "spotlight") { SpotlightHeader(spotlight) }
 
-            state.rails.forEachIndexed { index, rail ->
-                val focusModifier = if (index == 0) firstRailFocus else null
+            var railsShown = 0
+            state.rails.forEach { rail ->
+                val first = railsShown == 0
                 when (rail) {
                     HomeRail.CONTINUE_PLAYING -> if (state.continuePlaying.isNotEmpty()) {
                         item(key = rail.name) {
-                            Rail("Continue playing", focusRequester = focusModifier) {
+                            Rail("Continue playing", autoFocus = first) {
                                 items(state.continuePlaying, key = { it.id.value }) { game ->
                                     val accent = state.platformOf(game)?.platform?.color() ?: VelaTheme.colors.accentSecondary
                                     HeroCard(
@@ -131,18 +129,18 @@ fun HomeScreen(
                             }
                         }
                     }
-                    HomeRail.RECENT -> gameRail(rail.name, "Recent", state.recent, state, viewModel, navigation)
-                    HomeRail.FAVORITES -> gameRail(rail.name, "Favorites", state.favorites, state, viewModel, navigation)
-                    HomeRail.RECOMMENDED -> gameRail(rail.name, "Because you play", state.recommended, state, viewModel, navigation, subtitle = "Unplayed games from the systems you use most")
-                    HomeRail.RECENTLY_ADDED -> gameRail(rail.name, "Recently added", state.recentlyAdded, state, viewModel, navigation)
-                    HomeRail.ANDROID -> gameRail(rail.name, "Android games", state.android, state, viewModel, navigation, accentOverride = Color(0xFF3DDC84))
+                    HomeRail.RECENT -> gameRail(rail.name, "Recent", state.recent, state, viewModel, navigation, autoFocus = first)
+                    HomeRail.FAVORITES -> gameRail(rail.name, "Favorites", state.favorites, state, viewModel, navigation, autoFocus = first)
+                    HomeRail.RECOMMENDED -> gameRail(rail.name, "Because you play", state.recommended, state, viewModel, navigation, subtitle = "Unplayed games from the systems you use most", autoFocus = first)
+                    HomeRail.RECENTLY_ADDED -> gameRail(rail.name, "Recently added", state.recentlyAdded, state, viewModel, navigation, autoFocus = first)
+                    HomeRail.ANDROID -> gameRail(rail.name, "Android games", state.android, state, viewModel, navigation, accentOverride = Color(0xFF3DDC84), autoFocus = first)
                     HomeRail.PLATFORMS -> if (state.platforms.isNotEmpty()) {
                         item(key = rail.name) {
-                            Rail("Systems", subtitle = "${state.platforms.size} systems, ${state.totalGames} games") {
+                            Rail("Systems", subtitle = "${state.platforms.size} systems, ${state.totalGames} games", autoFocus = first) {
                                 items(state.platforms, key = { it.id.value }) { entry ->
                                     PlatformTile(
-                                        name = entry.platform.manufacturer,
-                                        shortName = entry.displayName,
+                                        name = entry.displayName,
+                                        shortName = entry.platform.shortName,
                                         count = entry.gameCount,
                                         accent = entry.platform.color(),
                                         onClick = { navigation.openPlatform(entry.id) },
@@ -154,7 +152,7 @@ fun HomeScreen(
                     }
                     HomeRail.COLLECTIONS -> if (state.collections.isNotEmpty()) {
                         item(key = rail.name) {
-                            Rail("Collections") {
+                            Rail("Collections", autoFocus = first) {
                                 items(state.collections, key = { it.id.value }) { collection ->
                                     CollectionTile(
                                         name = collection.name,
@@ -168,6 +166,16 @@ fun HomeScreen(
                             }
                         }
                     }
+                }
+                railsShown += when (rail) {
+                    HomeRail.CONTINUE_PLAYING -> if (state.continuePlaying.isNotEmpty()) 1 else 0
+                    HomeRail.RECENT -> if (state.recent.isNotEmpty()) 1 else 0
+                    HomeRail.FAVORITES -> if (state.favorites.isNotEmpty()) 1 else 0
+                    HomeRail.RECOMMENDED -> if (state.recommended.isNotEmpty()) 1 else 0
+                    HomeRail.RECENTLY_ADDED -> if (state.recentlyAdded.isNotEmpty()) 1 else 0
+                    HomeRail.ANDROID -> if (state.android.isNotEmpty()) 1 else 0
+                    HomeRail.PLATFORMS -> if (state.platforms.isNotEmpty()) 1 else 0
+                    HomeRail.COLLECTIONS -> if (state.collections.isNotEmpty()) 1 else 0
                 }
             }
         }
@@ -197,10 +205,11 @@ private fun androidx.compose.foundation.lazy.LazyListScope.gameRail(
     navigation: HomeNavigation,
     subtitle: String? = null,
     accentOverride: Color? = null,
+    autoFocus: Boolean = false,
 ) {
     if (games.isEmpty()) return
     item(key = key) {
-        Rail(title, subtitle = subtitle) {
+        Rail(title, subtitle = subtitle, autoFocus = autoFocus) {
             items(games, key = { it.id.value }) { game ->
                 val accent = accentOverride ?: state.platformOf(game)?.platform?.color() ?: VelaTheme.colors.accentSecondary
                 GameCard(
@@ -222,7 +231,7 @@ private fun SpotlightHeader(spotlight: Spotlight?) {
         Modifier
             .fillMaxWidth()
             .padding(horizontal = VelaTheme.dimens.screenPadding)
-            .height(118.dp),
+            .height((VelaTheme.typography.display.fontSize.value * 2.7f).dp),
         verticalArrangement = Arrangement.Bottom,
     ) {
         AnimatedContent(

@@ -103,7 +103,7 @@ fun GameDetailScreen(
     Row(
         modifier
             .fillMaxSize()
-            .padding(horizontal = padding, vertical = 8.dp),
+            .padding(start = padding, end = padding, top = 28.dp, bottom = 8.dp),
     ) {
         // Left: box art or app icon.
         Box(

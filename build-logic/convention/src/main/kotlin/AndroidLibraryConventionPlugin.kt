@@ -4,7 +4,9 @@ import io.vela.buildlogic.libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.withType
 
 class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -18,6 +20,9 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 defaultConfig.consumerProguardFiles("consumer-rules.pro")
                 testOptions.unitTests.isIncludeAndroidResources = true
             }
+
+            // Modules without unit tests must not fail `gradle test` (Gradle 9 default).
+            tasks.withType<Test>().configureEach { failOnNoDiscoveredTests.set(false) }
 
             dependencies {
                 add("implementation", libs.findLibrary("kotlinx-coroutines-core").get())

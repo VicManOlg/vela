@@ -15,6 +15,9 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -34,11 +37,21 @@ fun Rail(
     subtitle: String? = null,
     state: LazyListState = rememberLazyListState(),
     focusRequester: FocusRequester? = null,
+    /** Move focus into this rail as soon as it appears (first rail of a screen). */
+    autoFocus: Boolean = false,
     trailing: (@Composable () -> Unit)? = null,
     content: LazyListScope.() -> Unit,
 ) {
     val dimens = VelaTheme.dimens
     val bleed = focusBleed()
+    val requester = focusRequester ?: remember { FocusRequester() }
+    if (autoFocus) {
+        LaunchedEffect(Unit) {
+            withFrameNanos { }
+            withFrameNanos { }
+            runCatching { requester.requestFocus() }
+        }
+    }
     Column(modifier.fillMaxWidth()) {
         Row(
             Modifier
@@ -57,7 +70,7 @@ fun Rail(
             state = state,
             modifier = Modifier
                 .fillMaxWidth()
-                .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+                .focusRequester(requester)
                 .focusRestorer()
                 .focusGroup(),
             contentPadding = PaddingValues(horizontal = dimens.screenPadding, vertical = bleed),

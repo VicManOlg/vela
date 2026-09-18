@@ -40,8 +40,37 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import io.vela.core.ui.input.GamepadButton
 import io.vela.core.ui.theme.VelaTheme
+
+/**
+ * Dialogs get their own window, which would bring the system bars back. Hide them so menus feel
+ * like part of the console UI instead of an Android popup.
+ */
+@Composable
+fun ImmersiveDialogWindow() {
+    val view = LocalView.current
+    SideEffect {
+        val window = (view.parent as? DialogWindowProvider)?.window ?: return@SideEffect
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowCompat.getInsetsController(window, view)
+        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.hide(WindowInsetsCompat.Type.systemBars())
+    }
+}
+
+/** Tallest a dialog panel may grow: leaves breathing room above and below on any screen. */
+@Composable
+fun dialogMaxHeight(): Dp = (LocalConfiguration.current.screenHeightDp * 0.86f).dp
 
 /** One choice in a contextual menu. */
 data class MenuOption(
@@ -69,6 +98,7 @@ fun VelaMenuDialog(
     val colors = VelaTheme.colors
     val firstFocus = remember { FocusRequester() }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        ImmersiveDialogWindow()
         BackHandler(onBack = onDismiss)
         Box(
             Modifier
@@ -81,13 +111,14 @@ fun VelaMenuDialog(
                 Modifier
                     .padding(end = VelaTheme.dimens.screenPadding)
                     .widthIn(min = 320.dp, max = 440.dp)
+                    .heightIn(max = dialogMaxHeight())
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
             ) {
                 Column {
-                    Text(title, style = VelaTheme.typography.title, color = colors.onBackground)
-                    if (subtitle != null) Text(subtitle, style = VelaTheme.typography.caption, color = colors.muted)
+                    Text(title, style = VelaTheme.typography.title, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (subtitle != null) Text(subtitle, style = VelaTheme.typography.caption, color = colors.muted, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(12.dp))
-                    LazyColumn(Modifier.heightIn(max = 420.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    LazyColumn(Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         itemsIndexed(options, key = { _, o -> o.id }) { index, option ->
                             SettingRow(
                                 title = option.label,
@@ -126,7 +157,8 @@ fun ConfirmDialog(
 ) {
     val colors = VelaTheme.colors
     val cancelFocus = remember { FocusRequester() }
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        ImmersiveDialogWindow()
         BackHandler(onBack = onDismiss)
         Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
             GlassPanel(Modifier.widthIn(min = 360.dp, max = 520.dp)) {
@@ -160,7 +192,8 @@ fun TextInputDialog(
     val colors = VelaTheme.colors
     var text by rememberSaveable { mutableStateOf(initial) }
     val fieldFocus = remember { FocusRequester() }
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        ImmersiveDialogWindow()
         BackHandler(onBack = onDismiss)
         Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
             GlassPanel(Modifier.widthIn(min = 360.dp, max = 520.dp)) {

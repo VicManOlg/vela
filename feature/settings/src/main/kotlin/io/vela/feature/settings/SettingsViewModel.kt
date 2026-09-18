@@ -113,7 +113,8 @@ class SettingsViewModel @Inject constructor(
         val candidates = listOf("ROMs", "Roms", "roms", "Games", "Emulation/roms", "Emulation", "RetroArch/roms", "Download").map { File(ext, it) }
         val sd = File("/storage").listFiles()?.filter { it.name != "emulated" && it.name != "self" && it.isDirectory }.orEmpty()
         val sdCandidates = sd.flatMap { root -> listOf("ROMs", "Roms", "roms", "Games").map { File(root, it) } + root }
-        return (candidates + sdCandidates).filter { it.isDirectory && it.canRead() }.distinct()
+        return (candidates + sdCandidates).filter { it.isDirectory && it.canRead() }
+            .distinctBy { it.absolutePath.lowercase() }
     }
 
     fun hasAllFilesAccess(): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()

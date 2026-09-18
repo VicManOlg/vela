@@ -38,6 +38,9 @@ import io.vela.core.model.GameSummary
 import io.vela.core.model.LaunchOption
 import io.vela.core.model.PlatformId
 import io.vela.core.ui.components.EmptyState
+import io.vela.core.ui.components.rememberAutoFocus
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.focusGroup
 import io.vela.core.ui.components.GameCard
 import io.vela.core.ui.components.GameMenuCallbacks
 import io.vela.core.ui.components.GameMenuHost
@@ -149,7 +152,8 @@ fun AndroidScreen(
         }
     }
 
-    LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 90.dp), verticalArrangement = Arrangement.spacedBy(VelaTheme.dimens.sectionSpacing - 12.dp)) {
+    val autoFocus = rememberAutoFocus(keys = arrayOf(state.games.isNotEmpty(), state.apps.isNotEmpty()))
+    LazyColumn(modifier.fillMaxSize().focusRequester(autoFocus).focusGroup(), contentPadding = PaddingValues(bottom = 90.dp), verticalArrangement = Arrangement.spacedBy(VelaTheme.dimens.sectionSpacing - 12.dp)) {
         item {
             Column(Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding).height(96.dp), verticalArrangement = Arrangement.Bottom) {
                 Text("Android", style = VelaTheme.typography.display, color = colors.onBackground)

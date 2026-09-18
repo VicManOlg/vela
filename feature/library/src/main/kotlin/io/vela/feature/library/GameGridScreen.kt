@@ -40,6 +40,8 @@ import io.vela.core.ui.components.GameMenuHost
 import io.vela.core.ui.components.MenuOption
 import io.vela.core.ui.components.VelaMenuDialog
 import io.vela.core.ui.components.focusBleed
+import io.vela.core.ui.components.rememberAutoFocus
+import androidx.compose.ui.focus.focusRequester
 import io.vela.core.ui.input.GamepadButton
 import io.vela.core.ui.input.GamepadHandler
 import io.vela.core.ui.theme.VelaTheme
@@ -83,13 +85,15 @@ fun GameGridScreen(
             )
             return@Column
         }
-        val columns = VelaTheme.dimens.gridColumns.takeIf { it > 0 } ?: 6
+        val columnsSetting = VelaTheme.dimens.gridColumns
         val bleed = focusBleed()
+        val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0))
         LazyVerticalGrid(
             state = gridState,
-            columns = GridCells.Fixed(columns),
+            columns = if (columnsSetting > 0) GridCells.Fixed(columnsSetting) else GridCells.Adaptive(VelaTheme.dimens.cardWidth),
             modifier = Modifier
                 .fillMaxSize()
+                .focusRequester(autoFocus)
                 .focusRestorer()
                 .focusGroup(),
             contentPadding = PaddingValues(start = VelaTheme.dimens.screenPadding, end = VelaTheme.dimens.screenPadding, top = bleed, bottom = 90.dp),

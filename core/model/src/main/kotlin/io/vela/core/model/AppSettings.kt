@@ -33,6 +33,7 @@ data class AppSettings(
         HomeRail.CONTINUE_PLAYING,
         HomeRail.RECENT,
         HomeRail.FAVORITES,
+        HomeRail.RECENTLY_ADDED,
         HomeRail.PLATFORMS,
         HomeRail.COLLECTIONS,
         HomeRail.ANDROID,

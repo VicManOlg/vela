@@ -116,10 +116,12 @@ class AppIconFetcher(private val context: Context, private val packageName: Stri
         return ImageFetchResult(image = bitmap.asImage(), isSampled = false, dataSource = DataSource.DISK)
     }
 
-    class Factory(private val context: Context) : Fetcher.Factory<String> {
-        override fun create(data: String, options: Options, imageLoader: ImageLoader): Fetcher? {
-            if (!data.startsWith("appicon://")) return null
-            return AppIconFetcher(context, data.removePrefix("appicon://"), options)
+    /** Coil maps String models to [coil3.Uri] before fetching, so the factory keys on the URI scheme. */
+    class Factory(private val context: Context) : Fetcher.Factory<coil3.Uri> {
+        override fun create(data: coil3.Uri, options: Options, imageLoader: ImageLoader): Fetcher? {
+            if (data.scheme != "appicon") return null
+            val packageName = data.authority?.takeIf { it.isNotBlank() } ?: data.path?.trim('/') ?: return null
+            return AppIconFetcher(context, packageName, options)
         }
     }
 }

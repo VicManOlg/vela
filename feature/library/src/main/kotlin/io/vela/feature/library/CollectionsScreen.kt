@@ -41,6 +41,8 @@ import io.vela.core.ui.components.TextInputDialog
 import io.vela.core.ui.components.VelaButton
 import io.vela.core.ui.components.VelaMenuDialog
 import io.vela.core.ui.components.focusBleed
+import io.vela.core.ui.components.rememberAutoFocus
+import androidx.compose.ui.focus.focusRequester
 import io.vela.core.ui.input.GamepadButton
 import io.vela.core.ui.input.GamepadHandler
 import io.vela.core.ui.theme.VelaTheme
@@ -90,16 +92,19 @@ fun CollectionsScreen(
         }
         Spacer(Modifier.height(6.dp))
         if (collections.isEmpty()) {
+            val emptyFocus = rememberAutoFocus()
             EmptyState(
                 title = "No collections yet",
+                actionModifier = Modifier.focusRequester(emptyFocus),
                 message = "Create one for a series, a mood or a weekend. Add games from any game menu.",
                 actionLabel = "New collection",
                 onAction = { creating = true },
             )
         } else {
+            val autoFocus = rememberAutoFocus()
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(VelaTheme.dimens.cardWidth * 1.6f),
-                modifier = Modifier.fillMaxSize().focusRestorer().focusGroup(),
+                modifier = Modifier.fillMaxSize().focusRequester(autoFocus).focusRestorer().focusGroup(),
                 contentPadding = PaddingValues(start = VelaTheme.dimens.screenPadding, end = VelaTheme.dimens.screenPadding, top = focusBleed(), bottom = 90.dp),
                 horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
                 verticalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),

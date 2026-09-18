@@ -27,6 +27,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.onFocusChanged
+import io.vela.core.ui.components.rememberAutoFocus
+import io.vela.core.ui.components.velaFocusable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -150,13 +157,18 @@ fun SearchScreen(
     val colors = VelaTheme.colors
     val fieldFocus = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
+    // The text field only takes focus (and shows the keyboard) after an explicit press.
+    var editing by remember { mutableStateOf(false) }
+    val fieldInteraction = remember { MutableInteractionSource() }
+    val wrapperFocus = rememberAutoFocus()
 
-    LaunchedEffect(Unit) { onBackgroundArtwork(null, 0xFF7FD7FF); runCatching { fieldFocus.requestFocus() } }
+    LaunchedEffect(Unit) { onBackgroundArtwork(null, 0xFF7FD7FF) }
+    LaunchedEffect(editing) { if (editing) runCatching { fieldFocus.requestFocus() } }
 
     GamepadHandler { button ->
         when (button) {
             GamepadButton.Y -> { viewModel.cyclePlatformFilter(); true }
-            GamepadButton.X -> { runCatching { fieldFocus.requestFocus() }; true }
+            GamepadButton.X -> { editing = true; true }
             else -> false
         }
     }
@@ -170,6 +182,8 @@ fun SearchScreen(
             Row(
                 Modifier
                     .weight(1f)
+                    .focusRequester(wrapperFocus)
+                    .velaFocusable(VelaTheme.shapes.chip, fieldInteraction, onClick = { editing = true }, scaleOverride = 1.01f)
                     .clip(VelaTheme.shapes.chip)
                     .background(colors.surfaceElevated.copy(alpha = 0.9f))
                     .padding(horizontal = 18.dp, vertical = 14.dp),
@@ -187,7 +201,11 @@ fun SearchScreen(
                         cursorBrush = SolidColor(colors.accent),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(onSearch = { focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Down) }),
-                        modifier = Modifier.fillMaxWidth().focusRequester(fieldFocus),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(fieldFocus)
+                            .focusProperties { canFocus = editing }
+                            .onFocusChanged { if (!it.isFocused) editing = false },
                     )
                 }
             }
@@ -210,7 +228,7 @@ fun SearchScreen(
             )
         }
         LazyVerticalGrid(
-            columns = GridCells.Fixed(VelaTheme.dimens.gridColumns.takeIf { it > 0 } ?: 6),
+            columns = VelaTheme.dimens.gridColumns.let { if (it > 0) GridCells.Fixed(it) else GridCells.Adaptive(VelaTheme.dimens.cardWidth) },
             modifier = Modifier.fillMaxSize().focusRestorer().focusGroup(),
             contentPadding = PaddingValues(start = VelaTheme.dimens.screenPadding, end = VelaTheme.dimens.screenPadding, top = focusBleed(), bottom = 90.dp),
             horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),

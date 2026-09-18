@@ -219,13 +219,14 @@ fun EmptyState(
     modifier: Modifier = Modifier,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
+    actionModifier: Modifier = Modifier,
 ) {
     Column(modifier.padding(VelaTheme.dimens.screenPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(title, style = VelaTheme.typography.title, color = VelaTheme.colors.onBackground)
         Text(message, style = VelaTheme.typography.body, color = VelaTheme.colors.muted, modifier = Modifier.fillMaxWidth(0.6f))
         if (actionLabel != null && onAction != null) {
             Spacer(Modifier.height(6.dp))
-            VelaButton(actionLabel, onAction, primary = true)
+            VelaButton(actionLabel, onAction, primary = true, modifier = actionModifier)
         }
     }
 }

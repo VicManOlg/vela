@@ -4,6 +4,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,7 +68,11 @@ fun TopBar(
         VelaMark()
         Spacer(Modifier.width(28.dp))
         if (dimens.showButtonHints) ShoulderHint("L1")
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             tabs.forEachIndexed { index, tab ->
                 TabChip(
                     label = tab.label,
@@ -77,7 +83,7 @@ fun TopBar(
             }
         }
         if (dimens.showButtonHints) ShoulderHint("R1")
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.width(16.dp))
         if (dimens.showBattery) BatteryIndicator()
         if (dimens.showClock) {
             Spacer(Modifier.width(18.dp))
@@ -103,11 +109,13 @@ private fun TabChip(label: String, selected: Boolean, onClick: () -> Unit, modif
                     else -> Color.Transparent
                 },
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 13.dp, vertical = 7.dp),
     ) {
         Text(
             label,
             style = VelaTheme.typography.bodyStrong,
+            maxLines = 1,
+            softWrap = false,
             color = if (selected) colors.background else colors.onBackground.copy(alpha = if (focused) 1f else 0.72f),
         )
     }
@@ -151,7 +159,7 @@ fun Clock() {
             delay(10_000)
         }
     }
-    Text(time, style = VelaTheme.typography.bodyStrong, color = VelaTheme.colors.onBackground)
+    Text(time, style = VelaTheme.typography.bodyStrong, color = VelaTheme.colors.onBackground, maxLines = 1, softWrap = false)
 }
 
 private fun formatTime(): String = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date())
@@ -192,7 +200,7 @@ fun BatteryIndicator() {
             )
         }
         Spacer(Modifier.width(6.dp))
-        Text(if (charging) "$level% ⚡" else "$level%", style = VelaTheme.typography.caption, color = colors.muted)
+        Text(if (charging) "$level% ⚡" else "$level%", style = VelaTheme.typography.caption, color = colors.muted, maxLines = 1, softWrap = false)
     }
 }
 

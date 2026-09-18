@@ -15,7 +15,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -84,7 +87,8 @@ class SetupViewModel @Inject constructor(
         val names = listOf("ROMs", "Roms", "roms", "Games", "Emulation/roms", "Emulation", "RetroArch/roms")
         val internal = names.map { File(ext, it) }
         val sd = File("/storage").listFiles()?.filter { it.isDirectory && it.name != "emulated" && it.name != "self" }.orEmpty()
-        return (internal + sd.flatMap { r -> names.map { File(r, it) } + r }).filter { it.isDirectory && it.canRead() }.distinct()
+        return (internal + sd.flatMap { r -> names.map { File(r, it) } + r }).filter { it.isDirectory && it.canRead() }
+            .distinctBy { it.absolutePath.lowercase() }
     }
 
     fun addPath(path: String) = viewModelScope.launch {
@@ -122,13 +126,15 @@ fun SetupScreen(onDone: () -> Unit, modifier: Modifier = Modifier, viewModel: Se
     val step by viewModel.step.collectAsStateWithLifecycle()
     val colors = VelaTheme.colors
     Box(modifier.fillMaxSize().padding(VelaTheme.dimens.screenPadding), contentAlignment = Alignment.Center) {
-        GlassPanel(Modifier.fillMaxWidth(0.72f)) {
-            when (step) {
+        GlassPanel(Modifier.fillMaxWidth(0.72f).fillMaxHeight(0.92f)) {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                when (step) {
                 SetupStep.WELCOME -> Welcome { viewModel.step.value = SetupStep.STORAGE }
                 SetupStep.STORAGE -> Storage(viewModel) { viewModel.step.value = SetupStep.FOLDERS }
                 SetupStep.FOLDERS -> Folders(viewModel) { viewModel.startScan() }
                 SetupStep.SCANNING -> Scanning(viewModel)
                 SetupStep.DONE -> Done(viewModel, onDone)
+                }
             }
         }
         Text("Vela", style = VelaTheme.typography.caption, color = colors.muted, modifier = Modifier.align(Alignment.BottomEnd))

@@ -11,6 +11,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -126,9 +127,16 @@ object VelaTheme {
     val effects: VelaEffects @Composable @ReadOnlyComposable get() = LocalVelaTheme.current.effects
 }
 
+/** Height the theme's default sizes were designed for (a 1080p 16:9 handheld at ~2x density). */
+private const val REFERENCE_HEIGHT_DP = 540f
+
 @Composable
 fun VelaTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = false, content: @Composable () -> Unit) {
-    val values = remember(spec, uiScale, reduceMotion) { resolveTheme(spec, uiScale, reduceMotion) }
+    // Fit-to-screen: shorter screens get proportionally smaller cards and type so rails still fit.
+    val heightDp = LocalConfiguration.current.screenHeightDp.toFloat()
+    val fit = (heightDp / REFERENCE_HEIGHT_DP).coerceIn(0.72f, 1.15f)
+    val effectiveScale = uiScale * fit
+    val values = remember(spec, effectiveScale, reduceMotion) { resolveTheme(spec, effectiveScale, reduceMotion) }
     CompositionLocalProvider(LocalVelaTheme provides values) {
         MaterialTheme(colorScheme = values.materialScheme(), content = content)
     }
@@ -178,9 +186,9 @@ fun resolveTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = f
         cardWidth = (l.cardWidth * s).dp,
         boxArtAspect = l.boxArtAspect,
         heroAspect = l.heroAspect,
-        railSpacing = l.railSpacing.dp,
-        sectionSpacing = l.sectionSpacing.dp,
-        screenPadding = l.screenPadding.dp,
+        railSpacing = (l.railSpacing * s).dp,
+        sectionSpacing = (l.sectionSpacing * s).dp,
+        screenPadding = (l.screenPadding * s).dp,
         gridColumns = l.gridColumns,
         showButtonHints = l.showButtonHints,
         showClock = l.showClock,
