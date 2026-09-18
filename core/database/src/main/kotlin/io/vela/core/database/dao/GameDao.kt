@@ -187,6 +187,9 @@ interface GameDao {
     )
     suspend fun duplicatesOf(duplicateKey: String, exceptId: Long): List<GameSummaryView>
 
+    @Query("SELECT id FROM game_summaries WHERE boxArt IS NULL AND hidden = 0 AND present = 1 AND kind = 'ROM' ORDER BY lastPlayedAt DESC, addedAt DESC")
+    suspend fun idsMissingBoxArt(): List<Long>
+
     @Query("SELECT DISTINCT genres FROM game_metadata WHERE genres IS NOT NULL")
     suspend fun allGenreStrings(): List<String>
 
