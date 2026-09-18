@@ -1,0 +1,314 @@
+package io.vela.core.ui.components
+
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.size.Precision
+import io.vela.core.ui.image.artworkModel
+import io.vela.core.ui.theme.VelaTheme
+
+/** The Vela sail: a tall right triangle with a soft foot. */
+object SailShape : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val p = Path().apply {
+            moveTo(size.width * 0.55f, 0f)
+            lineTo(size.width * 0.55f, size.height * 0.82f)
+            lineTo(0f, size.height * 0.82f)
+            close()
+            moveTo(size.width * 0.66f, size.height * 0.15f)
+            lineTo(size.width, size.height * 0.82f)
+            lineTo(size.width * 0.66f, size.height * 0.82f)
+            close()
+            moveTo(size.width * 0.05f, size.height * 0.9f)
+            lineTo(size.width * 0.95f, size.height * 0.9f)
+            lineTo(size.width * 0.85f, size.height)
+            lineTo(size.width * 0.15f, size.height)
+            close()
+        }
+        return Outline.Generic(p)
+    }
+}
+
+/**
+ * Full-screen background driven by the focused item's artwork: blurred, dimmed, slightly
+ * saturated, cross-faded when the art changes. Falls back to a platform-tinted gradient.
+ */
+@Composable
+fun DynamicBackground(
+    artwork: String?,
+    accent: Color,
+    modifier: Modifier = Modifier,
+) {
+    val style = VelaTheme.background
+    val colors = VelaTheme.colors
+    val motion = VelaTheme.motion
+    val context = LocalContext.current
+    Box(modifier.fillMaxSize().background(style.staticColor ?: colors.background)) {
+        if (style.mode != "static") {
+            Crossfade(targetState = artwork to accent, animationSpec = tween(motion.backgroundCrossfadeMs), label = "background") { (art, tint) ->
+                Box(Modifier.fillMaxSize()) {
+                    if (art != null && style.mode == "artwork") {
+                        val request = ImageRequest.Builder(context)
+                            .data(artworkModel(art))
+                            .size(480)
+                            .precision(Precision.INEXACT)
+                            .crossfade(false)
+                            .build()
+                        AsyncImage(
+                            model = request,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(style.saturation) }),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .blur(style.blurRadius),
+                        )
+                    } else {
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.radialGradient(
+                                        listOf(tint.copy(alpha = 0.55f), colors.background),
+                                        center = androidx.compose.ui.geometry.Offset(0.25f, 0.1f).let { androidx.compose.ui.geometry.Offset(it.x * 2000f, it.y * 1200f) },
+                                        radius = 1600f,
+                                    ),
+                                ),
+                        )
+                    }
+                }
+            }
+        }
+        // Scrim: darker at the top-left where text lives, transparent to the right where art shows.
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(colors.background.copy(alpha = style.dim)),
+        )
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Brush.horizontalGradient(listOf(colors.scrim, Color.Transparent))),
+        )
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(Brush.verticalGradient(listOf(Color.Transparent, colors.background.copy(alpha = 0.9f)), startY = 900f)),
+        )
+    }
+}
+
+/** Translucent panel used for detail blocks and dialogs. */
+@Composable
+fun GlassPanel(
+    modifier: Modifier = Modifier,
+    padding: PaddingValues = PaddingValues(20.dp),
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val colors = VelaTheme.colors
+    val effects = VelaTheme.effects
+    val shape = VelaTheme.shapes.panel
+    Box(
+        modifier
+            .clip(shape)
+            .background(colors.surface.copy(alpha = if (effects.glassPanels) effects.panelAlpha else 1f))
+            .padding(padding),
+        content = content,
+    )
+}
+
+/** Primary/secondary action button, gamepad-focusable. */
+@Composable
+fun VelaButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    primary: Boolean = false,
+    icon: ImageVector? = null,
+    enabled: Boolean = true,
+    onFocused: (() -> Unit)? = null,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+) {
+    val colors = VelaTheme.colors
+    val shape = VelaTheme.shapes.chip
+    val focused by rememberFocusState(interactionSource)
+    val bg = when {
+        primary -> colors.onBackground
+        focused -> colors.surfaceElevated
+        else -> colors.onBackground.copy(alpha = 0.10f)
+    }
+    val fg = if (primary) colors.background else colors.onBackground
+    Row(
+        modifier
+            .velaFocusable(shape, interactionSource, onClick, onFocused = onFocused, scaleOverride = 1.05f, enabled = enabled)
+            .clip(shape)
+            .background(bg.copy(alpha = if (enabled) bg.alpha else bg.alpha * 0.4f))
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) {
+            Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(text, style = VelaTheme.typography.bodyStrong, color = fg.copy(alpha = if (enabled) 1f else 0.5f), maxLines = 1)
+    }
+}
+
+/** Small metadata pill: "1995", "RPG", "2 players". */
+@Composable
+fun Pill(text: String, modifier: Modifier = Modifier, tint: Color = VelaTheme.colors.onBackground) {
+    Box(
+        modifier
+            .clip(VelaTheme.shapes.chip)
+            .background(tint.copy(alpha = 0.12f))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+    ) {
+        Text(text, style = VelaTheme.typography.caption, color = tint.copy(alpha = 0.9f), maxLines = 1)
+    }
+}
+
+/** Empty state that says what to do next, with an optional action. */
+@Composable
+fun EmptyState(
+    title: String,
+    message: String,
+    modifier: Modifier = Modifier,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
+) {
+    Column(modifier.padding(VelaTheme.dimens.screenPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(title, style = VelaTheme.typography.title, color = VelaTheme.colors.onBackground)
+        Text(message, style = VelaTheme.typography.body, color = VelaTheme.colors.muted, modifier = Modifier.fillMaxWidth(0.6f))
+        if (actionLabel != null && onAction != null) {
+            Spacer(Modifier.height(6.dp))
+            VelaButton(actionLabel, onAction, primary = true)
+        }
+    }
+}
+
+/**
+ * Settings/menu row: label + optional description on the left, value or switch on the right.
+ * Clicking toggles or opens; the row is one focus target.
+ */
+@Composable
+fun SettingRow(
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    value: String? = null,
+    checked: Boolean? = null,
+    icon: ImageVector? = null,
+    enabled: Boolean = true,
+    danger: Boolean = false,
+    onFocused: (() -> Unit)? = null,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+) {
+    val colors = VelaTheme.colors
+    val shape = RoundedCornerShape(12.dp)
+    val focused by rememberFocusState(interactionSource)
+    Row(
+        modifier
+            .fillMaxWidth()
+            .velaFocusable(shape, interactionSource, onClick, onFocused = onFocused, scaleOverride = 1.01f, enabled = enabled)
+            .clip(shape)
+            .background(if (focused) colors.surfaceElevated.copy(alpha = 0.9f) else Color.Transparent)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) {
+            Icon(icon, contentDescription = null, tint = if (danger) colors.danger else colors.muted, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(14.dp))
+        }
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                style = VelaTheme.typography.body,
+                color = when {
+                    !enabled -> colors.muted
+                    danger -> colors.danger
+                    else -> colors.onBackground
+                },
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (description != null) {
+                Text(description, style = VelaTheme.typography.caption, color = colors.muted, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        if (value != null) {
+            Spacer(Modifier.width(16.dp))
+            Text(value, style = VelaTheme.typography.bodyStrong, color = colors.accent, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(0.35f), textAlign = androidx.compose.ui.text.style.TextAlign.End)
+        }
+        if (checked != null) {
+            Spacer(Modifier.width(16.dp))
+            Switch(
+                checked = checked,
+                onCheckedChange = null,
+                enabled = enabled,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = colors.background,
+                    checkedTrackColor = colors.accent,
+                    uncheckedThumbColor = colors.muted,
+                    uncheckedTrackColor = colors.surfaceElevated,
+                    uncheckedBorderColor = colors.muted.copy(alpha = 0.4f),
+                ),
+            )
+        }
+    }
+}
+
+/** Section heading inside settings pages and detail panels. */
+@Composable
+fun SectionHeader(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text,
+        style = VelaTheme.typography.label,
+        color = VelaTheme.colors.muted,
+        modifier = modifier.padding(start = 16.dp, top = 18.dp, bottom = 6.dp),
+    )
+}

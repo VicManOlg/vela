@@ -49,7 +49,7 @@ data class ThemeTypography(
     val bodySize: Float = 15f,
     val labelSize: Float = 12f,
     val letterSpacingDisplay: Float = -0.02f,
-    val allCapsLabels: Boolean = true,
+    val allCapsLabels: Boolean = false,
 )
 
 @Serializable

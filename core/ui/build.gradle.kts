@@ -12,4 +12,5 @@ dependencies {
     api(libs.coil.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
 }
