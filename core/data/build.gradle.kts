@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.vela.android.library)
     alias(libs.plugins.vela.android.hilt)
-
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
@@ -15,4 +15,5 @@ dependencies {
     implementation(project(":core:scraper"))
     implementation(project(":core:apps"))
     implementation(libs.androidx.paging.runtime)
+    implementation(libs.kotlinx.serialization.json)
 }
