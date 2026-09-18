@@ -1,0 +1,258 @@
+package io.vela.feature.home
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.vela.core.model.CollectionId
+import io.vela.core.model.GameId
+import io.vela.core.model.GameSummary
+import io.vela.core.model.HomeRail
+import io.vela.core.model.PlatformId
+import io.vela.core.ui.components.CollectionTile
+import io.vela.core.ui.components.EmptyState
+import io.vela.core.ui.components.GameCard
+import io.vela.core.ui.components.GameMenuCallbacks
+import io.vela.core.ui.components.GameMenuHost
+import io.vela.core.ui.components.HeroCard
+import io.vela.core.ui.components.PlatformTile
+import io.vela.core.ui.components.Rail
+import io.vela.core.ui.components.color
+import io.vela.core.ui.components.formatLastPlayed
+import io.vela.core.ui.input.GamepadButton
+import io.vela.core.ui.input.GamepadHandler
+import io.vela.core.ui.theme.VelaTheme
+
+/** Navigation the Home feature can request; the app module wires these to routes. */
+class HomeNavigation(
+    val openGame: (GameId) -> Unit,
+    val openPlatform: (PlatformId) -> Unit,
+    val openCollection: (CollectionId) -> Unit,
+    val openAndroid: () -> Unit,
+    val openLibrary: () -> Unit,
+    val openSettings: () -> Unit,
+)
+
+/**
+ * Home: a spotlight header that follows focus, then the rails the user enabled. The whole
+ * screen is one vertical list so D-pad down/up walks rails naturally.
+ */
+@Composable
+fun HomeScreen(
+    navigation: HomeNavigation,
+    onSpotlightChanged: (Spotlight?) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: HomeViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val spotlight by viewModel.spotlight.collectAsStateWithLifecycle()
+    val menuState by viewModel.menuState.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+    val firstRailFocus = remember { FocusRequester() }
+
+    LaunchedEffect(spotlight) { onSpotlightChanged(spotlight) }
+
+    GamepadHandler { button ->
+        when (button) {
+            GamepadButton.X -> {
+                val id = spotlight?.gameId
+                val game = id?.let { gid -> state.allGames().firstOrNull { it.id.value == gid } }
+                if (game != null) viewModel.openMenu(game)
+                game != null
+            }
+            else -> false
+        }
+    }
+
+    Box(modifier.fillMaxSize()) {
+        if (state.isEmpty && state.android.isEmpty()) {
+            EmptyState(
+                title = "Your library is empty",
+                message = "Add the folders where your games live and Vela will find them, sort them by system and fetch artwork.",
+                actionLabel = "Open settings",
+                onAction = navigation.openSettings,
+                modifier = Modifier.padding(top = 40.dp),
+            )
+            return@Box
+        }
+
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 80.dp),
+            verticalArrangement = Arrangement.spacedBy(VelaTheme.dimens.sectionSpacing - 12.dp),
+        ) {
+            item(key = "spotlight") { SpotlightHeader(spotlight) }
+
+            state.rails.forEachIndexed { index, rail ->
+                val focusModifier = if (index == 0) firstRailFocus else null
+                when (rail) {
+                    HomeRail.CONTINUE_PLAYING -> if (state.continuePlaying.isNotEmpty()) {
+                        item(key = rail.name) {
+                            Rail("Continue playing", focusRequester = focusModifier) {
+                                items(state.continuePlaying, key = { it.id.value }) { game ->
+                                    val accent = state.platformOf(game)?.platform?.color() ?: VelaTheme.colors.accentSecondary
+                                    HeroCard(
+                                        game = game,
+                                        accent = accent,
+                                        subtitle = formatLastPlayed(game.lastPlayedAt),
+                                        onClick = { viewModel.launch(game) },
+                                        onLongPress = { viewModel.openMenu(game) },
+                                        onFocused = { viewModel.spotlightGame(game) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    HomeRail.RECENT -> gameRail(rail.name, "Recent", state.recent, state, viewModel, navigation)
+                    HomeRail.FAVORITES -> gameRail(rail.name, "Favorites", state.favorites, state, viewModel, navigation)
+                    HomeRail.RECOMMENDED -> gameRail(rail.name, "Because you play", state.recommended, state, viewModel, navigation, subtitle = "Unplayed games from the systems you use most")
+                    HomeRail.RECENTLY_ADDED -> gameRail(rail.name, "Recently added", state.recentlyAdded, state, viewModel, navigation)
+                    HomeRail.ANDROID -> gameRail(rail.name, "Android games", state.android, state, viewModel, navigation, accentOverride = Color(0xFF3DDC84))
+                    HomeRail.PLATFORMS -> if (state.platforms.isNotEmpty()) {
+                        item(key = rail.name) {
+                            Rail("Systems", subtitle = "${state.platforms.size} systems, ${state.totalGames} games") {
+                                items(state.platforms, key = { it.id.value }) { entry ->
+                                    PlatformTile(
+                                        name = entry.platform.manufacturer,
+                                        shortName = entry.displayName,
+                                        count = entry.gameCount,
+                                        accent = entry.platform.color(),
+                                        onClick = { navigation.openPlatform(entry.id) },
+                                        onFocused = { viewModel.spotlightPlatform(entry) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    HomeRail.COLLECTIONS -> if (state.collections.isNotEmpty()) {
+                        item(key = rail.name) {
+                            Rail("Collections") {
+                                items(state.collections, key = { it.id.value }) { collection ->
+                                    CollectionTile(
+                                        name = collection.name,
+                                        count = collection.gameCount,
+                                        coverArt = collection.coverArt,
+                                        accent = collection.accentColor?.let(::Color) ?: VelaTheme.colors.accent,
+                                        onClick = { navigation.openCollection(collection.id) },
+                                        onFocused = { viewModel.spotlightCollection(collection) },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    GameMenuHost(
+        state = menuState,
+        callbacks = GameMenuCallbacks(
+            onAction = { action -> viewModel.onMenuAction(action) { navigation.openGame(it.id) } },
+            onDismiss = viewModel::dismissMenu,
+            onToggleCollection = { viewModel.toggleCollection(it) },
+            onStartNewCollection = viewModel::startNewCollection,
+            onCreateCollection = { viewModel.createCollection(it) },
+            onLaunchWith = { option, remember -> viewModel.launchWith(option, remember) },
+            onSetCompletion = { viewModel.setCompletion(it) },
+            onConfirmHide = viewModel::confirmHide,
+        ),
+    )
+}
+
+private fun androidx.compose.foundation.lazy.LazyListScope.gameRail(
+    key: String,
+    title: String,
+    games: List<GameSummary>,
+    state: HomeUiState,
+    viewModel: HomeViewModel,
+    navigation: HomeNavigation,
+    subtitle: String? = null,
+    accentOverride: Color? = null,
+) {
+    if (games.isEmpty()) return
+    item(key = key) {
+        Rail(title, subtitle = subtitle) {
+            items(games, key = { it.id.value }) { game ->
+                val accent = accentOverride ?: state.platformOf(game)?.platform?.color() ?: VelaTheme.colors.accentSecondary
+                GameCard(
+                    game = game,
+                    accent = accent,
+                    onClick = { viewModel.launch(game) },
+                    onLongPress = { viewModel.openMenu(game) },
+                    onFocused = { viewModel.spotlightGame(game) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpotlightHeader(spotlight: Spotlight?) {
+    val colors = VelaTheme.colors
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = VelaTheme.dimens.screenPadding)
+            .height(118.dp),
+        verticalArrangement = Arrangement.Bottom,
+    ) {
+        AnimatedContent(
+            targetState = spotlight,
+            transitionSpec = {
+                (fadeIn() + slideInVertically { it / 6 }) togetherWith (fadeOut() + slideOutVertically { -it / 6 })
+            },
+            label = "spotlight",
+        ) { s ->
+            Column {
+                Text(
+                    s?.title ?: "Welcome back",
+                    style = VelaTheme.typography.display,
+                    color = colors.onBackground,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth(0.7f),
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    s?.subtitle ?: "Pick up where you left off",
+                    style = VelaTheme.typography.body,
+                    color = colors.muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+private fun HomeUiState.allGames(): List<GameSummary> =
+    continuePlaying + recent + favorites + android + recommended + recentlyAdded

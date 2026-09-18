@@ -45,7 +45,8 @@ fun GameCard(
     accent: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    width: Dp = VelaTheme.dimens.cardWidth,
+    /** Fixed width for rails; null lets the parent (a grid cell) decide. */
+    width: Dp? = VelaTheme.dimens.cardWidth,
     onLongPress: (() -> Unit)? = null,
     onFocused: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
@@ -58,7 +59,7 @@ fun GameCard(
 
     Box(
         modifier
-            .width(width)
+            .then(if (width != null) Modifier.width(width) else Modifier)
             .aspectRatio(VelaTheme.dimens.boxArtAspect)
             .velaFocusable(shape, interactionSource, onClick, onLongPress, onFocused)
             .clip(shape)
@@ -208,7 +209,7 @@ fun PlatformTile(
     accent: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    width: Dp = VelaTheme.dimens.cardWidth * 1.35f,
+    width: Dp? = VelaTheme.dimens.cardWidth * 1.35f,
     onFocused: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
@@ -217,7 +218,7 @@ fun PlatformTile(
     val focused by rememberFocusState(interactionSource)
     Box(
         modifier
-            .width(width)
+            .then(if (width != null) Modifier.width(width) else Modifier)
             .aspectRatio(1.6f)
             .velaFocusable(shape, interactionSource, onClick, onFocused = onFocused, scaleOverride = 1.05f)
             .clip(shape)
@@ -237,7 +238,7 @@ fun PlatformTile(
                 Text(shortName, style = VelaTheme.typography.title, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(name, style = VelaTheme.typography.caption, color = colors.onBackground.copy(alpha = 0.75f), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            Text("$count", style = VelaTheme.typography.label, color = colors.onBackground.copy(alpha = 0.85f))
+            if (count >= 0) Text("$count", style = VelaTheme.typography.label, color = colors.onBackground.copy(alpha = 0.85f))
         }
     }
 }
@@ -251,7 +252,7 @@ fun CollectionTile(
     accent: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    width: Dp = VelaTheme.dimens.cardWidth * 1.6f,
+    width: Dp? = VelaTheme.dimens.cardWidth * 1.6f,
     onLongPress: (() -> Unit)? = null,
     onFocused: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
@@ -260,7 +261,7 @@ fun CollectionTile(
     val colors = VelaTheme.colors
     Row(
         modifier
-            .width(width)
+            .then(if (width != null) Modifier.width(width) else Modifier)
             .aspectRatio(2.2f)
             .velaFocusable(shape, interactionSource, onClick, onLongPress, onFocused, scaleOverride = 1.05f)
             .clip(shape)
