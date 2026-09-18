@@ -14,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
@@ -129,4 +132,63 @@ class AppIconFetcher(private val context: Context, private val packageName: Stri
 @Composable
 fun PainterImage(painter: Painter, modifier: Modifier = Modifier, contentScale: ContentScale = ContentScale.Fit) {
     Image(painter = painter, contentDescription = null, modifier = modifier, contentScale = contentScale)
+}
+
+
+/**
+ * Box art that is never cropped: the image is fitted inside the card and the empty bands are
+ * filled with a blurred, dimmed copy of the same art, so landscape boxes (SNES, N64) and
+ * portrait boxes (PS1, GBA) share one card size without looking cut.
+ */
+@Composable
+fun FittedArtwork(
+    model: Any?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    accent: Color = VelaTheme.colors.accentSecondary,
+    placeholder: (@Composable () -> Unit)? = null,
+) {
+    val context = LocalContext.current
+    val request = ImageRequest.Builder(context)
+        .data(model)
+        .crossfade(VelaTheme.motion.transitionDurationMs)
+        .precision(Precision.INEXACT)
+        .build()
+    SubcomposeAsyncImage(
+        model = request,
+        contentDescription = contentDescription,
+        modifier = modifier,
+        contentScale = ContentScale.Fit,
+    ) {
+        val state = painter.state.collectAsState().value
+        if (state is AsyncImagePainter.State.Success) {
+            val intrinsic = state.painter.intrinsicSize
+            val portraitish = intrinsic.height >= intrinsic.width * 1.25f
+            Box(Modifier.fillMaxSize()) {
+                if (!portraitish) {
+                    // Fill behind with a soft copy, then the real art fitted on top.
+                    Image(
+                        painter = state.painter,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .blur(22.dp)
+                            .alpha(0.7f),
+                    )
+                    Box(Modifier.fillMaxSize().background(VelaTheme.colors.background.copy(alpha = 0.25f)))
+                }
+                Image(
+                    painter = state.painter,
+                    contentDescription = contentDescription,
+                    contentScale = if (portraitish) ContentScale.Crop else ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        } else if (placeholder != null) {
+            placeholder()
+        } else {
+            ArtPlaceholder(accent)
+        }
+    }
 }

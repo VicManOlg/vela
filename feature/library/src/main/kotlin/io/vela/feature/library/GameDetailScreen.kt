@@ -114,14 +114,17 @@ fun GameDetailScreen(
         ) {
             val model = game.artwork[ArtworkType.BOX_FRONT]?.let(::artworkModel)
                 ?: (game.location as? io.vela.core.model.GameLocation.AndroidApp)?.packageName?.let(::appIconModel)
-            VelaImage(
-                model = model,
-                contentDescription = game.displayTitle,
-                modifier = Modifier.fillMaxSize(),
-                accent = accent,
-                contentScale = if (isApp && game.artwork[ArtworkType.BOX_FRONT] == null) ContentScale.Fit else ContentScale.Crop,
-                placeholder = { io.vela.core.ui.components.TitlePlaceholder(game.displayTitle, accent) },
-            )
+            if (isApp && game.artwork[ArtworkType.BOX_FRONT] == null) {
+                VelaImage(model = model, contentDescription = game.displayTitle, modifier = Modifier.fillMaxSize().padding(24.dp), accent = accent, contentScale = ContentScale.Fit)
+            } else {
+                io.vela.core.ui.image.FittedArtwork(
+                    model = model,
+                    contentDescription = game.displayTitle,
+                    modifier = Modifier.fillMaxSize(),
+                    accent = accent,
+                    placeholder = { io.vela.core.ui.components.TitlePlaceholder(game.displayTitle, accent) },
+                )
+            }
         }
         Spacer(Modifier.width(36.dp))
 

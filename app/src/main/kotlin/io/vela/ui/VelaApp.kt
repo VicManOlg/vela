@@ -100,16 +100,19 @@ fun VelaApp(gamepad: GamepadInputController, viewModel: AppViewModel = hiltViewM
                                 onBackgroundArtwork = viewModel::setBackdrop,
                                 modifier = Modifier.weight(1f),
                             )
+                            ButtonHints(listOf(ButtonHint(GamepadButton.A, "Play"), ButtonHint(GamepadButton.X, "Menu"), ButtonHint(GamepadButton.Y, "Sort"), ButtonHint(GamepadButton.B, "Back")), swapped = prefs.confirmButton == ConfirmButton.B)
                         }
-                        ButtonHintsOverlay(listOf(ButtonHint(GamepadButton.A, "Play"), ButtonHint(GamepadButton.X, "Menu"), ButtonHint(GamepadButton.Y, "Sort"), ButtonHint(GamepadButton.B, "Back")), prefs.confirmButton == ConfirmButton.B)
                     }
                     composable<GameDetailRoute> {
-                        GameDetailScreen(
-                            onBack = { navController.popBackStack() },
-                            onOpenGame = { navController.navigate(GameDetailRoute(it.value)) },
-                            onBackgroundArtwork = viewModel::setBackdrop,
-                        )
-                        ButtonHintsOverlay(listOf(ButtonHint(GamepadButton.A, "Select"), ButtonHint(GamepadButton.X, "Menu"), ButtonHint(GamepadButton.Y, "Favorite"), ButtonHint(GamepadButton.B, "Back")), prefs.confirmButton == ConfirmButton.B)
+                        Column(Modifier.fillMaxSize()) {
+                            GameDetailScreen(
+                                onBack = { navController.popBackStack() },
+                                onOpenGame = { navController.navigate(GameDetailRoute(it.value)) },
+                                onBackgroundArtwork = viewModel::setBackdrop,
+                                modifier = Modifier.weight(1f),
+                            )
+                            ButtonHints(listOf(ButtonHint(GamepadButton.A, "Select"), ButtonHint(GamepadButton.X, "Menu"), ButtonHint(GamepadButton.Y, "Favorite"), ButtonHint(GamepadButton.B, "Back")), swapped = prefs.confirmButton == ConfirmButton.B)
+                        }
                     }
                 }
                 MessageToast(viewModel)
@@ -175,13 +178,6 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
             },
             swapped = swapped,
         )
-    }
-}
-
-@Composable
-private fun ButtonHintsOverlay(hints: List<ButtonHint>, swapped: Boolean) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-        ButtonHints(hints, swapped = swapped)
     }
 }
 

@@ -9,6 +9,18 @@ search work across everything.
 Vela can be set as the Android home app. Android Settings and the stock launcher stay one press
 away from Settings > Advanced.
 
+## Screenshots
+
+Captured on an Android emulator with placeholder files named after No-Intro/Redump sets; artwork comes from libretro-thumbnails.
+
+| Home | Grid |
+|---|---|
+| ![Home](docs/screenshots/home.png) | ![Grid](docs/screenshots/grid.png) |
+
+| Detail | Settings |
+|---|---|
+| ![Detail](docs/screenshots/detail.png) | ![Settings](docs/screenshots/settings.png) |
+
 ## Status
 
 MVP: functional, tested on an emulator and designed for 16:9 handhelds.

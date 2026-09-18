@@ -15,3 +15,4 @@
 /keys/
 secrets.properties
 .kotlin/
+/dist

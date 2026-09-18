@@ -96,7 +96,7 @@ fun GameGridScreen(
                 .focusRequester(autoFocus)
                 .focusRestorer()
                 .focusGroup(),
-            contentPadding = PaddingValues(start = VelaTheme.dimens.screenPadding, end = VelaTheme.dimens.screenPadding, top = bleed, bottom = 90.dp),
+            contentPadding = PaddingValues(start = VelaTheme.dimens.screenPadding, end = VelaTheme.dimens.screenPadding, top = bleed, bottom = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
             verticalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing + 4.dp),
         ) {

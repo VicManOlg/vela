@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.vela.core.model.GameKind
 import io.vela.core.model.GameSummary
+import io.vela.core.ui.image.FittedArtwork
 import io.vela.core.ui.image.VelaImage
 import io.vela.core.ui.image.appIconModel
 import io.vela.core.ui.image.artworkModel
@@ -68,7 +69,7 @@ fun GameCard(
         if (isApp && game.boxArt == null) {
             AppIconTile(model, accent, game.title)
         } else {
-            VelaImage(
+            FittedArtwork(
                 model = model,
                 contentDescription = game.title,
                 modifier = Modifier.fillMaxSize(),
