@@ -16,6 +16,15 @@ enum class StorageMode {
 @Serializable
 enum class ConfirmButton { A, B }
 
+/** How a game list (platform, collection, favourites, all) is laid out. */
+@Serializable
+enum class LibraryView(val label: String, val description: String) {
+    GRID("Grid", "Box art cards"),
+    COMPACT("Compact grid", "Smaller cards, more per row"),
+    LIST("List", "Titles on the left, preview on the right"),
+    SHOWCASE("Showcase", "One row of large art"),
+}
+
 @Serializable
 enum class HomeRail { CONTINUE_PLAYING, RECENT, FAVORITES, PLATFORMS, COLLECTIONS, ANDROID, RECOMMENDED, RECENTLY_ADDED }
 
@@ -53,6 +62,7 @@ data class AppSettings(
     val showClock: Boolean = true,
     val showBattery: Boolean = true,
     val gridColumns: Int = 0,
+    val libraryView: LibraryView = LibraryView.GRID,
     val reduceMotion: Boolean = false,
     val uiScale: Float = 1f,
     // Android apps

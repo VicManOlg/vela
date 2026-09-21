@@ -39,6 +39,7 @@ import io.vela.core.data.repository.PlatformEntry
 import io.vela.core.model.AppSettings
 import io.vela.core.model.ConfirmButton
 import io.vela.core.model.LibrarySource
+import io.vela.core.model.LibraryView
 import io.vela.core.model.PlatformId
 import io.vela.core.model.PlatformKind
 import io.vela.core.model.PlayerId
@@ -403,6 +404,14 @@ private fun Scope.appearanceSection(vm: SettingsViewModel, settings: AppSettings
         if (picking) {
             VelaMenuDialog("Theme", vm.themes.themes.map { MenuOption(it.id, it.name, description = it.author.takeIf { a -> a.isNotBlank() }?.let { a -> "by $a" }, selected = it.id == settings.themeId) },
                 onSelect = { opt -> vm.update { it.copy(themeId = opt.id) }; picking = false }, onDismiss = { picking = false })
+        }
+    }
+    item {
+        var picking by remember { mutableStateOf(false) }
+        SettingRow("Library view", description = "Also changeable with Start inside any game list", value = settings.libraryView.label, onClick = { picking = true })
+        if (picking) {
+            VelaMenuDialog("Library view", LibraryView.entries.map { MenuOption(it.name, it.label, description = it.description, selected = it == settings.libraryView) },
+                onSelect = { opt -> vm.update { it.copy(libraryView = LibraryView.valueOf(opt.id)) }; picking = false }, onDismiss = { picking = false })
         }
     }
     item {

@@ -19,6 +19,7 @@ import io.vela.core.model.CompletionStatus
 import io.vela.core.model.GameMenuState
 import io.vela.core.model.GameSort
 import io.vela.core.model.GameSummary
+import io.vela.core.model.LibraryView
 import io.vela.core.model.LaunchOption
 import io.vela.core.model.PlatformId
 import io.vela.core.settings.SettingsRepository
@@ -48,7 +49,7 @@ class GameGridViewModel @Inject constructor(
     private val games: GameRepository,
     private val library: LibraryRepository,
     private val collections: CollectionRepository,
-    settings: SettingsRepository,
+    private val settings: SettingsRepository,
     private val actions: GameActions,
     val menu: GameMenuController,
 ) : ViewModel() {
@@ -93,6 +94,17 @@ class GameGridViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GameGridHeader(route.title ?: "", "", 0xFF7FD7FF, GameSort.TITLE, 0))
 
     val menuState: StateFlow<GameMenuState> = menu.state
+
+    /** Persisted globally so every list opens the way the user last chose. */
+    val view: StateFlow<LibraryView> = settings.settings.map { it.libraryView }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryView.GRID)
+
+    fun setView(v: LibraryView) = viewModelScope.launch { settings.update { it.copy(libraryView = v) } }
+
+    /** Favourites, collections and "All games" mix systems, so rows name the platform. */
+    val showsSeveralPlatforms: Boolean get() = platformId == null
+
+    fun platformLabel(game: GameSummary): String? = library.platform(game.platformId)?.shortName
 
     fun setSort(s: GameSort) { sort.value = s }
     fun cycleSort() {

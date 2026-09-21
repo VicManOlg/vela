@@ -101,7 +101,7 @@ fun VelaApp(gamepad: GamepadInputController, viewModel: AppViewModel = hiltViewM
                                 onBackgroundArtwork = viewModel::setBackdrop,
                                 modifier = Modifier.weight(1f),
                             )
-                            ButtonHints(listOf(ButtonHint(GamepadButton.A, "Play"), ButtonHint(GamepadButton.X, "Menu"), ButtonHint(GamepadButton.Y, "Sort"), ButtonHint(GamepadButton.B, "Back")), swapped = prefs.confirmButton == ConfirmButton.B)
+                            ButtonHints(listOf(ButtonHint(GamepadButton.A, "Play"), ButtonHint(GamepadButton.X, "Menu"), ButtonHint(GamepadButton.Y, "Sort"), ButtonHint(GamepadButton.START, "View"), ButtonHint(GamepadButton.B, "Back")), swapped = prefs.confirmButton == ConfirmButton.B)
                         }
                     }
                     composable<AndroidRoute> {
