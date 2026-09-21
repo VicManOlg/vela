@@ -41,6 +41,11 @@ import io.vela.core.ui.image.VelaImage
 import io.vela.core.ui.image.appIconModel
 import io.vela.core.ui.image.artworkModel
 import io.vela.core.ui.theme.VelaTheme
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 
 /** Portrait box-art card. Title appears only when there is no art, so grids stay clean. */
 @Composable
@@ -223,17 +228,24 @@ fun PlatformTile(
     val colors = VelaTheme.colors
     val iconStyle = VelaTheme.platformIcons
     val focused by rememberFocusState(interactionSource)
+    val phase by animateFloatAsState(if (focused) 1f else 0f, tween(if (focused) 700 else 400), label = "tileLight")
     Box(
         modifier
             .then(if (width != null) Modifier.width(width) else Modifier)
             .aspectRatio(1.6f)
             .velaFocusable(shape, interactionSource, onClick, onFocused = onFocused, scaleOverride = 1.05f)
             .clip(shape)
-            .background(
-                Brush.linearGradient(
-                    listOf(accent.copy(alpha = if (focused) 0.95f else 0.75f), accent.copy(alpha = 0.35f), colors.surfaceElevated),
-                ),
-            ),
+            .drawBehind {
+                // The accent light slides across the tile as it gains focus.
+                val shift = phase * size.width * 0.35f
+                drawRect(
+                    Brush.linearGradient(
+                        listOf(accent.copy(alpha = 0.75f + 0.2f * phase), accent.copy(alpha = 0.35f), colors.surfaceElevated),
+                        start = Offset(-shift, 0f),
+                        end = Offset(size.width - shift * 0.5f, size.height),
+                    ),
+                )
+            },
     ) {
         if (icon != null) {
             VelaImage(
@@ -244,7 +256,12 @@ fun PlatformTile(
                     .padding(top = 10.dp, end = 12.dp)
                     .fillMaxHeight(0.58f)
                     .aspectRatio(1f)
-                    .alpha(if (focused) 1f else iconStyle.alpha),
+                    .alpha(if (focused) 1f else iconStyle.alpha)
+                    .graphicsLayer {
+                        val grow = 1f + 0.08f * phase
+                        scaleX = grow
+                        scaleY = grow
+                    },
                 contentScale = ContentScale.Fit,
                 colorFilter = if (iconStyle.tint) ColorFilter.tint(colors.onBackground) else null,
                 placeholder = {},

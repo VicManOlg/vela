@@ -47,6 +47,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import io.vela.core.ui.components.rememberEntranceClock
+import io.vela.core.ui.components.staggeredEntrance
 
 /** Android shown as one more system: detected games plus pinned apps. */
 data class AndroidTile(val games: Int, val apps: Int, val accent: Long, val name: String) {
@@ -80,6 +83,7 @@ fun PlatformsScreen(
     val android by viewModel.android.collectAsStateWithLifecycle()
     var focusedName by remember { mutableStateOf<String?>(null) }
     val colors = VelaTheme.colors
+    val clock = rememberEntranceClock()
     val total = platforms.sumOf { it.gameCount }
 
     Column(modifier.fillMaxSize()) {
@@ -114,17 +118,17 @@ fun PlatformsScreen(
                 PlatformTile(
                     name = "Every system", shortName = "All games", count = total, accent = colors.accent,
                     onClick = onOpenAll, onFocused = { focusedName = "All games"; onBackgroundAccent(0xFF7FD7FF) }, width = null,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().staggeredEntrance(0, clock),
                 )
             }
             item(key = "favorites") {
                 PlatformTile(
                     name = "Your picks", shortName = "Favorites", count = -1, accent = colors.accentSecondary,
                     onClick = onOpenFavorites, onFocused = { focusedName = "Favorites"; onBackgroundAccent(0xFF3D7BFF) }, width = null,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().staggeredEntrance(1, clock),
                 )
             }
-            items(platforms, key = { it.id.value }) { entry ->
+            itemsIndexed(platforms, key = { _, it -> it.id.value }) { index, entry ->
                 PlatformTile(
                     name = entry.displayName,
                     shortName = entry.platform.shortName,
@@ -134,7 +138,7 @@ fun PlatformsScreen(
                     onClick = { onOpenPlatform(entry.id) },
                     onFocused = { focusedName = "${entry.platform.name}   ${entry.gameCount} games"; onBackgroundAccent(entry.platform.accentColor) },
                     width = null,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().staggeredEntrance(index + 2, clock),
                 )
             }
             item(key = "android") {
@@ -147,7 +151,7 @@ fun PlatformsScreen(
                     iconVector = Icons.Rounded.Android,
                     onFocused = { focusedName = "Android   ${android.games} games   ${android.apps} apps"; onBackgroundAccent(android.accent) },
                     width = null,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().staggeredEntrance(platforms.size + 2, clock),
                 )
             }
         }

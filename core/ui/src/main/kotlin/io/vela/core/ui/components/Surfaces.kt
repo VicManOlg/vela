@@ -50,6 +50,7 @@ import coil3.request.crossfade
 import coil3.size.Precision
 import io.vela.core.ui.image.artworkModel
 import io.vela.core.ui.theme.VelaTheme
+import androidx.compose.ui.graphics.graphicsLayer
 
 /** The Vela sail: a tall right triangle with a soft foot. */
 object SailShape : Shape {
@@ -74,8 +75,9 @@ object SailShape : Shape {
 }
 
 /**
- * Full-screen background driven by the focused item's artwork: blurred, dimmed, slightly
- * saturated, cross-faded when the art changes. Falls back to a platform-tinted gradient.
+ * Full-screen background driven by the focused item's artwork. Mode `artwork` blurs it heavily;
+ * `hero` shows the scene almost sharp with a slow Ken Burns drift; both dim, saturate and
+ * cross-fade when the art changes. Falls back to a platform-tinted gradient.
  */
 @Composable
 fun DynamicBackground(
@@ -91,10 +93,12 @@ fun DynamicBackground(
         if (style.mode != "static") {
             Crossfade(targetState = artwork to accent, animationSpec = tween(motion.backgroundCrossfadeMs), label = "background") { (art, tint) ->
                 Box(Modifier.fillMaxSize()) {
-                    if (art != null && style.mode == "artwork") {
+                    if (art != null && (style.mode == "artwork" || style.mode == "hero")) {
+                        val hero = style.mode == "hero"
+                        val drift by rememberDrift(enabled = hero && !motion.reduceMotion)
                         val request = ImageRequest.Builder(context)
                             .data(artworkModel(art))
-                            .size(480)
+                            .size(if (hero) 1280 else 480)
                             .precision(Precision.INEXACT)
                             .crossfade(false)
                             .build()
@@ -105,7 +109,16 @@ fun DynamicBackground(
                             colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(style.saturation) }),
                             modifier = Modifier
                                 .fillMaxSize()
-                                .blur(style.blurRadius),
+                                .graphicsLayer {
+                                    if (hero) {
+                                        // Ken Burns: slow zoom plus sideways drift so the scene never sits still.
+                                        val zoom = 1.06f + 0.06f * drift
+                                        scaleX = zoom
+                                        scaleY = zoom
+                                        translationX = (drift - 0.5f) * size.width * 0.04f
+                                    }
+                                }
+                                .then(if (style.blurRadius > 0.dp) Modifier.blur(style.blurRadius) else Modifier),
                         )
                     } else {
                         Box(

@@ -55,6 +55,11 @@ import io.vela.core.ui.image.artworkModel
 import io.vela.core.ui.input.GamepadButton
 import io.vela.core.ui.input.GamepadHandler
 import io.vela.core.ui.theme.VelaTheme
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 
 /**
  * Game detail: art on the left, title/logo and facts on the right, actions in a row, then the
@@ -99,6 +104,12 @@ fun GameDetailScreen(
     val meta = game.metadata
     val isApp = game.kind == GameKind.ANDROID_APP
     val padding = VelaTheme.dimens.screenPadding
+    val motion = VelaTheme.motion
+    val entrance = remember { Animatable(0f) }
+    val slide = with(LocalDensity.current) { 32.dp.toPx() }
+    LaunchedEffect(game.id) {
+        if (motion.reduceMotion) entrance.snapTo(1f) else { entrance.snapTo(0f); entrance.animateTo(1f, tween(motion.transitionDurationMs + 160, easing = FastOutSlowInEasing)) }
+    }
 
     Row(
         modifier
@@ -110,6 +121,12 @@ fun GameDetailScreen(
             Modifier
                 .fillMaxHeight(0.78f)
                 .aspectRatio(if (isApp && game.artwork[ArtworkType.BOX_FRONT] == null) 1f else VelaTheme.dimens.boxArtAspect)
+                .graphicsLayer {
+                    val grow = 0.94f + 0.06f * entrance.value
+                    scaleX = grow
+                    scaleY = grow
+                    alpha = entrance.value
+                }
                 .clip(VelaTheme.shapes.tile),
         ) {
             val model = game.artwork[ArtworkType.BOX_FRONT]?.let(::artworkModel)
@@ -133,6 +150,10 @@ fun GameDetailScreen(
             Modifier
                 .weight(1f)
                 .fillMaxHeight()
+                .graphicsLayer {
+                    translationX = (1f - entrance.value) * slide
+                    alpha = entrance.value
+                }
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 80.dp),
         ) {

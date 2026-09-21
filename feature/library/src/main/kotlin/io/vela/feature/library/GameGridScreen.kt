@@ -2,6 +2,7 @@ package io.vela.feature.library
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -24,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -55,14 +59,17 @@ import io.vela.core.ui.components.VelaMenuDialog
 import io.vela.core.ui.components.focusBleed
 import io.vela.core.ui.components.gameFacts
 import io.vela.core.ui.components.rememberAutoFocus
+import io.vela.core.ui.components.rememberEntranceClock
+import io.vela.core.ui.components.staggeredEntrance
 import io.vela.core.ui.input.GamepadButton
 import io.vela.core.ui.input.GamepadHandler
 import io.vela.core.ui.theme.VelaTheme
+import kotlin.math.abs
 
 /**
  * Games of a platform, a collection, favourites or everything, in the view the user picked:
- * grid, compact grid, list with preview, or showcase. Header follows the focused game; X opens
- * the game menu, Y cycles sort, Start opens the display menu (view + sort).
+ * grid, compact grid, list with preview, or showcase wheel. Header follows the focused game; X
+ * opens the game menu, Y cycles sort, Start opens the display menu (view + sort).
  */
 @Composable
 fun GameGridScreen(
@@ -94,8 +101,8 @@ fun GameGridScreen(
     Column(modifier.fillMaxSize()) {
         GridHeader(
             header = header,
-            // The list view names the focused game in its preview panel already.
-            focusedTitle = if (view == LibraryView.LIST) null else focused?.title,
+            // List names the focused game in its preview panel, Showcase under the wheel.
+            focusedTitle = if (view == LibraryView.LIST || view == LibraryView.SHOWCASE) null else focused?.title,
             view = view,
             onOpenDisplay = { displayMenu = true },
         )
@@ -164,6 +171,7 @@ private class GameCallbacks(
 @Composable
 private fun GridContent(items: LazyPagingItems<GameSummary>, accent: Color, callbacks: GameCallbacks, compact: Boolean) {
     val gridState = rememberLazyGridState()
+    val clock = rememberEntranceClock()
     val columnsSetting = VelaTheme.dimens.gridColumns
     val cardWidth: Dp = if (compact) VelaTheme.dimens.cardWidth * 0.68f else VelaTheme.dimens.cardWidth
     val spacing = if (compact) VelaTheme.dimens.railSpacing * 0.6f else VelaTheme.dimens.railSpacing
@@ -194,7 +202,7 @@ private fun GridContent(items: LazyPagingItems<GameSummary>, accent: Color, call
                 onClick = { callbacks.launch(game) },
                 onLongPress = { callbacks.menu(game) },
                 onFocused = { callbacks.focus(game) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().staggeredEntrance(index, clock),
             )
         }
     }
@@ -210,6 +218,7 @@ private fun ListContent(
     platformLabel: (GameSummary) -> String?,
 ) {
     val listState = rememberLazyListState()
+    val clock = rememberEntranceClock()
     val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0))
     Row(Modifier.fillMaxSize().padding(horizontal = VelaTheme.dimens.screenPadding)) {
         LazyColumn(
@@ -232,6 +241,7 @@ private fun ListContent(
                     onClick = { callbacks.launch(game) },
                     onLongPress = { callbacks.menu(game) },
                     onFocused = { callbacks.focus(game) },
+                    modifier = Modifier.staggeredEntrance(index, clock),
                 )
             }
         }
@@ -248,6 +258,10 @@ private fun ListContent(
     }
 }
 
+/**
+ * Wheel: the focused cover sits centred and full size; neighbours shrink, tilt away and fade
+ * with distance from the centre. Focus moves the wheel, flings snap to a cover.
+ */
 @Composable
 private fun ShowcaseContent(
     items: LazyPagingItems<GameSummary>,
@@ -259,20 +273,32 @@ private fun ShowcaseContent(
     val rowState = rememberLazyListState()
     val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0))
     val colors = VelaTheme.colors
+    val motion = VelaTheme.motion
+    var focusedIndex by remember { mutableIntStateOf(-1) }
+
+    LaunchedEffect(focusedIndex) {
+        if (focusedIndex >= 0) rowState.animateScrollToItem(focusedIndex)
+    }
+
     Column(Modifier.fillMaxSize()) {
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-            val bleed = focusBleed() * 1.5f
+            val bleed = focusBleed() * 1.2f
             val cardHeight = maxHeight - bleed * 2
             val cardWidth = cardHeight * VelaTheme.dimens.boxArtAspect
+            val spacing = VelaTheme.dimens.railSpacing * 2
+            // Symmetric padding lets the first and last cover reach the centre.
+            val sidePadding = ((maxWidth - cardWidth) / 2).coerceAtLeast(0.dp)
+            val tilt = if (motion.reduceMotion) 0f else 16f
             LazyRow(
                 state = rowState,
+                flingBehavior = rememberSnapFlingBehavior(rowState),
                 modifier = Modifier
                     .fillMaxSize()
                     .focusRequester(autoFocus)
                     .focusRestorer()
                     .focusGroup(),
-                contentPadding = PaddingValues(horizontal = VelaTheme.dimens.screenPadding, vertical = bleed),
-                horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing * 1.5f),
+                contentPadding = PaddingValues(horizontal = sidePadding, vertical = bleed),
+                horizontalArrangement = Arrangement.spacedBy(spacing),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 items(count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
@@ -283,19 +309,48 @@ private fun ShowcaseContent(
                         width = cardWidth,
                         onClick = { callbacks.launch(game) },
                         onLongPress = { callbacks.menu(game) },
-                        onFocused = { callbacks.focus(game) },
+                        onFocused = { focusedIndex = index; callbacks.focus(game) },
+                        modifier = Modifier.graphicsLayer {
+                            val info = rowState.layoutInfo
+                            val item = info.visibleItemsInfo.firstOrNull { it.index == index } ?: return@graphicsLayer
+                            val center = (info.viewportStartOffset + info.viewportEndOffset) / 2f
+                            val itemCenter = item.offset + item.size / 2f
+                            val distance = ((itemCenter - center) / (item.size + spacing.toPx())).coerceIn(-3f, 3f)
+                            val near = abs(distance).coerceAtMost(1f)
+                            val shrink = 1f - 0.18f * near
+                            scaleX = shrink
+                            scaleY = shrink
+                            rotationY = -distance * tilt
+                            cameraDistance = 16f * density
+                            alpha = 1f - 0.35f * near
+                            transformOrigin = TransformOrigin(0.5f, 0.5f)
+                        },
                     )
                 }
             }
         }
-        Text(
-            focused?.let { gameFacts(it, platformLabel(it)) } ?: "",
-            style = VelaTheme.typography.body,
-            color = colors.muted,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = VelaTheme.dimens.screenPadding, vertical = 8.dp),
-        )
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = VelaTheme.dimens.screenPadding)
+                .padding(bottom = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                focused?.title ?: "",
+                style = VelaTheme.typography.title,
+                color = colors.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                focused?.let { gameFacts(it, platformLabel(it)) } ?: "",
+                style = VelaTheme.typography.caption,
+                color = colors.muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 

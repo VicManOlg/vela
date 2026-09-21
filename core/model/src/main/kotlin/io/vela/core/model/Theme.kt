@@ -89,7 +89,7 @@ data class ThemeMotion(
 
 @Serializable
 data class ThemeBackground(
-    /** `artwork` (focused game), `platform` (platform colour gradient), `static`. */
+    /** `artwork` (focused game, blurred), `hero` (focused game, sharp with slow drift), `platform` (colour gradient), `static`. */
     val mode: String = "artwork",
     val blurRadius: Float = 40f,
     val dim: Float = 0.55f,
