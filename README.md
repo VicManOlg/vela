@@ -189,6 +189,12 @@ Research notes with the recipes for 30+ emulators are in `docs/research/emulator
 `ScrapeService` handles ordering, rate spacing, negative caching and downloading; `ArtworkStore`
 persists files under `files/artwork/<gameId>/`.
 
+Sources without an account: libretro-thumbnails (art, matched through each system's directory
+listing), libretro-database `.rdb` files (developer, publisher, year, genre, players, franchise,
+age rating) and Wikipedia article leads (descriptions, CC BY-SA, can be switched off). With a
+free SteamGridDB API key the app also fetches logos, hero backgrounds, alternative covers and
+icons. ScreenScraper needs developer credentials in `secrets.properties`.
+
 ## Adding a theme
 
 Copy one of `core/catalog/src/main/resources/catalog/themes/*.json`, change `id`, colours,

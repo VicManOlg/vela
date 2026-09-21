@@ -79,6 +79,12 @@ class GameRepository @Inject constructor(
     fun observeByPlatformPreview(platformId: PlatformId, limit: Int = 12): Flow<List<GameSummary>> =
         gameDao.observeByPlatformPreview(platformId.value, limit).map { it.map { v -> v.toDomain() } }
 
+    /** Other games of the same series, oldest first (needs franchise metadata on both sides). */
+    suspend fun sameFranchise(game: Game, limit: Int = 20): List<GameSummary> = withContext(dispatchers.io) {
+        val franchise = game.metadata?.franchise ?: return@withContext emptyList()
+        gameDao.sameFranchise(franchise, game.id.value, limit).map { it.toDomain() }
+    }
+
     suspend fun duplicatesOf(game: Game): List<GameSummary> = withContext(dispatchers.io) {
         gameDao.duplicatesOf("${game.platformId}:${game.sortTitle}", game.id.value).map { it.toDomain() }
     }

@@ -356,6 +356,7 @@ private fun Scope.scrapingSection(vm: SettingsViewModel, settings: AppSettings) 
     item { SettingRow("Fetch artwork for new games", description = "Right after each scan", checked = settings.scraping.autoScrapeNewGames, onClick = { vm.update { it.copy(scraping = it.scraping.copy(autoScrapeNewGames = !it.scraping.autoScrapeNewGames)) } }) }
     item { SettingRow("Wi-Fi only", checked = settings.scraping.wifiOnly, onClick = { vm.update { it.copy(scraping = it.scraping.copy(wifiOnly = !it.scraping.wifiOnly)) } }) }
     item { SettingRow("Download videos", description = "Preview clips where a provider offers them", checked = settings.scraping.downloadVideos, onClick = { vm.update { it.copy(scraping = it.scraping.copy(downloadVideos = !it.scraping.downloadVideos)) } }) }
+    item { SettingRow("Wikipedia descriptions", description = "Use the article lead as the description (CC BY-SA)", checked = settings.scraping.wikipediaDescriptions, onClick = { vm.update { it.copy(scraping = it.scraping.copy(wikipediaDescriptions = !it.scraping.wikipediaDescriptions)) } }) }
     item { SectionHeader("Providers") }
     item {
         var picking by remember { mutableStateOf(false) }

@@ -88,6 +88,12 @@ data class GameMetadata(
     /** Normalised 0..1 rating. */
     val rating: Float? = null,
     val region: String? = null,
+    /** Series the game belongs to ("Pokemon", "Zelda"). */
+    val franchise: String? = null,
+    /** ESRB/PEGI/ELSPA label as the source gives it ("E", "T", "12"). */
+    val ageRating: String? = null,
+    /** Where the description came from, when it is a web page. */
+    val sourceUrl: String? = null,
     val providerId: String? = null,
     val providerGameId: String? = null,
     val scrapedAt: Long? = null,

@@ -15,6 +15,11 @@ import io.vela.core.scraper.provider.ScreenScraperProvider
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import io.vela.core.scraper.provider.LibretroDatabase
+import io.vela.core.scraper.provider.LibretroMetadataSource
+import io.vela.core.scraper.provider.WikipediaSummaries
+import io.vela.core.scraper.provider.DescriptionSource
+import io.vela.core.scraper.provider.SteamGridDbProvider
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -22,6 +27,9 @@ abstract class ScraperBindings {
     @Binds @IntoSet abstract fun bindLibretro(p: LibretroThumbnailsProvider): MetadataProvider
     @Binds @IntoSet abstract fun bindScreenScraper(p: ScreenScraperProvider): MetadataProvider
     @Binds abstract fun bindLibretroNames(i: LibretroIndex): LibretroNameSource
+    @Binds abstract fun bindLibretroDatabase(d: LibretroDatabase): LibretroMetadataSource
+    @Binds abstract fun bindDescriptions(w: WikipediaSummaries): DescriptionSource
+    @Binds @IntoSet abstract fun bindSteamGridDb(p: SteamGridDbProvider): MetadataProvider
 }
 
 @Module

@@ -60,11 +60,17 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import io.vela.core.common.TitleCleaner
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
 /**
  * Game detail: art on the left, title/logo and facts on the right, actions in a row, then the
  * description and other versions. Play is focused on entry so a single press starts the game.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun GameDetailScreen(
     onBack: () -> Unit,
@@ -177,6 +183,7 @@ fun GameDetailScreen(
                 meta?.genres?.firstOrNull()?.let { Pill(it) }
                 meta?.players?.let { Pill(if (it.contains('-') || it.toIntOrNull() == 1) "$it player" else "$it players") }
                 meta?.rating?.let { Pill("${(it * 10).toInt()}/10") }
+                meta?.ageRating?.let { Pill(it) }
                 if (game.completion != io.vela.core.model.CompletionStatus.NONE) Pill(completionLabel(game.completion), tint = colors.accent)
             }
             Spacer(Modifier.height(20.dp))
@@ -214,18 +221,54 @@ fun GameDetailScreen(
             }
             Spacer(Modifier.height(18.dp))
 
-            val description = meta?.description
-            if (!description.isNullOrBlank()) {
-                Text(description, style = VelaTheme.typography.body, color = colors.onBackground.copy(alpha = 0.9f), modifier = Modifier.fillMaxWidth(0.9f))
+            val facts = listOfNotNull(
+                meta?.developer?.let { "Developer" to it },
+                meta?.publisher?.let { "Publisher" to it },
+                meta?.releaseDate?.let { "Released" to formatReleaseDate(it) },
+                meta?.genres?.takeIf { it.isNotEmpty() }?.let { "Genre" to it.joinToString(", ") },
+                meta?.players?.let { "Players" to it },
+                meta?.ageRating?.let { "Age rating" to it },
+                meta?.franchise?.let { "Series" to it },
+                (meta?.region ?: TitleCleaner.region(game.fileName)?.uppercase())?.let { "Region" to it },
+            )
+            if (facts.isNotEmpty()) {
+                GlassPanel(Modifier.fillMaxWidth()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        facts.forEach { (label, value) -> Fact(label, value) }
+                    }
+                }
                 Spacer(Modifier.height(14.dp))
             }
-            val credits = listOfNotNull(meta?.developer?.let { "Developed by $it" }, meta?.publisher?.let { "Published by $it" })
-            if (credits.isNotEmpty()) {
-                Text(credits.joinToString("  ·  "), style = VelaTheme.typography.caption, color = colors.muted)
+            val description = meta?.description
+            if (!description.isNullOrBlank()) {
+                var expanded by remember { mutableStateOf(false) }
+                Text(
+                    description,
+                    style = VelaTheme.typography.body,
+                    color = colors.onBackground.copy(alpha = 0.9f),
+                    maxLines = if (expanded) Int.MAX_VALUE else 4,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth(0.9f),
+                )
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (description.length > 260) VelaButton(if (expanded) "Show less" else "Read more", { expanded = !expanded })
+                    meta?.sourceUrl?.takeIf { "wikipedia" in it }?.let {
+                        Text("From Wikipedia, CC BY-SA", style = VelaTheme.typography.caption, color = colors.muted)
+                    }
+                }
                 Spacer(Modifier.height(14.dp))
             }
             if (!isApp) {
-                Text(game.fileName, style = VelaTheme.typography.caption, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                val fileInfo = listOfNotNull(
+                    game.fileName,
+                    game.fileSize.takeIf { it > 0 }?.let(::formatBytes),
+                    game.extension.takeIf { it.isNotBlank() }?.uppercase(),
+                ).joinToString("   ")
+                Text(fileInfo, style = VelaTheme.typography.caption, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                (game.location as? io.vela.core.model.GameLocation.File)?.path?.let { path ->
+                    Text(path, style = VelaTheme.typography.caption, color = colors.muted.copy(alpha = 0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
             }
 
             if (state.otherVersions.isNotEmpty()) {
@@ -234,6 +277,16 @@ fun GameDetailScreen(
                 Spacer(Modifier.height(10.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing)) {
                     items(state.otherVersions, key = { it.id.value }) { other ->
+                        GameCard(game = other, accent = accent, width = VelaTheme.dimens.cardWidth * 0.75f, onClick = { onOpenGame(other.id) })
+                    }
+                }
+            }
+            if (state.franchise.isNotEmpty()) {
+                Spacer(Modifier.height(22.dp))
+                Text("More from ${meta?.franchise}", style = VelaTheme.typography.headline, color = colors.onBackground)
+                Spacer(Modifier.height(10.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing)) {
+                    items(state.franchise, key = { it.id.value }) { other ->
                         GameCard(game = other, accent = accent, width = VelaTheme.dimens.cardWidth * 0.75f, onClick = { onOpenGame(other.id) })
                     }
                 }
@@ -254,6 +307,27 @@ fun GameDetailScreen(
             onConfirmHide = { viewModel.confirmHide(onBack) },
         ),
     )
+}
+
+private val monthNames = listOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+
+/** "2010-03-14" -> "14 March 2010", "2010-03" -> "March 2010", "2010" stays. */
+internal fun formatReleaseDate(raw: String): String {
+    val parts = raw.trim().split('-', '/').mapNotNull { it.toIntOrNull() }
+    val month = parts.getOrNull(1)?.takeIf { it in 1..12 }?.let { monthNames[it - 1] }
+    return when {
+        parts.isEmpty() -> raw
+        parts.size >= 3 && month != null -> "${parts[2]} $month ${parts[0]}"
+        month != null -> "$month ${parts[0]}"
+        else -> parts[0].toString()
+    }
+}
+
+internal fun formatBytes(bytes: Long): String = when {
+    bytes >= 1L shl 30 -> "%.1f GB".format(bytes / (1L shl 30).toDouble())
+    bytes >= 1L shl 20 -> "%.1f MB".format(bytes / (1L shl 20).toDouble())
+    bytes >= 1L shl 10 -> "${bytes shr 10} KB"
+    else -> "$bytes B"
 }
 
 @Composable

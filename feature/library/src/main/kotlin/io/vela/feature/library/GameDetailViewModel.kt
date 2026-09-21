@@ -36,6 +36,7 @@ data class GameDetailUiState(
     val playerName: String? = null,
     val playerMissing: Boolean = false,
     val otherVersions: List<GameSummary> = emptyList(),
+    val franchise: List<GameSummary> = emptyList(),
     val loading: Boolean = true,
 )
 
@@ -68,6 +69,7 @@ class GameDetailViewModel @Inject constructor(
                 },
                 playerMissing = resolution is PlayerResolver.Resolution.NotInstalled || resolution is PlayerResolver.Resolution.NoCandidate,
                 otherVersions = games.duplicatesOf(g),
+                franchise = games.sameFranchise(g),
                 loading = false,
             )
         }

@@ -190,6 +190,24 @@ interface GameDao {
     @Query("SELECT id FROM game_summaries WHERE boxArt IS NULL AND hidden = 0 AND present = 1 AND kind = 'ROM' ORDER BY lastPlayedAt DESC, addedAt DESC")
     suspend fun idsMissingBoxArt(): List<Long>
 
+    /** Games still lacking box art, never asked for metadata, or (when a logo source exists) lacking a logo. */
+    @Query(
+        """SELECT s.id FROM game_summaries s
+           WHERE s.hidden = 0 AND s.present = 1 AND s.kind = 'ROM'
+             AND (s.boxArt IS NULL
+                  OR NOT EXISTS (SELECT 1 FROM game_metadata m WHERE m.gameId = s.id)
+                  OR (:needLogo AND s.logo IS NULL))
+           ORDER BY s.lastPlayedAt DESC, s.addedAt DESC""",
+    )
+    suspend fun idsNeedingScrape(needLogo: Boolean): List<Long>
+
+    @Query(
+        """SELECT s.* FROM game_summaries s JOIN game_metadata m ON m.gameId = s.id
+           WHERE m.franchise = :franchise AND s.id != :exceptId AND s.hidden = 0 AND s.present = 1
+           ORDER BY s.releaseDate, s.sortTitle LIMIT :limit""",
+    )
+    suspend fun sameFranchise(franchise: String, exceptId: Long, limit: Int): List<GameSummaryView>
+
     @Query("SELECT DISTINCT genres FROM game_metadata WHERE genres IS NOT NULL")
     suspend fun allGenreStrings(): List<String>
 

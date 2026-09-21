@@ -1,0 +1,126 @@
+package io.vela.core.scraper.provider
+
+import io.vela.core.common.Outcome
+import io.vela.core.common.VelaError
+import io.vela.core.model.ArtworkCandidate
+import io.vela.core.model.ArtworkType
+import io.vela.core.model.GameMetadata
+import io.vela.core.model.MetadataMatch
+import io.vela.core.model.MetadataProviderInfo
+import io.vela.core.model.MetadataQuery
+import io.vela.core.model.ScrapingSettings
+import io.vela.core.scraper.MetadataProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import timber.log.Timber
+import java.net.URLEncoder
+import javax.inject.Inject
+import javax.inject.Singleton
+
+/**
+ * SteamGridDB: community logos, hero backgrounds, vertical grids and icons. Needs the user's own
+ * API key (free at steamgriddb.com/profile/preferences/api). The game is found by title; the
+ * first static, non-humour, non-NSFW asset of each type is offered.
+ */
+@Singleton
+class SteamGridDbProvider @Inject constructor(
+    private val client: OkHttpClient,
+) : MetadataProvider {
+
+    override val info = MetadataProviderInfo(
+        id = ID,
+        name = "SteamGridDB",
+        description = "Game logos, hero backgrounds and alternative covers. Needs a free API key from steamgriddb.com.",
+        requiresCredentials = true,
+        supportsHashLookup = false,
+        artworkTypes = setOf(ArtworkType.LOGO, ArtworkType.BACKGROUND, ArtworkType.BOX_FRONT, ArtworkType.ICON),
+        website = "https://www.steamgriddb.com",
+    )
+
+    private val json = Json { ignoreUnknownKeys = true; isLenient = true }
+
+    override fun isAvailable(settings: ScrapingSettings): Boolean = settings.steamGridDbApiKey.isNotBlank()
+
+    override suspend fun search(query: MetadataQuery, settings: ScrapingSettings): Outcome<List<MetadataMatch>> = withContext(Dispatchers.IO) {
+        val key = settings.steamGridDbApiKey.trim()
+        try {
+            val results = when (val r = call("$BASE/search/autocomplete/${encode(query.title)}", key)) {
+                is Outcome.Failure -> return@withContext r
+                is Outcome.Success -> r.value.data()
+            }
+            val games = results.mapNotNull { it as? JsonObject }
+                .mapNotNull { g -> g.int("id")?.let { id -> Candidate(id, g.str("name") ?: return@mapNotNull null, g["verified"]?.jsonPrimitive?.booleanOrNull == true) } }
+            val picked = TitleSimilarity.best(query.title, games.sortedByDescending { it.verified }, threshold = 0.6f) { it.name }
+                ?: return@withContext Outcome.success(emptyList())
+
+            val artwork = ArrayList<ArtworkCandidate>(4)
+            for ((path, type, extra) in ASSETS) {
+                when (val r = call("$BASE/$path/game/${picked.id}?types=static$extra", key)) {
+                    is Outcome.Failure -> if (r.error is VelaError.Unauthorized || r.error is VelaError.RateLimited) return@withContext r else continue
+                    is Outcome.Success -> firstUsable(r.value.data(), type)?.let(artwork::add)
+                }
+            }
+            Outcome.success(
+                listOf(
+                    MetadataMatch(
+                        providerId = ID,
+                        providerGameId = picked.id.toString(),
+                        title = picked.name,
+                        score = TitleSimilarity.score(query.title, picked.name),
+                        metadata = GameMetadata(),
+                        artwork = artwork,
+                    ),
+                ),
+            )
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.w(e, "SteamGridDB request failed")
+            Outcome.failure(VelaError.Network(e.message ?: "network error", e))
+        }
+    }
+
+    private data class Candidate(val id: Int, val name: String, val verified: Boolean)
+
+    private fun call(url: String, key: String): Outcome<JsonObject> =
+        client.newCall(Request.Builder().url(url).header("Authorization", "Bearer $key").build()).execute().use { response ->
+            when (response.code) {
+                200 -> Outcome.success(json.parseToJsonElement(response.body.string()).jsonObject)
+                401, 403 -> Outcome.failure(VelaError.Unauthorized(ID))
+                404 -> Outcome.success(JsonObject(emptyMap()))
+                429 -> Outcome.failure(VelaError.RateLimited(ID, 60_000))
+                else -> Outcome.failure(VelaError.Network("SteamGridDB HTTP ${response.code}"))
+            }
+        }
+
+    private fun JsonObject.data(): List<Any?> = this["data"]?.jsonArray?.toList().orEmpty()
+
+    private fun firstUsable(items: List<Any?>, type: ArtworkType): ArtworkCandidate? =
+        items.mapNotNull { it as? JsonObject }
+            .firstOrNull { it["nsfw"]?.jsonPrimitive?.booleanOrNull != true && it["humor"]?.jsonPrimitive?.booleanOrNull != true && it.str("url") != null }
+            ?.let { ArtworkCandidate(type, it.str("url")!!, width = it.int("width"), height = it.int("height"), format = it.str("mime")?.substringAfter('/')) }
+
+    private fun JsonObject.str(key: String): String? = this[key]?.jsonPrimitive?.contentOrNull
+    private fun JsonObject.int(key: String): Int? = this[key]?.jsonPrimitive?.intOrNull
+    private fun encode(s: String) = URLEncoder.encode(s, "UTF-8").replace("+", "%20")
+
+    companion object {
+        const val ID = "steamgriddb"
+        private const val BASE = "https://www.steamgriddb.com/api/v2"
+        private val ASSETS = listOf(
+            Triple("logos", ArtworkType.LOGO, ""),
+            Triple("heroes", ArtworkType.BACKGROUND, ""),
+            Triple("grids", ArtworkType.BOX_FRONT, "&dimensions=600x900,342x482"),
+            Triple("icons", ArtworkType.ICON, ""),
+        )
+    }
+}

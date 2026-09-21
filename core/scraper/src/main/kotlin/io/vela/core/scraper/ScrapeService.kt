@@ -68,7 +68,9 @@ class ScrapeService @Inject constructor(
     fun scrapeMissingInBackground() {
         if (isRunning) return
         job = scope.launch {
-            val ids = gameDao.idsMissingBoxArt()
+            val prefs = settings.current().scraping
+            val wantsLogos = providers.all.any { it.isAvailable(prefs) && ArtworkType.LOGO in it.info.artworkTypes }
+            val ids = gameDao.idsNeedingScrape(wantsLogos)
             Timber.i("Scrape queue: %d games", ids.size)
             scrapeGames(ids.map(::GameId))
         }
@@ -138,7 +140,9 @@ class ScrapeService @Inject constructor(
 
         var stored = false
         val metadataProvider = providers[prefs.metadataProviderId]?.takeIf { it.isAvailable(prefs) }
-        val artworkProviders = prefs.artworkProviderIds.mapNotNull { providers[it] }.filter { it.isAvailable(prefs) }
+        // The user's order first, then every other provider that is ready (a key was entered).
+        val artworkProviders = (prefs.artworkProviderIds + providers.all.map { it.info.id }).distinct()
+            .mapNotNull { providers[it] }.filter { it.isAvailable(prefs) }
         val resultsByProvider = HashMap<String, List<MetadataMatch>>()
 
         suspend fun matchesFor(provider: MetadataProvider): Outcome<List<MetadataMatch>> {
@@ -151,9 +155,15 @@ class ScrapeService @Inject constructor(
             if (existing == null || prefs.overwriteExisting) {
                 when (val r = matchesFor(metadataProvider)) {
                     is Outcome.Failure -> return r
-                    is Outcome.Success -> r.value.maxByOrNull { it.score }?.takeIf { it.metadata.hasContent() }?.let { best ->
-                        metadataDao.upsertMetadata(best.metadata.toEntity(game.id))
-                        stored = true
+                    is Outcome.Success -> {
+                        val best = r.value.maxByOrNull { it.score }?.takeIf { it.metadata.hasContent() }
+                        if (best != null) {
+                            metadataDao.upsertMetadata(best.metadata.toEntity(game.id))
+                            stored = true
+                        } else if (existing == null) {
+                            // Remember the attempt so the game is not asked about on every run.
+                            metadataDao.upsertMetadata(GameMetadataEntity(gameId = game.id, providerId = metadataProvider.info.id, scrapedAt = System.currentTimeMillis()))
+                        }
                     }
                 }
             }
@@ -185,12 +195,13 @@ class ScrapeService @Inject constructor(
     }
 
     private fun io.vela.core.model.GameMetadata.hasContent() =
-        !description.isNullOrBlank() || !developer.isNullOrBlank() || !releaseDate.isNullOrBlank() || genres.isNotEmpty()
+        !description.isNullOrBlank() || !developer.isNullOrBlank() || !publisher.isNullOrBlank() || !releaseDate.isNullOrBlank() || genres.isNotEmpty() || !franchise.isNullOrBlank()
 
     private fun io.vela.core.model.GameMetadata.toEntity(gameId: Long) = GameMetadataEntity(
         gameId = gameId, title = title, description = description, developer = developer, publisher = publisher,
         releaseDate = releaseDate, genres = genres.joinToString("|").ifEmpty { null }, players = players, rating = rating,
-        region = region, providerId = providerId, providerGameId = providerGameId, scrapedAt = scrapedAt ?: System.currentTimeMillis(),
+        region = region, franchise = franchise, ageRating = ageRating, sourceUrl = sourceUrl,
+        providerId = providerId, providerGameId = providerGameId, scrapedAt = scrapedAt ?: System.currentTimeMillis(),
     )
 
     private companion object {

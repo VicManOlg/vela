@@ -96,6 +96,8 @@ data class ScrapingSettings(
     val overwriteExisting: Boolean = false,
     val autoScrapeNewGames: Boolean = true,
     val wifiOnly: Boolean = true,
+    /** Use the Wikipedia article lead as the description when the metadata source has none. */
+    val wikipediaDescriptions: Boolean = true,
     val screenScraperUser: String = "",
     val screenScraperPassword: String = "",
     val steamGridDbApiKey: String = "",

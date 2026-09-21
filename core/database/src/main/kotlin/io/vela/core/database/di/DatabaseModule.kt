@@ -14,6 +14,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import io.vela.core.database.MIGRATION_1_2
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -23,7 +24,8 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): VelaDatabase =
         Room.databaseBuilder(context, VelaDatabase::class.java, VelaDatabase.NAME)
-            // Schema is young; wipe rather than crash until 1.0 ships real migrations.
+            .addMigrations(MIGRATION_1_2)
+            // Last resort for schema jumps without a migration; never expected on release builds.
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
 

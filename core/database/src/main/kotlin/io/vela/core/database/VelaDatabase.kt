@@ -20,9 +20,11 @@ import io.vela.core.database.entity.LibrarySourceEntity
 import io.vela.core.database.entity.LocationType
 import io.vela.core.database.entity.PlatformSettingsEntity
 import io.vela.core.database.entity.PlaySessionEntity
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    version = 1,
+    version = 2,
     exportSchema = true,
     entities = [
         GameEntity::class,
@@ -56,4 +58,13 @@ class VelaTypeConverters {
 
     @TypeConverter
     fun stringToLocationType(value: String): LocationType = LocationType.valueOf(value)
+}
+
+/** 1 -> 2: franchise, age rating and description source on game_metadata. */
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE game_metadata ADD COLUMN franchise TEXT")
+        db.execSQL("ALTER TABLE game_metadata ADD COLUMN ageRating TEXT")
+        db.execSQL("ALTER TABLE game_metadata ADD COLUMN sourceUrl TEXT")
+    }
 }

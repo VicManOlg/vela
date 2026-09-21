@@ -88,6 +88,10 @@ fun GameGridScreen(
     val accent = Color(header.accent)
 
     LaunchedEffect(focused, header.accent) { onBackgroundArtwork(focused?.background ?: focused?.boxArt, header.accent) }
+    // The first item receives focus before any focus callback runs; seed the header/preview with it.
+    LaunchedEffect(items.itemCount, focused == null) {
+        if (focused == null && items.itemCount > 0) items.peek(0)?.let { viewModel.focused.value = it }
+    }
 
     GamepadHandler { button ->
         when (button) {

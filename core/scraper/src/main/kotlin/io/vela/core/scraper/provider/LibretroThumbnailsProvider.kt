@@ -16,24 +16,26 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * libretro-thumbnails: no account, no rate limit, works with No-Intro/Redump named files.
- * Only artwork (box, screenshot, title screen), no descriptive metadata.
- *
- * Names come from the system's directory listing ([LibretroNameSource]) so files with extra tags,
- * a missing region or slightly different punctuation still match. When the listing cannot be
- * fetched the provider falls back to guessing the exact file name and the cleaned title with the
- * preferred region tags; the downloader tolerates the resulting 404s.
+ * The no-account provider, built from three public sources:
+ * - libretro-thumbnails for box art, screenshots and title screens, matched through the
+ *   system's directory listing ([LibretroNameSource]) so files with odd tags still hit;
+ * - libretro-database for developer, publisher, year, genre, players, franchise and age rating;
+ * - Wikipedia for the description, when the user keeps it enabled.
+ * When the listing cannot be fetched the artwork falls back to guessing the exact file name and
+ * the cleaned title with the preferred region tags; the downloader tolerates the resulting 404s.
  */
 @Singleton
 class LibretroThumbnailsProvider @Inject constructor(
     private val platforms: PlatformCatalog,
     private val index: LibretroNameSource,
+    private val database: LibretroMetadataSource,
+    private val descriptions: DescriptionSource,
 ) : MetadataProvider {
 
     override val info = MetadataProviderInfo(
         id = ID,
-        name = "libretro thumbnails",
-        description = "Box art, screenshots and title screens by No-Intro/Redump file name. No account needed.",
+        name = "libretro + Wikipedia",
+        description = "Box art and screenshots from libretro-thumbnails, facts from libretro-database, descriptions from Wikipedia. No account needed.",
         requiresCredentials = false,
         supportsHashLookup = false,
         artworkTypes = setOf(ArtworkType.BOX_FRONT, ArtworkType.SCREENSHOT, ArtworkType.TITLE_SCREEN),
@@ -57,16 +59,44 @@ class LibretroThumbnailsProvider @Inject constructor(
             (listOf(stem to 0.9f) + regionGuesses + listOf(sanitize(query.title) to 0.5f)).distinctBy { it.first }
         }
 
-        return Outcome.success(candidates.map { (name, score) -> match(system, name, score) })
+        val metadata = metadataFor(system, query, settings)
+        // Facts are about the game, not about one cover: attach them to every candidate so the
+        // best artwork match and the metadata always travel together.
+        val matches = candidates.map { (name, score) -> match(system, name, score, metadata) }
+        return Outcome.success(
+            if (matches.isEmpty() && metadata.hasFacts()) listOf(match(system, stem, 0.3f, metadata, withArtwork = false)) else matches,
+        )
     }
 
-    private fun match(system: String, name: String, score: Float) = MetadataMatch(
+    private suspend fun metadataFor(system: String, query: MetadataQuery, settings: ScrapingSettings): GameMetadata {
+        val entry = database.lookup(system, query.fileName, query.title, query.preferredRegions)
+        val description = if (settings.wikipediaDescriptions) descriptions.describe(query.title, query.language) else null
+        return GameMetadata(
+            description = description?.text ?: entry?.description,
+            developer = entry?.developer,
+            publisher = entry?.publisher,
+            releaseDate = entry?.releaseYear?.let { y -> entry.releaseMonth?.let { m -> "%04d-%02d".format(y, m) } ?: y.toString() },
+            genres = entry?.genre?.split('/', ',', '|')?.map { it.trim() }?.filter { it.isNotEmpty() }.orEmpty(),
+            players = entry?.players?.toString(),
+            region = entry?.region,
+            franchise = entry?.franchise,
+            ageRating = entry?.ageRating,
+            sourceUrl = description?.url,
+            providerId = ID,
+            providerGameId = entry?.name ?: description?.pageTitle,
+        )
+    }
+
+    private fun GameMetadata.hasFacts() =
+        !description.isNullOrBlank() || !developer.isNullOrBlank() || !publisher.isNullOrBlank() || !releaseDate.isNullOrBlank() || genres.isNotEmpty()
+
+    private fun match(system: String, name: String, score: Float, metadata: GameMetadata, withArtwork: Boolean = true) = MetadataMatch(
         providerId = ID,
         providerGameId = "$system/$name",
         title = name,
         score = score,
-        metadata = GameMetadata(),
-        artwork = listOf(
+        metadata = metadata,
+        artwork = if (!withArtwork) emptyList() else listOf(
             ArtworkCandidate(ArtworkType.BOX_FRONT, url(system, "Named_Boxarts", name)),
             ArtworkCandidate(ArtworkType.SCREENSHOT, url(system, "Named_Snaps", name)),
             ArtworkCandidate(ArtworkType.TITLE_SCREEN, url(system, "Named_Titles", name)),
