@@ -36,6 +36,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         gamepad = GamepadInputController(lifecycleScope)
         gamepad.dispatchSyntheticKey = { event -> window.decorView.dispatchKeyEvent(event) }
+        gamepad.performBack = { onBackPressedDispatcher.onBackPressed() }
 
         lifecycleScope.launch {
             settings.settings.collectLatest { s ->

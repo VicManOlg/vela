@@ -41,6 +41,8 @@ import io.vela.core.ui.theme.VelaTheme
 import kotlinx.coroutines.delay
 import java.text.DateFormat
 import java.util.Date
+import androidx.compose.foundation.clickable
+import io.vela.core.ui.input.LocalGamepad
 
 /** Top-level destinations shown in the header. */
 data class TopTab(val id: String, val label: String)
@@ -207,7 +209,7 @@ fun BatteryIndicator() {
 /** One entry in the bottom hint bar. */
 data class ButtonHint(val button: GamepadButton, val label: String)
 
-/** Bottom bar: which button does what on this screen. Nintendo/Xbox glyph follows the swap setting. */
+/** Bottom bar: which button does what on this screen. Nintendo/Xbox glyph follows the swap setting. Each hint is also a touch button. */
 @Composable
 fun ButtonHints(hints: List<ButtonHint>, modifier: Modifier = Modifier, swapped: Boolean = false) {
     if (!VelaTheme.dimens.showButtonHints || hints.isEmpty()) return
@@ -219,8 +221,16 @@ fun ButtonHints(hints: List<ButtonHint>, modifier: Modifier = Modifier, swapped:
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val gamepad = LocalGamepad.current
         hints.forEach { hint ->
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 22.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(start = 10.dp)
+                    .clip(VelaTheme.shapes.chip)
+                    .clickable(enabled = gamepad != null) { gamepad?.press(hint.button) }
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
                 ButtonGlyph(hint.button, swapped)
                 Spacer(Modifier.width(8.dp))
                 Text(hint.label, style = VelaTheme.typography.label, color = colors.onBackground.copy(alpha = 0.85f))

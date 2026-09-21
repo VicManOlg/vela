@@ -53,6 +53,9 @@ class GamepadInputController(private val scope: CoroutineScope) {
     /** Where synthetic D-pad events are injected; set by the Activity. */
     var dispatchSyntheticKey: ((KeyEvent) -> Unit)? = null
 
+    /** Runs the system back action; set by the Activity. */
+    var performBack: (() -> Unit)? = null
+
     private val handlers = CopyOnWriteArrayList<Handler>()
     private var pressed = HashSet<GamepadButton>()
     private var lastDeviceIsGamepad = false
@@ -87,6 +90,20 @@ class GamepadInputController(private val scope: CoroutineScope) {
             KeyEvent.ACTION_UP -> pressed -= button
         }
         return null
+    }
+
+    /**
+     * Acts as if [button] were pressed. Touch affordances (the hint bar) call this so a tap on
+     * "Y Sort" does exactly what the Y button does: A clicks the focused item, B goes back, the
+     * rest reach the handler stack.
+     */
+    fun press(button: GamepadButton) {
+        lastDeviceIsGamepad = false
+        when (button) {
+            GamepadButton.A -> sendKey(KeyEvent.KEYCODE_DPAD_CENTER)
+            GamepadButton.B -> performBack?.invoke() ?: sendKey(KeyEvent.KEYCODE_BACK)
+            else -> dispatch(button)
+        }
     }
 
     private fun dispatch(button: GamepadButton) {
@@ -162,6 +179,10 @@ class GamepadInputController(private val scope: CoroutineScope) {
             horizontal > 0 -> KeyEvent.KEYCODE_DPAD_RIGHT
             else -> return
         }
+        sendKey(code)
+    }
+
+    private fun sendKey(code: Int) {
         val now = android.os.SystemClock.uptimeMillis()
         dispatchSyntheticKey?.invoke(KeyEvent(now, now, KeyEvent.ACTION_DOWN, code, 0, 0, -1, 0, KeyEvent.FLAG_SOFT_KEYBOARD, InputDevice.SOURCE_DPAD))
         dispatchSyntheticKey?.invoke(KeyEvent(now, now, KeyEvent.ACTION_UP, code, 0, 0, -1, 0, KeyEvent.FLAG_SOFT_KEYBOARD, InputDevice.SOURCE_DPAD))
