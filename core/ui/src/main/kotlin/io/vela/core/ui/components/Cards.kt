@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -213,6 +214,7 @@ fun PlatformTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: String? = null,
+    iconVector: ImageVector? = null,
     width: Dp? = VelaTheme.dimens.cardWidth * 1.35f,
     onFocused: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
@@ -246,6 +248,17 @@ fun PlatformTile(
                 contentScale = ContentScale.Fit,
                 colorFilter = if (iconStyle.tint) ColorFilter.tint(colors.onBackground) else null,
                 placeholder = {},
+            )
+        } else if (iconVector != null) {
+            Icon(
+                iconVector,
+                contentDescription = null,
+                tint = colors.onBackground.copy(alpha = if (focused) 1f else 0.9f),
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 14.dp, end = 16.dp)
+                    .fillMaxHeight(0.5f)
+                    .aspectRatio(1f),
             )
         }
         Row(

@@ -66,8 +66,9 @@ import androidx.compose.ui.graphics.Color
 
 @Serializable private data object SetupRoute
 @Serializable private data class ShellRoute(val tab: String = ShellTab.HOME.name)
+@Serializable private data object AndroidRoute
 
-private enum class ShellTab(val label: String) { HOME("Home"), LIBRARY("Library"), ANDROID("Android"), COLLECTIONS("Collections"), SEARCH("Search"), SETTINGS("Settings") }
+private enum class ShellTab(val label: String) { HOME("Home"), LIBRARY("Library"), COLLECTIONS("Collections"), SEARCH("Search"), SETTINGS("Settings") }
 
 /** Root composable: theme, backdrop, navigation, hints and transient messages. */
 @Composable
@@ -101,6 +102,16 @@ fun VelaApp(gamepad: GamepadInputController, viewModel: AppViewModel = hiltViewM
                                 modifier = Modifier.weight(1f),
                             )
                             ButtonHints(listOf(ButtonHint(GamepadButton.A, "Play"), ButtonHint(GamepadButton.X, "Menu"), ButtonHint(GamepadButton.Y, "Sort"), ButtonHint(GamepadButton.B, "Back")), swapped = prefs.confirmButton == ConfirmButton.B)
+                        }
+                    }
+                    composable<AndroidRoute> {
+                        Column(Modifier.fillMaxSize()) {
+                            AndroidScreen(
+                                onOpenGame = { navController.navigate(GameDetailRoute(it.value)) },
+                                onBackgroundArtwork = viewModel::setBackdrop,
+                                modifier = Modifier.weight(1f),
+                            )
+                            ButtonHints(listOf(ButtonHint(GamepadButton.A, "Launch"), ButtonHint(GamepadButton.X, "Games"), ButtonHint(GamepadButton.Y, "Apps"), ButtonHint(GamepadButton.B, "Back")), swapped = prefs.confirmButton == ConfirmButton.B)
                         }
                     }
                     composable<GameDetailRoute> {
@@ -138,6 +149,7 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
     val openGame: (GameId) -> Unit = { navController.navigate(GameDetailRoute(it.value)) }
     val openPlatform: (PlatformId) -> Unit = { navController.navigate(GameGridRoute(platformId = it.value)) }
     val openCollection: (CollectionId) -> Unit = { navController.navigate(GameGridRoute(collectionId = it.value)) }
+    val openAndroid: () -> Unit = { navController.navigate(AndroidRoute) }
 
     Column(Modifier.fillMaxSize()) {
         TopBar(tabs = tabs, selectedId = tab.name, onSelect = { id -> tab = ShellTab.valueOf(id) })
@@ -148,7 +160,7 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
                         openGame = openGame,
                         openPlatform = openPlatform,
                         openCollection = openCollection,
-                        openAndroid = { tab = ShellTab.ANDROID },
+                        openAndroid = openAndroid,
                         openLibrary = { tab = ShellTab.LIBRARY },
                         openSettings = { tab = ShellTab.SETTINGS },
                     ),
@@ -156,12 +168,12 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
                 )
                 ShellTab.LIBRARY -> PlatformsScreen(
                     onOpenPlatform = openPlatform,
+                    onOpenAndroid = openAndroid,
                     onOpenFavorites = { navController.navigate(GameGridRoute(favorites = true, title = "Favorites")) },
                     onOpenAll = { navController.navigate(GameGridRoute(title = "All games")) },
                     onOpenSettings = { tab = ShellTab.SETTINGS },
                     onBackgroundAccent = { appViewModel.setBackdrop(null, it) },
                 )
-                ShellTab.ANDROID -> AndroidScreen(onOpenGame = openGame, onBackgroundArtwork = appViewModel::setBackdrop)
                 ShellTab.COLLECTIONS -> CollectionsScreen(onOpenCollection = openCollection)
                 ShellTab.SEARCH -> SearchScreen(onOpenGame = openGame, onBackgroundArtwork = appViewModel::setBackdrop)
                 ShellTab.SETTINGS -> SettingsScreen(onBackgroundAccent = { appViewModel.setBackdrop(null, it) })
@@ -171,7 +183,6 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
             hints = when (tab) {
                 ShellTab.HOME -> listOf(ButtonHint(GamepadButton.A, "Play"), ButtonHint(GamepadButton.X, "Menu"), ButtonHint(GamepadButton.L1, "Tabs"))
                 ShellTab.LIBRARY -> listOf(ButtonHint(GamepadButton.A, "Open"), ButtonHint(GamepadButton.L1, "Tabs"))
-                ShellTab.ANDROID -> listOf(ButtonHint(GamepadButton.A, "Launch"), ButtonHint(GamepadButton.X, "Games"), ButtonHint(GamepadButton.Y, "Apps"))
                 ShellTab.COLLECTIONS -> listOf(ButtonHint(GamepadButton.A, "Open"), ButtonHint(GamepadButton.X, "New"))
                 ShellTab.SEARCH -> listOf(ButtonHint(GamepadButton.A, "Play"), ButtonHint(GamepadButton.X, "Type"), ButtonHint(GamepadButton.Y, "System"))
                 ShellTab.SETTINGS -> listOf(ButtonHint(GamepadButton.A, "Change"), ButtonHint(GamepadButton.L2, "Pages"))

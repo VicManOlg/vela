@@ -1,5 +1,11 @@
 package io.vela.feature.library
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Android
+import androidx.compose.ui.graphics.Color
+import io.vela.core.data.repository.AppsRepository
+import kotlinx.coroutines.flow.combine
+
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -42,16 +48,27 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
+/** Android shown as one more system: detected games plus pinned apps. */
+data class AndroidTile(val games: Int, val apps: Int, val accent: Long, val name: String) {
+    val count: Int get() = games + apps
+}
+
 @HiltViewModel
-class PlatformsViewModel @Inject constructor(library: LibraryRepository) : ViewModel() {
+class PlatformsViewModel @Inject constructor(library: LibraryRepository, apps: AppsRepository) : ViewModel() {
     val platforms: StateFlow<List<PlatformEntry>> = library.observePlatformsWithGames()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private val androidPlatform = library.platform(PlatformId.ANDROID)
+    val android: StateFlow<AndroidTile> = combine(apps.observeAndroidGames(), apps.observeApps()) { games, pinned ->
+        AndroidTile(games.size, pinned.size, androidPlatform?.accentColor ?: 0xFF3DDC84, androidPlatform?.shortName ?: "Android")
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AndroidTile(0, 0, 0xFF3DDC84, "Android"))
 }
 
 /** Library tab: every system with games, as tiles. Also offers the two smart shelves. */
 @Composable
 fun PlatformsScreen(
     onOpenPlatform: (PlatformId) -> Unit,
+    onOpenAndroid: () -> Unit,
     onOpenFavorites: () -> Unit,
     onOpenAll: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -60,6 +77,7 @@ fun PlatformsScreen(
     viewModel: PlatformsViewModel = hiltViewModel(),
 ) {
     val platforms by viewModel.platforms.collectAsStateWithLifecycle()
+    val android by viewModel.android.collectAsStateWithLifecycle()
     var focusedName by remember { mutableStateOf<String?>(null) }
     val colors = VelaTheme.colors
     val total = platforms.sumOf { it.gameCount }
@@ -69,13 +87,13 @@ fun PlatformsScreen(
             Text("Library", style = VelaTheme.typography.display, color = colors.onBackground)
             Spacer(Modifier.height(4.dp))
             Text(
-                focusedName ?: "${platforms.size} systems   $total games",
+                focusedName ?: "${platforms.size + 1} systems   ${total + android.games} games",
                 style = VelaTheme.typography.body,
                 color = colors.muted,
             )
         }
         Spacer(Modifier.height(6.dp))
-        if (platforms.isEmpty()) {
+        if (platforms.isEmpty() && android.count == 0) {
             EmptyState(
                 title = "No systems yet",
                 message = "Add a ROM folder and scan it. Folder names like snes, ps2 or gba are recognised automatically.",
@@ -115,6 +133,19 @@ fun PlatformsScreen(
                     icon = entry.iconPath,
                     onClick = { onOpenPlatform(entry.id) },
                     onFocused = { focusedName = "${entry.platform.name}   ${entry.gameCount} games"; onBackgroundAccent(entry.platform.accentColor) },
+                    width = null,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            item(key = "android") {
+                PlatformTile(
+                    name = "Games and apps",
+                    shortName = android.name,
+                    count = android.count,
+                    accent = Color(android.accent),
+                    onClick = onOpenAndroid,
+                    iconVector = Icons.Rounded.Android,
+                    onFocused = { focusedName = "Android   ${android.games} games   ${android.apps} apps"; onBackgroundAccent(android.accent) },
                     width = null,
                     modifier = Modifier.fillMaxWidth(),
                 )
