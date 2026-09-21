@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import io.vela.core.scraper.store.PlatformIconStore
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,6 +32,8 @@ data class PlatformEntry(
     val platform: Platform,
     val settings: PlatformSettings,
     val gameCount: Int,
+    /** Local path of the system icon for the current theme's icon set, when downloaded. */
+    val iconPath: String? = null,
 ) {
     val id: PlatformId get() = platform.id
     val displayName: String get() = settings.customName ?: platform.name
@@ -43,6 +46,7 @@ class LibraryRepository @Inject constructor(
     private val gameDao: GameDao,
     private val scanner: LibraryScanner,
     private val settingsRepository: SettingsRepository,
+    private val platformIcons: PlatformIconStore,
     private val dispatchers: DispatcherProvider,
 ) {
     val scanProgress: StateFlow<ScanProgress> = scanner.progress
@@ -54,7 +58,7 @@ class LibraryRepository @Inject constructor(
 
     /** Every catalog platform with its settings and count (Settings > Platforms). */
     fun observeAllPlatforms(): Flow<List<PlatformEntry>> =
-        combine(gameDao.observePlatformCounts(), libraryDao.observePlatformSettings()) { counts, settings ->
+        combine(gameDao.observePlatformCounts(), libraryDao.observePlatformSettings(), platformIcons.icons) { counts, settings, icons ->
             val countById = counts.associate { it.platformId to it.count }
             val settingsById = settings.associateBy { it.platformId }
             catalog.platforms.map { p ->
@@ -62,6 +66,7 @@ class LibraryRepository @Inject constructor(
                     platform = p,
                     settings = settingsById[p.id.value]?.toDomain() ?: PlatformSettings(p.id),
                     gameCount = countById[p.id.value] ?: 0,
+                    iconPath = icons[p.id],
                 )
             }
         }

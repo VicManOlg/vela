@@ -103,6 +103,13 @@ data class VelaEffects(
 )
 
 @Immutable
+data class VelaPlatformIcons(
+    val set: String,
+    val tint: Boolean,
+    val alpha: Float,
+)
+
+@Immutable
 data class VelaThemeValues(
     val spec: ThemeSpec,
     val colors: VelaColors,
@@ -112,6 +119,7 @@ data class VelaThemeValues(
     val motion: VelaMotion,
     val background: VelaBackgroundStyle,
     val effects: VelaEffects,
+    val platformIcons: VelaPlatformIcons,
 )
 
 val LocalVelaTheme = staticCompositionLocalOf<VelaThemeValues> { resolveTheme(ThemeSpec(id = "fallback", name = "Fallback")) }
@@ -125,6 +133,7 @@ object VelaTheme {
     val motion: VelaMotion @Composable @ReadOnlyComposable get() = LocalVelaTheme.current.motion
     val background: VelaBackgroundStyle @Composable @ReadOnlyComposable get() = LocalVelaTheme.current.background
     val effects: VelaEffects @Composable @ReadOnlyComposable get() = LocalVelaTheme.current.effects
+    val platformIcons: VelaPlatformIcons @Composable @ReadOnlyComposable get() = LocalVelaTheme.current.platformIcons
 }
 
 /** Height the theme's default sizes were designed for (a 1080p 16:9 handheld at ~2x density). */
@@ -214,7 +223,9 @@ fun resolveTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = f
     )
     val e = spec.effects
     val effects = VelaEffects(e.glassPanels, e.panelAlpha, e.cardShadow, e.focusGlow, e.videoPreviews, e.videoPreviewDelayMs)
-    return VelaThemeValues(spec, colors, typography, shapes, dimens, motion, background, effects)
+    val pi = spec.platformIcons
+    val platformIcons = VelaPlatformIcons(pi.set, pi.tint, pi.alpha.coerceIn(0f, 1f))
+    return VelaThemeValues(spec, colors, typography, shapes, dimens, motion, background, effects, platformIcons)
 }
 
 private fun VelaThemeValues.materialScheme(): ColorScheme = darkColorScheme(

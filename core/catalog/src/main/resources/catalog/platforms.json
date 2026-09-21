@@ -70,7 +70,7 @@
     "libretroName": "Nintendo - Nintendo 3DS", "accentColor": "#FFD62828", "sortOrder": 100
   },
   {
-    "id": "switch", "name": "Nintendo Switch", "shortName": "Switch", "manufacturer": "Nintendo", "releaseYear": 2017,
+    "id": "switch", "iconName": "Nintendo - Switch", "name": "Nintendo Switch", "shortName": "Switch", "manufacturer": "Nintendo", "releaseYear": 2017,
     "family": "NINTENDO", "extensions": ["nsp", "xci", "nca", "nso", "nro", "kip"],
     "folderAliases": ["switch", "nintendo switch", "nsw"],
     "defaultPlayers": ["eden", "sudachi", "citron"], "screenScraperId": 225, "igdbId": 130,
@@ -297,7 +297,7 @@
     "defaultPlayers": [], "accentColor": "#FF8AB4F8", "sortOrder": 910
   },
   {
-    "id": "pc", "name": "PC Games", "shortName": "PC", "manufacturer": "Various", "releaseYear": 1981,
+    "id": "pc", "iconName": "DOS", "name": "PC Games", "shortName": "PC", "manufacturer": "Various", "releaseYear": 1981,
     "family": "PC", "kind": "PC", "extensions": ["desktop", "exe", "lnk", "bat"], "folderAliases": ["windows", "winlator", "pcgames", "steam"],
     "defaultPlayers": ["winlator_cmod", "gamenative"], "screenScraperId": 138, "igdbId": 6, "accentColor": "#FF1B2838", "sortOrder": 920
   }

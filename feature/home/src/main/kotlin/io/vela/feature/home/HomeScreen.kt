@@ -143,6 +143,7 @@ fun HomeScreen(
                                         shortName = entry.platform.shortName,
                                         count = entry.gameCount,
                                         accent = entry.platform.color(),
+                                        icon = entry.iconPath,
                                         onClick = { navigation.openPlatform(entry.id) },
                                         onFocused = { viewModel.spotlightPlatform(entry) },
                                     )

@@ -24,9 +24,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -201,7 +203,7 @@ fun HeroCard(
     }
 }
 
-/** Platform tile: accent colour block with name and count. Icons/logos arrive with themes later. */
+/** Platform tile: accent colour block with the system icon from the theme's icon set, name and count. */
 @Composable
 fun PlatformTile(
     name: String,
@@ -210,12 +212,14 @@ fun PlatformTile(
     accent: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    icon: String? = null,
     width: Dp? = VelaTheme.dimens.cardWidth * 1.35f,
     onFocused: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
     val shape = VelaTheme.shapes.tile
     val colors = VelaTheme.colors
+    val iconStyle = VelaTheme.platformIcons
     val focused by rememberFocusState(interactionSource)
     Box(
         modifier
@@ -229,6 +233,21 @@ fun PlatformTile(
                 ),
             ),
     ) {
+        if (icon != null) {
+            VelaImage(
+                model = artworkModel(icon),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 10.dp, end = 12.dp)
+                    .fillMaxHeight(0.58f)
+                    .aspectRatio(1f)
+                    .alpha(if (focused) 1f else iconStyle.alpha),
+                contentScale = ContentScale.Fit,
+                colorFilter = if (iconStyle.tint) ColorFilter.tint(colors.onBackground) else null,
+                placeholder = {},
+            )
+        }
         Row(
             Modifier
                 .fillMaxSize()

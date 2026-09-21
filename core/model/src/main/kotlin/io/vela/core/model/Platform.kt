@@ -44,6 +44,8 @@ data class Platform(
     val igdbId: Int? = null,
     /** libretro-thumbnails system directory name. */
     val libretroName: String? = null,
+    /** RetroArch assets icon name when it differs from [libretroName] (or there is none). */
+    val iconName: String? = null,
     /** Accent colour (ARGB) used by the theme for platform tiles. */
     @Serializable(with = ArgbHexSerializer::class)
     val accentColor: Long = 0xFF3D7BFF,

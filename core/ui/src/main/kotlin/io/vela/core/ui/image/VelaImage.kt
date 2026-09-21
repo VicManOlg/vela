@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -61,6 +62,7 @@ fun VelaImage(
     accent: Color = VelaTheme.colors.accentSecondary,
     placeholder: (@Composable () -> Unit)? = null,
     alignment: Alignment = Alignment.Center,
+    colorFilter: ColorFilter? = null,
 ) {
     val context = LocalContext.current
     val request = ImageRequest.Builder(context)
@@ -74,6 +76,7 @@ fun VelaImage(
         modifier = modifier,
         contentScale = contentScale,
         alignment = alignment,
+        colorFilter = colorFilter,
     ) {
         val state = painter.state.collectAsState().value
         when (state) {

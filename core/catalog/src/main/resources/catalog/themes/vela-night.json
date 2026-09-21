@@ -18,5 +18,6 @@
   },
   "typography": { "displayFamily": "outfit", "bodyFamily": "manrope" },
   "background": { "mode": "artwork", "blurRadius": 40, "dim": 0.55, "saturation": 1.1 },
-  "effects": { "glassPanels": true, "panelAlpha": 0.62, "focusGlow": true, "videoPreviews": true }
+  "effects": { "glassPanels": true, "panelAlpha": 0.62, "focusGlow": true, "videoPreviews": true },
+  "platformIcons": { "set": "systematic" }
 }

@@ -20,5 +20,6 @@
   "shapes": { "cardRadius": 4, "tileRadius": 6, "focusBorderWidth": 2 },
   "motion": { "focusScale": 1.04, "parallax": false },
   "background": { "mode": "static", "blurRadius": 0, "dim": 1.0, "saturation": 0, "staticColor": "#FF000000" },
-  "effects": { "glassPanels": false, "panelAlpha": 1.0, "cardShadow": false, "focusGlow": false, "videoPreviews": false }
+  "effects": { "glassPanels": false, "panelAlpha": 1.0, "cardShadow": false, "focusGlow": false, "videoPreviews": false },
+  "platformIcons": { "set": "monochrome", "tint": true, "alpha": 0.9 }
 }

@@ -19,5 +19,6 @@
   "typography": { "displayFamily": "outfit", "bodyFamily": "manrope" },
   "shapes": { "cardRadius": 10, "tileRadius": 14 },
   "background": { "mode": "artwork", "blurRadius": 48, "dim": 0.6, "saturation": 1.25 },
-  "effects": { "glassPanels": true, "panelAlpha": 0.7, "focusGlow": true, "videoPreviews": true }
+  "effects": { "glassPanels": true, "panelAlpha": 0.7, "focusGlow": true, "videoPreviews": true },
+  "platformIcons": { "set": "systematic" }
 }

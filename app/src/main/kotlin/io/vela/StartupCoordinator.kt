@@ -1,11 +1,16 @@
 package io.vela
 
+import io.vela.core.catalog.ThemeCatalog
 import io.vela.core.common.ApplicationScope
 import io.vela.core.data.repository.AppsRepository
 import io.vela.core.data.repository.LibraryRepository
 import io.vela.core.data.repository.ScrapeRepository
 import io.vela.core.model.ScanProgress
+import io.vela.core.scraper.NetworkStatus
+import io.vela.core.scraper.store.PlatformIconStore
 import io.vela.core.settings.SettingsRepository
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
@@ -17,8 +22,9 @@ import javax.inject.Singleton
 
 /**
  * Process-wide background work kept out of the Activity so rotation and re-launches never repeat
- * it: mirror installed apps and rescan folders on start (when enabled), and fetch artwork for
- * newly found games after *any* scan (startup, Home "rescan", Settings) once setup is complete.
+ * it: mirror installed apps and rescan folders on start (when enabled), fetch artwork for newly
+ * found games after *any* scan (startup, Home "rescan", Settings) once setup is complete, and
+ * keep the platform icons of the active theme downloaded.
  * The setup flow's own scan is excluded on purpose: its last step asks the user whether to fetch
  * artwork.
  */
@@ -28,6 +34,9 @@ class StartupCoordinator @Inject constructor(
     private val library: LibraryRepository,
     private val apps: AppsRepository,
     private val scrape: ScrapeRepository,
+    private val themes: ThemeCatalog,
+    private val platformIcons: PlatformIconStore,
+    private val network: NetworkStatus,
     private val scope: ApplicationScope,
 ) {
     private var started = false
@@ -36,6 +45,7 @@ class StartupCoordinator @Inject constructor(
         if (started) return
         started = true
         scope.launch { autoScrapeAfterScans() }
+        scope.launch { syncPlatformIcons() }
         scope.launch { startupWork() }
     }
 
@@ -47,6 +57,18 @@ class StartupCoordinator @Inject constructor(
                 scrape.scrapeMissingInBackground()
             }
         }
+    }
+
+    /** Re-syncs when the theme (icon set) or the Wi-Fi-only preference changes. */
+    private suspend fun syncPlatformIcons() {
+        settings.settings
+            .map { it.themeId to it.scraping.wifiOnly }
+            .distinctUntilChanged()
+            .collectLatest { (themeId, wifiOnly) ->
+                val spec = themes.byId(themeId).platformIcons
+                runCatching { platformIcons.sync(spec, allowNetwork = !wifiOnly || network.isUnmetered()) }
+                    .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it else Timber.w(it, "Platform icon sync failed") }
+            }
     }
 
     private suspend fun startupWork() {

@@ -112,6 +112,7 @@ fun PlatformsScreen(
                     shortName = entry.platform.shortName,
                     count = entry.gameCount,
                     accent = entry.platform.color(),
+                    icon = entry.iconPath,
                     onClick = { onOpenPlatform(entry.id) },
                     onFocused = { focusedName = "${entry.platform.name}   ${entry.gameCount} games"; onBackgroundAccent(entry.platform.accentColor) },
                     width = null,

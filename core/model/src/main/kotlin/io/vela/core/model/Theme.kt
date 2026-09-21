@@ -19,6 +19,7 @@ data class ThemeSpec(
     val motion: ThemeMotion = ThemeMotion(),
     val background: ThemeBackground = ThemeBackground(),
     val effects: ThemeEffects = ThemeEffects(),
+    val platformIcons: ThemePlatformIcons = ThemePlatformIcons(),
 )
 
 @Serializable
@@ -94,6 +95,22 @@ data class ThemeBackground(
     val dim: Float = 0.55f,
     val saturation: Float = 1.1f,
     val staticColor: String? = null,
+)
+
+/**
+ * System icons drawn on platform tiles. They are downloaded once per set from the RetroArch assets
+ * repository (CC BY 4.0, https://github.com/libretro/retroarch-assets) using the platform's
+ * `iconName`/`libretroName`, and kept under `files/platform-icons/<set>/`.
+ */
+@Serializable
+data class ThemePlatformIcons(
+    /** `systematic` (console illustrations), `flatui` (flat colour), `monochrome` (white glyphs) or `none`. */
+    val set: String = "systematic",
+    /** Tint the icon with the theme's onBackground colour; meant for `monochrome`. */
+    val tint: Boolean = false,
+    val alpha: Float = 1f,
+    /** Download URL; `{set}` and `{name}` are replaced, URL-encoded. */
+    val urlTemplate: String = "https://raw.githubusercontent.com/libretro/retroarch-assets/master/xmb/{set}/png/{name}.png",
 )
 
 @Serializable
