@@ -101,6 +101,28 @@ class LibraryScannerTest {
     }
 
     @Test
+    fun `pinning a source to a system moves already scanned games without recreating them`() = runTest {
+        file("roms/Game A.bin")
+        file("roms/Game B.bin")
+        val sourceId = addSource(platform = "megadrive")
+        scanner.scanAll()
+        val before = db.gameDao().observeRecentlyAdded(10).first()
+        assertThat(before.map { it.platformId }.distinct()).containsExactly("megadrive")
+        db.gameDao().setFavorite(before.first().id, true)
+
+        val source = db.libraryDao().source(sourceId)!!
+        db.libraryDao().updateSource(source.copy(platformId = "psx"))
+        val result = scanner.scanSource(sourceId)
+
+        assertThat(result.added).isEqualTo(0)
+        assertThat(result.updated).isEqualTo(2)
+        val after = db.gameDao().observeRecentlyAdded(10).first()
+        assertThat(after.map { it.id }).containsExactlyElementsIn(before.map { it.id })
+        assertThat(after.map { it.platformId }.distinct()).containsExactly("psx")
+        assertThat(after.first { it.id == before.first().id }.favorite).isTrue()
+    }
+
+    @Test
     fun `multi disc without playlist keeps only first disc visible`() = runTest {
         file("psx/Metal Gear Solid (Disc 1).chd")
         file("psx/Metal Gear Solid (Disc 2).chd")

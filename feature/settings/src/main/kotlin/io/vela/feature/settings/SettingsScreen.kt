@@ -231,9 +231,7 @@ private fun LibrarySources(vm: SettingsViewModel) {
                 platforms.filter { it.platform.kind == PlatformKind.EMULATED }.map { MenuOption(it.id.value, it.displayName, selected = it.id == source.platformId) },
             onSelect = { opt ->
                 pendingPlatformFor = null
-                vm.removeSource(source.id)
-                val platform = opt.id.takeIf { it != "auto" }?.let(::PlatformId)
-                if (source.access.name == "FILE") vm.addPathSource(source.uri, platform) else vm.addTreeSource(Uri.parse(source.uri), platform)
+                vm.setSourcePlatform(source, opt.id.takeIf { it != "auto" }?.let(::PlatformId))
             },
             onDismiss = { pendingPlatformFor = null },
         )

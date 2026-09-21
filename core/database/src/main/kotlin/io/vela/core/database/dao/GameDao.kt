@@ -32,10 +32,10 @@ interface GameDao {
     @Query("SELECT * FROM games WHERE locationType = :type AND locationValue = :value LIMIT 1")
     suspend fun findByLocation(type: LocationType, value: String): GameEntity?
 
-    @Query("SELECT id, locationValue, fileSize, lastModified FROM games WHERE sourceId = :sourceId")
+    @Query("SELECT id, locationValue, fileSize, lastModified, platformId FROM games WHERE sourceId = :sourceId")
     suspend fun fileSignaturesForSource(sourceId: Long): List<FileSignature>
 
-    @Query("SELECT id, locationValue, fileSize, lastModified FROM games WHERE locationType IN ('FILE','DOCUMENT')")
+    @Query("SELECT id, locationValue, fileSize, lastModified, platformId FROM games WHERE locationType IN ('FILE','DOCUMENT')")
     suspend fun allFileSignatures(): List<FileSignature>
 
     @Query(
@@ -206,4 +206,5 @@ data class FileSignature(
     val locationValue: String,
     val fileSize: Long,
     val lastModified: Long,
+    val platformId: String,
 )

@@ -127,6 +127,10 @@ class LibraryScanner @Inject constructor(
                     db.gameDao().touchScanned(sig.id, file.size, file.lastModified, generation, platform.id.value, file.name)
                     updated++
                 } else {
+                    if (sig.platformId != platform.id.value) {
+                        db.gameDao().setPlatform(sig.id, platform.id.value)
+                        updated++
+                    }
                     seenIds += sig.id
                 }
             }

@@ -103,6 +103,10 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun removeSource(id: LibrarySourceId) = viewModelScope.launch { library.removeSource(id) }
+    fun setSourcePlatform(source: LibrarySource, platformId: PlatformId?) = viewModelScope.launch {
+        library.setSourcePlatform(source, platformId)
+        library.scanSource(source.id)
+    }
     fun toggleSource(source: LibrarySource) = viewModelScope.launch { library.setSourceEnabled(source, !source.enabled) }
     fun scanNow() = library.scanInBackground()
     fun cancelScan() = library.cancelScan()

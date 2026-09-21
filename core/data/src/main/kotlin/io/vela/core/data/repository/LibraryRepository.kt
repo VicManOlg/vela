@@ -101,14 +101,23 @@ class LibraryRepository @Inject constructor(
     }
 
     suspend fun setSourceEnabled(source: LibrarySource, enabled: Boolean) = withContext(dispatchers.io) {
-        libraryDao.updateSource(
-            LibrarySourceEntity(
-                id = source.id.value, uri = source.uri, displayName = source.displayName, access = source.access.name,
-                platformId = source.platformId?.value, recursive = source.recursive, enabled = enabled,
-                lastScanAt = source.lastScanAt, lastScanGameCount = source.lastScanGameCount,
-            ),
-        )
+        libraryDao.updateSource(source.toEntity().copy(enabled = enabled))
     }
+
+    /**
+     * Pins the folder to one system (or back to folder-name detection with null). Games already
+     * scanned keep their ids, favourites and play time; the next [scanSource] moves them to the
+     * right platform.
+     */
+    suspend fun setSourcePlatform(source: LibrarySource, platformId: PlatformId?) = withContext(dispatchers.io) {
+        libraryDao.updateSource(source.toEntity().copy(platformId = platformId?.value))
+    }
+
+    private fun LibrarySource.toEntity() = LibrarySourceEntity(
+        id = id.value, uri = uri, displayName = displayName, access = access.name,
+        platformId = platformId?.value, recursive = recursive, enabled = enabled,
+        lastScanAt = lastScanAt, lastScanGameCount = lastScanGameCount,
+    )
 
     // ---- Scanning -----------------------------------------------------------------------------
 
