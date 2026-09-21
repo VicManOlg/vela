@@ -53,6 +53,7 @@ class ScrapeService @Inject constructor(
     private val platforms: PlatformCatalog,
     private val scope: ApplicationScope,
     private val dispatchers: DispatcherProvider,
+    private val network: NetworkStatus,
 ) {
     private val _progress = MutableStateFlow<ScrapeProgress>(ScrapeProgress.Idle)
     val progress: StateFlow<ScrapeProgress> = _progress
@@ -86,6 +87,11 @@ class ScrapeService @Inject constructor(
     suspend fun scrapeGames(ids: List<GameId>) = mutex.withLock {
         withContext(dispatchers.io) {
             val prefs = settings.current().scraping
+            if (prefs.wifiOnly && !network.isUnmetered()) {
+                Timber.i("Scrape postponed: Wi-Fi only and the connection is metered or absent")
+                _progress.value = ScrapeProgress.Stopped("Waiting for Wi-Fi")
+                return@withContext
+            }
             var ok = 0
             var failed = 0
             var missing = 0

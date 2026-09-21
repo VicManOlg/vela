@@ -17,12 +17,17 @@ import javax.inject.Singleton
 
 /**
  * libretro-thumbnails: no account, no rate limit, works with No-Intro/Redump named files.
- * Only artwork (box, screenshot, title screen), no descriptive metadata. The URL is derived from
- * the file name, so the downloader must tolerate 404s for names that do not match the database.
+ * Only artwork (box, screenshot, title screen), no descriptive metadata.
+ *
+ * Names come from the system's directory listing ([LibretroNameSource]) so files with extra tags,
+ * a missing region or slightly different punctuation still match. When the listing cannot be
+ * fetched the provider falls back to guessing the exact file name and the cleaned title with the
+ * preferred region tags; the downloader tolerates the resulting 404s.
  */
 @Singleton
 class LibretroThumbnailsProvider @Inject constructor(
     private val platforms: PlatformCatalog,
+    private val index: LibretroNameSource,
 ) : MetadataProvider {
 
     override val info = MetadataProviderInfo(
@@ -39,36 +44,44 @@ class LibretroThumbnailsProvider @Inject constructor(
 
     override suspend fun search(query: MetadataQuery, settings: ScrapingSettings): Outcome<List<MetadataMatch>> {
         val system = platforms[query.platformId]?.libretroName ?: return Outcome.success(emptyList())
-        val stem = TitleCleaner.stem(query.fileName)
-        // Exact No-Intro name first, cleaned title as a weaker fallback.
-        val names = listOf(stem to 0.9f, query.title to 0.5f).distinctBy { it.first }
-        val matches = names.map { (name, score) ->
-            val safe = sanitize(name)
-            MetadataMatch(
-                providerId = ID,
-                providerGameId = "$system/$safe",
-                title = name,
-                score = score,
-                metadata = GameMetadata(),
-                artwork = listOf(
-                    ArtworkCandidate(ArtworkType.BOX_FRONT, url(system, "Named_Boxarts", safe)),
-                    ArtworkCandidate(ArtworkType.SCREENSHOT, url(system, "Named_Snaps", safe)),
-                    ArtworkCandidate(ArtworkType.TITLE_SCREEN, url(system, "Named_Titles", safe)),
-                ),
-            )
+        val stem = sanitize(TitleCleaner.stem(query.fileName))
+        val names = index.names(system)
+
+        val candidates: List<Pair<String, Float>> = if (names != null) {
+            LibretroMatcher.rank(query.title, query.fileName, names, query.preferredRegions)
+                .mapIndexed { i, name -> name to if (name == stem) 1f else 0.9f - 0.05f * i }
+        } else {
+            val regionGuesses = query.preferredRegions
+                .mapNotNull(LibretroMatcher::regionTag)
+                .mapIndexed { i, tag -> sanitize("${query.title} ($tag)") to 0.7f - 0.05f * i }
+            (listOf(stem to 0.9f) + regionGuesses + listOf(sanitize(query.title) to 0.5f)).distinctBy { it.first }
         }
-        return Outcome.success(matches)
+
+        return Outcome.success(candidates.map { (name, score) -> match(system, name, score) })
     }
+
+    private fun match(system: String, name: String, score: Float) = MetadataMatch(
+        providerId = ID,
+        providerGameId = "$system/$name",
+        title = name,
+        score = score,
+        metadata = GameMetadata(),
+        artwork = listOf(
+            ArtworkCandidate(ArtworkType.BOX_FRONT, url(system, "Named_Boxarts", name)),
+            ArtworkCandidate(ArtworkType.SCREENSHOT, url(system, "Named_Snaps", name)),
+            ArtworkCandidate(ArtworkType.TITLE_SCREEN, url(system, "Named_Titles", name)),
+        ),
+    )
 
     private fun url(system: String, folder: String, name: String): String =
         "$BASE/${encode(system)}/$folder/${encode(name)}.png"
 
-    private fun encode(s: String) = URLEncoder.encode(s, "UTF-8").replace("+", "%20")
-
     companion object {
         const val ID = "libretro"
-        private const val BASE = "https://thumbnails.libretro.com"
+        internal const val BASE = "https://thumbnails.libretro.com"
         private val forbidden = Regex("""[&*/:`<>?\\|"]""")
+
+        internal fun encode(s: String): String = URLEncoder.encode(s, "UTF-8").replace("+", "%20")
 
         /** libretro replaces characters that are illegal in file names with underscores. */
         fun sanitize(name: String): String = name.replace(forbidden, "_")

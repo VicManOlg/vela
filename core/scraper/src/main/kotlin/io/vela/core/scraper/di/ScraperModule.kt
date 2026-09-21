@@ -8,6 +8,8 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
 import io.vela.core.scraper.MetadataProvider
 import io.vela.core.scraper.ProviderRegistry
+import io.vela.core.scraper.provider.LibretroIndex
+import io.vela.core.scraper.provider.LibretroNameSource
 import io.vela.core.scraper.provider.LibretroThumbnailsProvider
 import io.vela.core.scraper.provider.ScreenScraperProvider
 import okhttp3.OkHttpClient
@@ -19,6 +21,7 @@ import javax.inject.Singleton
 abstract class ScraperBindings {
     @Binds @IntoSet abstract fun bindLibretro(p: LibretroThumbnailsProvider): MetadataProvider
     @Binds @IntoSet abstract fun bindScreenScraper(p: ScreenScraperProvider): MetadataProvider
+    @Binds abstract fun bindLibretroNames(i: LibretroIndex): LibretroNameSource
 }
 
 @Module
