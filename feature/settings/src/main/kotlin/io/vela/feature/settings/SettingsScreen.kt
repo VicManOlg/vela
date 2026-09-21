@@ -57,6 +57,7 @@ import io.vela.core.ui.components.VelaMenuDialog
 import io.vela.core.ui.input.GamepadButton
 import io.vela.core.ui.input.GamepadHandler
 import io.vela.core.ui.theme.VelaTheme
+import io.vela.core.model.HomeLayout
 
 /**
  * Settings: sections on the left, content on the right. L2/R2 switch sections so the user never
@@ -404,6 +405,14 @@ private fun Scope.appearanceSection(vm: SettingsViewModel, settings: AppSettings
         if (picking) {
             VelaMenuDialog("Theme", vm.themes.themes.map { MenuOption(it.id, it.name, description = it.author.takeIf { a -> a.isNotBlank() }?.let { a -> "by $a" }, selected = it.id == settings.themeId) },
                 onSelect = { opt -> vm.update { it.copy(themeId = opt.id) }; picking = false }, onDismiss = { picking = false })
+        }
+    }
+    item {
+        var picking by remember { mutableStateOf(false) }
+        SettingRow("Home layout", description = settings.homeLayout.description, value = settings.homeLayout.label, onClick = { picking = true })
+        if (picking) {
+            VelaMenuDialog("Home layout", HomeLayout.entries.map { MenuOption(it.name, it.label, description = it.description, selected = it == settings.homeLayout) },
+                onSelect = { opt -> vm.update { it.copy(homeLayout = HomeLayout.valueOf(opt.id)) }; picking = false }, onDismiss = { picking = false })
         }
     }
     item {

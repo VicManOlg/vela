@@ -53,19 +53,21 @@ fun Rail(
         }
     }
     Column(modifier.fillMaxWidth()) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = dimens.screenPadding),
-            verticalAlignment = Alignment.Bottom,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(title, style = VelaTheme.typography.headline, color = VelaTheme.colors.onBackground)
-                if (subtitle != null) Text(subtitle, style = VelaTheme.typography.caption, color = VelaTheme.colors.muted)
+        if (title.isNotEmpty() || subtitle != null || trailing != null) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = dimens.screenPadding),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = VelaTheme.typography.headline, color = VelaTheme.colors.onBackground)
+                    if (subtitle != null) Text(subtitle, style = VelaTheme.typography.caption, color = VelaTheme.colors.muted)
+                }
+                trailing?.invoke()
             }
-            trailing?.invoke()
+            Spacer(Modifier.height(10.dp))
         }
-        Spacer(Modifier.height(10.dp))
         LazyRow(
             state = state,
             modifier = Modifier

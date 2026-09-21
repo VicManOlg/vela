@@ -16,6 +16,13 @@ enum class StorageMode {
 @Serializable
 enum class ConfirmButton { A, B }
 
+/** Home screen arrangement. */
+@Serializable
+enum class HomeLayout(val label: String, val description: String) {
+    RAILS("Rails", "Several rows: continue playing, recent, favourites, systems…"),
+    SPOTLIGHT("Spotlight", "The focused game fills the screen; one row of covers and one of systems"),
+}
+
 /** How a game list (platform, collection, favourites, all) is laid out. */
 @Serializable
 enum class LibraryView(val label: String, val description: String) {
@@ -63,6 +70,7 @@ data class AppSettings(
     val showBattery: Boolean = true,
     val gridColumns: Int = 0,
     val libraryView: LibraryView = LibraryView.GRID,
+    val homeLayout: HomeLayout = HomeLayout.RAILS,
     val reduceMotion: Boolean = false,
     val uiScale: Float = 1f,
     // Android apps

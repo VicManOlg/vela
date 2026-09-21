@@ -47,6 +47,7 @@ import io.vela.core.ui.components.formatLastPlayed
 import io.vela.core.ui.input.GamepadButton
 import io.vela.core.ui.input.GamepadHandler
 import io.vela.core.ui.theme.VelaTheme
+import io.vela.core.model.HomeLayout
 
 /** Navigation the Home feature can request; the app module wires these to routes. */
 class HomeNavigation(
@@ -97,6 +98,10 @@ fun HomeScreen(
                 onAction = navigation.openSettings,
                 modifier = Modifier.padding(top = 40.dp),
             )
+            return@Box
+        }
+        if (state.layout == HomeLayout.SPOTLIGHT) {
+            SpotlightHome(state, spotlight, viewModel, navigation)
             return@Box
         }
 

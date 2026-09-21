@@ -36,7 +36,8 @@ MVP: functional, tested on an emulator and designed for 16:9 handhelds.
 | Android games detection and pinned apps | Done |
 | Metadata: libretro-thumbnails (no account) and ScreenScraper (user account) providers | Done |
 | Theme system driven by JSON specs (3 bundled themes) | Done |
-| Game list views: grid, compact grid, list with preview, showcase (Start or Settings > Appearance) | Done |
+| Game list views: grid, compact grid, list with preview, showcase wheel (Start or Settings > Appearance) | Done |
+| Home layouts: rails or spotlight (focused game fills the screen) | Done |
 | Settings: library, systems, emulators, metadata, appearance, controller, Android apps, storage, advanced | Done |
 | First-run setup flow | Done |
 | Video previews, SteamGridDB, IGDB, RetroAchievements, Winlator integration, cloud sync | Planned |

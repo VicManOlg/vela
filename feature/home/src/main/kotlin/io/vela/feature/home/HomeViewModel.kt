@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import io.vela.core.model.HomeLayout
 
 /** What the focused card tells the header and the background. */
 data class Spotlight(
@@ -37,6 +38,7 @@ data class Spotlight(
 )
 
 data class HomeUiState(
+    val layout: HomeLayout = HomeLayout.RAILS,
     val rails: List<HomeRail> = emptyList(),
     val continuePlaying: List<GameSummary> = emptyList(),
     val recent: List<GameSummary> = emptyList(),
@@ -82,6 +84,7 @@ class HomeViewModel @Inject constructor(
         // "Continue playing": games marked Playing, else the most recent ones with play time.
         val continuePlaying = l.playing.ifEmpty { l.recent.filter { it.totalPlayTimeMs > 0 }.take(8) }
         HomeUiState(
+            layout = prefs.homeLayout,
             rails = prefs.homeRails,
             continuePlaying = continuePlaying,
             recent = l.recent,
