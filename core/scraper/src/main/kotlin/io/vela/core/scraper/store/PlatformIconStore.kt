@@ -6,6 +6,7 @@ import io.vela.core.catalog.PlatformCatalog
 import io.vela.core.common.DispatcherProvider
 import io.vela.core.model.PlatformId
 import io.vela.core.model.ThemePlatformIcons
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
@@ -43,8 +44,8 @@ class PlatformIconStore @Inject constructor(
 
     /**
      * Publishes the icons already on disk for [spec]'s set and, when [allowNetwork], downloads the
-     * ones still missing. Tiles update as each icon lands. Failures are remembered per process so
-     * a missing icon is requested once per run.
+     * ones still missing. Tiles update as each icon lands. Icons the server does not have are
+     * remembered per process; a network error stops the pass and leaves the rest for the next sync.
      */
     suspend fun sync(spec: ThemePlatformIcons, allowNetwork: Boolean) = mutex.withLock {
         withContext(dispatchers.io) {
@@ -62,11 +63,17 @@ class PlatformIconStore @Inject constructor(
                 val target = File(dir, "${platform.id.value}.png")
                 val key = "${spec.set}/${platform.id.value}"
                 if (target.exists() || key in missing) continue
-                if (download(urlFor(spec.urlTemplate, spec.set, name), target)) {
-                    downloaded++
-                    publish(dir)
-                } else {
-                    missing += key
+                when (downloadWithRetry(urlFor(spec.urlTemplate, spec.set, name), target)) {
+                    Result.DOWNLOADED -> {
+                        downloaded++
+                        publish(dir)
+                    }
+                    Result.NOT_FOUND -> missing += key
+                    Result.NETWORK_ERROR -> {
+                        // Offline or flaky link: leave the rest for the next sync instead of marking them missing.
+                        Timber.i("Platform icons (%s): network unavailable, %d downloaded so far", spec.set, downloaded)
+                        return@withContext
+                    }
                 }
             }
             if (downloaded > 0) Timber.i("Platform icons (%s): %d downloaded", spec.set, downloaded)
@@ -78,34 +85,49 @@ class PlatformIconStore @Inject constructor(
         _icons.value = files.associate { PlatformId(it.nameWithoutExtension) to it.absolutePath }
     }
 
-    private fun download(url: String, target: File): Boolean {
+    private enum class Result { DOWNLOADED, NOT_FOUND, NETWORK_ERROR }
+
+    /** DNS hiccups and dropped connections are common on handhelds: try a few times before giving up the pass. */
+    private suspend fun downloadWithRetry(url: String, target: File): Result {
+        var result = download(url, target)
+        var attempt = 1
+        while (result == Result.NETWORK_ERROR && attempt < MAX_ATTEMPTS) {
+            delay(RETRY_DELAY_MS * attempt)
+            result = download(url, target)
+            attempt++
+        }
+        return result
+    }
+
+    private fun download(url: String, target: File): Result {
         target.parentFile?.mkdirs()
         val tmp = File(target.path + ".part")
         return try {
             client.newCall(Request.Builder().url(url).build()).execute().use { response ->
                 if (!response.isSuccessful) {
                     Timber.d("Platform icon %s -> HTTP %d", url, response.code)
-                    return false
+                    return if (response.code in 500..599) Result.NETWORK_ERROR else Result.NOT_FOUND
                 }
                 tmp.sink().buffer().use { sink -> sink.writeAll(response.body.source()) }
             }
-            if (tmp.length() == 0L) {
-                tmp.delete()
-                false
-            } else {
-                if (target.exists()) target.delete()
-                tmp.renameTo(target)
+            when {
+                tmp.length() == 0L -> { tmp.delete(); Result.NOT_FOUND }
+                else -> {
+                    if (target.exists()) target.delete()
+                    if (tmp.renameTo(target)) Result.DOWNLOADED else { tmp.delete(); Result.NETWORK_ERROR }
+                }
             }
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
+        } catch (e: java.io.IOException) {
             tmp.delete()
-            Timber.w(e, "Platform icon download failed %s", url)
-            false
+            Timber.w("Platform icon download failed %s: %s", url, e.message)
+            Result.NETWORK_ERROR
         }
     }
 
     companion object {
         const val NONE = "none"
+        private const val MAX_ATTEMPTS = 3
+        private const val RETRY_DELAY_MS = 1500L
 
         /** Fills `{set}` and `{name}` in [template], URL-encoding both. */
         fun urlFor(template: String, set: String, name: String): String =

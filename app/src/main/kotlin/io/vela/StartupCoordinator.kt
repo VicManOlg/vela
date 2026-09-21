@@ -9,8 +9,12 @@ import io.vela.core.model.ScanProgress
 import io.vela.core.scraper.NetworkStatus
 import io.vela.core.scraper.store.PlatformIconStore
 import io.vela.core.settings.SettingsRepository
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
@@ -59,11 +63,13 @@ class StartupCoordinator @Inject constructor(
         }
     }
 
-    /** Re-syncs when the theme (icon set) or the Wi-Fi-only preference changes. */
+    /** Re-syncs when the theme (icon set) or the Wi-Fi-only preference changes, and when connectivity comes back. */
+    @OptIn(FlowPreview::class)
     private suspend fun syncPlatformIcons() {
-        settings.settings
-            .map { it.themeId to it.scraping.wifiOnly }
-            .distinctUntilChanged()
+        val prefs = settings.settings.map { it.themeId to it.scraping.wifiOnly }.distinctUntilChanged()
+        val connectivity = network.changes.onStart { emit(Unit) }
+        combine(prefs, connectivity) { p, _ -> p }
+            .debounce(1500)
             .collectLatest { (themeId, wifiOnly) ->
                 val spec = themes.byId(themeId).platformIcons
                 runCatching { platformIcons.sync(spec, allowNetwork = !wifiOnly || network.isUnmetered()) }
