@@ -116,8 +116,19 @@ Requirements: JDK 17, Android SDK with platform 37 and build-tools 37.
 ```
 ./gradlew :app:assembleDebug      # debug APK in app/build/outputs/apk/debug
 ./gradlew :app:installDebug       # install on the connected device
+./gradlew :app:assemblePerf       # optimised build (R8, not debuggable) that installs OVER the debug app
+adb install -r app/build/outputs/apk/perf/app-perf.apk
+adb shell cmd package compile -m speed -f io.vela.frontend.debug   # ahead-of-time compile, full speed from the first frame
 ./gradlew test                    # unit tests (JVM + Robolectric)
 ```
+
+Day-to-day testing on a phone should use the `perf` build: the debug build is `debuggable`, so ART
+runs it mostly in the interpreter and Compose keeps its debug checks. In a sampled profile of the
+debug build about three quarters of the main thread was interpreter overhead; the `perf` build cut
+the UI-thread time per frame by roughly two thirds on the same scenario. It shares package name and
+signature with the debug build, so library, artwork and settings are kept.
+
+```bash```
 
 Optional `secrets.properties` at the repository root enables ScreenScraper developer credentials:
 

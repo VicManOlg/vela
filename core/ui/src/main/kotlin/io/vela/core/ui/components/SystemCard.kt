@@ -61,7 +61,8 @@ fun SystemCard(
     val colors = VelaTheme.colors
     val iconStyle = VelaTheme.platformIcons
     val focused by rememberFocusState(interactionSource)
-    val glow by animateFloatAsState(if (focused) 1f else 0.5f, tween(450), label = "systemGlow")
+    // Read in draw and layer phases only, so the glow animates without recomposing the card.
+    val glow = animateFloatAsState(if (focused) 1f else 0.5f, tween(450), label = "systemGlow")
 
     Box(
         modifier
@@ -78,7 +79,7 @@ fun SystemCard(
                 val center = Offset(size.width / 2f, size.height * 0.3f)
                 val radius = size.width * 0.58f
                 drawCircle(
-                    Brush.radialGradient(listOf(accent.copy(alpha = 0.75f * glow), Color.Transparent), center = center, radius = radius),
+                    Brush.radialGradient(listOf(accent.copy(alpha = 0.75f * glow.value), Color.Transparent), center = center, radius = radius),
                     radius = radius,
                     center = center,
                 )
@@ -86,7 +87,6 @@ fun SystemCard(
     ) {
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.fillMaxWidth().weight(0.46f).padding(top = 6.dp), contentAlignment = Alignment.Center) {
-                val grow = 1f + 0.08f * ((glow - 0.5f) / 0.5f)
                 if (icon != null) {
                     VelaImage(
                         model = artworkModel(icon),
@@ -94,7 +94,7 @@ fun SystemCard(
                         modifier = Modifier
                             .fillMaxWidth(0.6f)
                             .aspectRatio(1f)
-                            .graphicsLayer { scaleX = grow; scaleY = grow },
+                            .graphicsLayer { val grow = 1f + 0.08f * ((glow.value - 0.5f) / 0.5f); scaleX = grow; scaleY = grow },
                         contentScale = ContentScale.Fit,
                         colorFilter = if (iconStyle.tint) ColorFilter.tint(colors.onBackground) else null,
                         placeholder = {},
@@ -107,7 +107,7 @@ fun SystemCard(
                         modifier = Modifier
                             .fillMaxWidth(0.4f)
                             .aspectRatio(1f)
-                            .graphicsLayer { scaleX = grow; scaleY = grow },
+                            .graphicsLayer { val grow = 1f + 0.08f * ((glow.value - 0.5f) / 0.5f); scaleX = grow; scaleY = grow },
                     )
                 }
             }

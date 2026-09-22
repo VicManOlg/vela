@@ -97,27 +97,32 @@ fun DynamicBackground(
                 Box(Modifier.fillMaxSize()) {
                     if (art != null && (style.mode == "artwork" || style.mode == "hero")) {
                         val hero = style.mode == "hero"
-                        val drift by rememberDrift(enabled = hero && !motion.reduceMotion)
-                        val request = ImageRequest.Builder(context)
-                            .data(artworkModel(art))
-                            .size(if (hero) 1280 else 480)
-                            .precision(Precision.INEXACT)
-                            .crossfade(false)
-                            .build()
+                        // Read inside graphicsLayer only: the 26 s drift must never recompose the scene.
+                        val drift = rememberDrift(enabled = hero && !motion.reduceMotion)
+                        val request = remember(art, hero, context) {
+                            ImageRequest.Builder(context)
+                                .data(artworkModel(art))
+                                .size(if (hero) 1280 else 480)
+                                .precision(Precision.INEXACT)
+                                .crossfade(false)
+                                .build()
+                        }
+                        val saturation = remember(style.saturation) { ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(style.saturation) }) }
                         AsyncImage(
                             model = request,
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
-                            colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(style.saturation) }),
+                            colorFilter = saturation,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .graphicsLayer {
                                     if (hero) {
                                         // Ken Burns: slow zoom plus sideways drift so the scene never sits still.
-                                        val zoom = 1.06f + 0.06f * drift
+                                        val d = drift.value
+                                        val zoom = 1.06f + 0.06f * d
                                         scaleX = zoom
                                         scaleY = zoom
-                                        translationX = (drift - 0.5f) * size.width * 0.04f
+                                        translationX = (d - 0.5f) * size.width * 0.04f
                                     }
                                 }
                                 .then(if (style.blurRadius > 0.dp) Modifier.blur(style.blurRadius) else Modifier),

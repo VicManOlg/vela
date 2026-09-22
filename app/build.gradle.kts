@@ -26,6 +26,16 @@ android {
             // Debug signing until a release keystore is configured (see README).
             signingConfig = signingConfigs.getByName("debug")
         }
+        // Optimised build that installs over the debug app: same package, same signature, so the
+        // library and settings on the device are kept. Not debuggable, so ART runs compiled code
+        // instead of the interpreter, and R8 strips and inlines. Use it for day-to-day testing.
+        create("perf") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".debug"
+            isDebuggable = false
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
+        }
     }
 
     buildFeatures {

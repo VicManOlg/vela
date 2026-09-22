@@ -228,7 +228,8 @@ fun PlatformTile(
     val colors = VelaTheme.colors
     val iconStyle = VelaTheme.platformIcons
     val focused by rememberFocusState(interactionSource)
-    val phase by animateFloatAsState(if (focused) 1f else 0f, tween(if (focused) 700 else 400), label = "tileLight")
+    // Read in draw and layer phases only, so the 700 ms light sweep never recomposes the tile.
+    val phase = animateFloatAsState(if (focused) 1f else 0f, tween(if (focused) 700 else 400), label = "tileLight")
     Box(
         modifier
             .then(if (width != null) Modifier.width(width) else Modifier)
@@ -237,10 +238,11 @@ fun PlatformTile(
             .clip(shape)
             .drawBehind {
                 // The accent light slides across the tile as it gains focus.
-                val shift = phase * size.width * 0.35f
+                val p = phase.value
+                val shift = p * size.width * 0.35f
                 drawRect(
                     Brush.linearGradient(
-                        listOf(accent.copy(alpha = 0.75f + 0.2f * phase), accent.copy(alpha = 0.35f), colors.surfaceElevated),
+                        listOf(accent.copy(alpha = 0.75f + 0.2f * p), accent.copy(alpha = 0.35f), colors.surfaceElevated),
                         start = Offset(-shift, 0f),
                         end = Offset(size.width - shift * 0.5f, size.height),
                     ),
@@ -258,7 +260,7 @@ fun PlatformTile(
                     .aspectRatio(1f)
                     .alpha(if (focused) 1f else iconStyle.alpha)
                     .graphicsLayer {
-                        val grow = 1f + 0.08f * phase
+                        val grow = 1f + 0.08f * phase.value
                         scaleX = grow
                         scaleY = grow
                     },

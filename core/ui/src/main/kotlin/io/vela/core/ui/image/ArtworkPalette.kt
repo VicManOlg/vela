@@ -41,9 +41,12 @@ object ArtworkPalette {
             val green = FloatArray(BINS)
             val blue = FloatArray(BINS)
             val hsv = FloatArray(3)
+            val width = bitmap.width
+            val pixels = IntArray(width * bitmap.height)
+            bitmap.getPixels(pixels, 0, width, 0, 0, width, bitmap.height)
             for (y in 0 until bitmap.height step 2) {
-                for (x in 0 until bitmap.width step 2) {
-                    val c = bitmap.getPixel(x, y)
+                for (x in 0 until width step 2) {
+                    val c = pixels[y * width + x]
                     if (c ushr 24 < 128) continue
                     Color.colorToHSV(c, hsv)
                     val s = hsv[1]

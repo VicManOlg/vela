@@ -2,7 +2,6 @@ package io.vela.core.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,14 +17,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -40,10 +42,14 @@ import io.vela.core.ui.sound.LocalUiSounds
 import io.vela.core.ui.sound.UiSound
 import androidx.compose.ui.draw.drawWithContent
 import io.vela.core.ui.theme.LocalDynamicAccent
+import kotlin.math.max
 
 /**
  * The one focus treatment used everywhere: scale up, thin light ring, optional glow underneath.
  * Long-press on the confirm button triggers [onLongPress] (contextual menus without X/Y).
+ *
+ * Every animated value (scale, ring, glow) is read in the layer and draw phases only, so a focus
+ * change animates without recomposing the card it decorates.
  */
 fun Modifier.velaFocusable(
     shape: Shape,
@@ -56,17 +62,22 @@ fun Modifier.velaFocusable(
     /** Hairline edge at rest; for cards and tiles, not for chips and buttons. */
     edge: Boolean = false,
 ): Modifier = composed {
-    val focused by interactionSource.collectIsFocusedAsState()
+    val focusedState = interactionSource.collectIsFocusedAsState()
+    val focused = focusedState.value
     val motion = VelaTheme.motion
     val colors = VelaTheme.colors
     val shapes = VelaTheme.shapes
     val effects = VelaTheme.effects
     val glow = LocalDynamicAccent.current ?: colors.accent
     val targetScale = if (focused) (scaleOverride ?: motion.focusScale) else 1f
-    val scale by animateFloatAsState(targetScale, tween(motion.focusDurationMs), label = "focusScale")
-    val ring by animateFloatAsState(if (focused) 1f else 0f, tween(motion.focusDurationMs), label = "focusRing")
-    val ringWidth = shapes.focusBorderWidth
+    val scale = animateFloatAsState(targetScale, tween(motion.focusDurationMs), label = "focusScale")
+    val ring = animateFloatAsState(if (focused) 1f else 0f, tween(motion.focusDurationMs), label = "focusRing")
     val density = LocalDensity.current
+    val ringWidthPx = with(density) { shapes.focusBorderWidth.toPx() }
+    val edgeWidthPx = with(density) { 1.dp.toPx() }
+    val shadowPx = with(density) { 18.dp.toPx() }
+    val edgeColor = colors.onBackground
+    val ringColor = colors.focusRing
     val latestFocused = rememberUpdatedState(onFocused)
     val sounds = LocalUiSounds.current
     val longPress = rememberUpdatedState(onLongPress)
@@ -109,47 +120,71 @@ fun Modifier.velaFocusable(
             },
         )
         .graphicsLayer {
-            scaleX = scale
-            scaleY = scale
+            val s = scale.value
+            scaleX = s
+            scaleY = s
             // Focused items draw above their neighbours while scaled.
-            shadowElevation = if (focused && effects.cardShadow) with(density) { 18.dp.toPx() } else 0f
+            shadowElevation = if (focusedState.value && effects.cardShadow) shadowPx else 0f
             spotShadowColor = glow
             ambientShadowColor = glow
             this.shape = shape
             clip = false
         }
-        .drawBehind {
-            if (ring <= 0f) return@drawBehind
-            val outline = shape.createOutline(size, layoutDirection, this)
-            if (effects.focusGlow) {
+        .drawWithContent {
+            val r = ring.value
+            val outline = if (r > 0f || edge) shape.createOutline(size, layoutDirection, this) else null
+            if (outline != null && r > 0f && effects.focusGlow) {
                 drawOutline(
                     outline,
                     brush = Brush.radialGradient(
-                        listOf(glow.copy(alpha = 0.4f * ring), Color.Transparent),
+                        listOf(glow.copy(alpha = 0.4f * r), Color.Transparent),
                         center = Offset(size.width / 2, size.height),
                         radius = size.maxDimension,
                     ),
                 )
             }
-        }
-        .drawWithContent {
             drawContent()
-            if (ring > 0f) {
-                // Specular sheen along the top edge while focused.
-                drawOutline(
-                    shape.createOutline(size, layoutDirection, this),
-                    brush = Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.14f * ring), Color.Transparent), endY = size.height * 0.45f),
-                )
+            if (outline != null) {
+                // Hairline edge at rest so cards read as objects, replaced by the ring when focused.
+                if (edge && r < 1f) drawBorder(outline, edgeColor.copy(alpha = 0.10f * (1f - r)), edgeWidthPx)
+                if (r > 0f) {
+                    drawBorder(outline, ringColor.copy(alpha = r), ringWidthPx)
+                    // Specular sheen along the top edge while focused.
+                    drawOutline(
+                        outline,
+                        brush = Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.14f * r), Color.Transparent), endY = size.height * 0.45f),
+                    )
+                }
             }
         }
-        // Hairline edge at rest so cards read as objects, replaced by the ring when focused.
-        .then(if (edge) Modifier.border(1.dp, colors.onBackground.copy(alpha = 0.10f * (1f - ring)), shape) else Modifier)
-        .border(ringWidth, colors.focusRing.copy(alpha = ring), shape)
         .clickable(interactionSource = interactionSource, indication = null, enabled = enabled) {
             sounds?.play(UiSound.CONFIRM)
             onClick()
         }
         .focusable(enabled, interactionSource)
+}
+
+/** Same geometry as `Modifier.border`: the stroke sits inside the outline and the corners follow it. */
+private fun DrawScope.drawBorder(outline: Outline, color: Color, width: Float) {
+    if (width <= 0f || color.alpha <= 0f) return
+    val half = width / 2f
+    when (outline) {
+        is Outline.Rounded -> {
+            val rr = outline.roundRect
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(rr.left + half, rr.top + half),
+                size = Size(max(0f, rr.width - width), max(0f, rr.height - width)),
+                cornerRadius = CornerRadius(max(0f, rr.topLeftCornerRadius.x - half), max(0f, rr.topLeftCornerRadius.y - half)),
+                style = Stroke(width),
+            )
+        }
+        is Outline.Rectangle -> {
+            val r = outline.rect
+            drawRect(color, Offset(r.left + half, r.top + half), Size(max(0f, r.width - width), max(0f, r.height - width)), style = Stroke(width))
+        }
+        is Outline.Generic -> drawOutline(outline, color, style = Stroke(width))
+    }
 }
 
 private const val LONG_PRESS_MS = 450L
@@ -159,8 +194,8 @@ fun rememberFocusState(interactionSource: MutableInteractionSource): State<Boole
 
 /** Simple scale-only variant for tiles that draw their own ring. */
 fun Modifier.focusScale(focused: Boolean, durationMs: Int, scale: Float): Modifier = composed {
-    val s by animateFloatAsState(if (focused) scale else 1f, tween(durationMs), label = "scale")
-    this.scale(s)
+    val s = animateFloatAsState(if (focused) scale else 1f, tween(durationMs), label = "scale")
+    graphicsLayer { scaleX = s.value; scaleY = s.value }
 }
 
 /** Spacing that keeps a scaled card from being clipped by its rail. */

@@ -29,6 +29,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
@@ -106,7 +110,9 @@ private fun TabChip(label: String, selected: Boolean, onClick: () -> Unit, modif
     val shape = VelaTheme.shapes.chip
     val interaction = remember { MutableInteractionSource() }
     val focused by rememberFocusState(interaction)
-    val underline by animateFloatAsState(if (selected) 1f else 0f, tween(VelaTheme.motion.transitionDurationMs), label = "tabUnderline")
+    val underline = animateFloatAsState(if (selected) 1f else 0f, tween(VelaTheme.motion.transitionDurationMs), label = "tabUnderline")
+    val accent = VelaTheme.liveAccent
+    val underlineRadius = VelaTheme.spec.shapes.chipRadius
     Column(
         modifier
             .velaFocusable(shape, interaction, onClick, scaleOverride = 1.04f)
@@ -124,7 +130,16 @@ private fun TabChip(label: String, selected: Boolean, onClick: () -> Unit, modif
         )
         Spacer(Modifier.height(4.dp))
         // The selected tab is marked by a short accent underline that grows in, not a solid pill.
-        Box(Modifier.height(2.dp).fillMaxWidth(underline.coerceIn(0.001f, 1f)).clip(shape).background(VelaTheme.liveAccent.copy(alpha = underline)))
+        // Drawn (not laid out) from the animated value so the grow-in never recomposes the tab.
+        Box(
+            Modifier.height(2.dp).fillMaxWidth().drawBehind {
+                val u = underline.value
+                if (u <= 0f) return@drawBehind
+                val w = size.width * u.coerceIn(0.001f, 1f)
+                val radius = minOf(underlineRadius.dp.toPx(), size.height / 2f)
+                drawRoundRect(accent.copy(alpha = u), Offset((size.width - w) / 2f, 0f), Size(w, size.height), CornerRadius(radius, radius))
+            },
+        )
     }
 }
 

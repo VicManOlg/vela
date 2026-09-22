@@ -149,8 +149,9 @@ fun VelaTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = fals
     val fit = (heightDp / REFERENCE_HEIGHT_DP).coerceIn(0.72f, 1.15f)
     val effectiveScale = uiScale * fit
     val values = remember(spec, effectiveScale, reduceMotion) { resolveTheme(spec, effectiveScale, reduceMotion) }
+    val scheme = remember(values) { values.materialScheme() }
     CompositionLocalProvider(LocalVelaTheme provides values) {
-        MaterialTheme(colorScheme = values.materialScheme(), content = content)
+        MaterialTheme(colorScheme = scheme, content = content)
     }
 }
 

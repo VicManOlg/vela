@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -24,9 +24,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import coil3.ImageLoader
 import coil3.asImage
+import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter
-import coil3.compose.SubcomposeAsyncImage
-import coil3.compose.SubcomposeAsyncImageContent
+import coil3.compose.rememberAsyncImagePainter
 import coil3.decode.DataSource
 import coil3.fetch.FetchResult
 import coil3.fetch.Fetcher
@@ -35,10 +35,9 @@ import coil3.request.ImageRequest
 import coil3.request.Options
 import coil3.request.crossfade
 import coil3.size.Precision
+import coil3.size.Scale
 import io.vela.core.ui.theme.VelaTheme
 import java.io.File
-import coil3.compose.AsyncImage
-import coil3.size.Scale
 import androidx.compose.ui.graphics.FilterQuality
 
 /** Model for app icons: `appicon://<package>`. */
@@ -51,9 +50,28 @@ fun artworkModel(path: String?): Any? = when {
     else -> File(path)
 }
 
+/** One request per (model, crossfade) pair; rebuilding it on every recomposition made Coil re-check each card. */
+@Composable
+private fun rememberArtworkRequest(model: Any?): ImageRequest {
+    val context = LocalContext.current
+    val crossfadeMs = VelaTheme.motion.transitionDurationMs
+    return remember(model, crossfadeMs, context) {
+        ImageRequest.Builder(context)
+            .data(model)
+            .crossfade(crossfadeMs)
+            .precision(Precision.INEXACT)
+            .build()
+    }
+}
+
 /**
  * Artwork image with the rules the whole UI follows: decode at display size, crossfade,
  * platform-tinted gradient while loading or when there is no art.
+ *
+ * Built on [rememberAsyncImagePainter] rather than a subcomposing image: grids show dozens of
+ * these at once and subcomposition per card was the single biggest cost while scrolling. The
+ * painter is always drawn (it learns its size from the draw scope), the placeholder sits on top
+ * until the image arrives.
  */
 @Composable
 fun VelaImage(
@@ -66,24 +84,19 @@ fun VelaImage(
     alignment: Alignment = Alignment.Center,
     colorFilter: ColorFilter? = null,
 ) {
-    val context = LocalContext.current
-    val request = ImageRequest.Builder(context)
-        .data(model)
-        .crossfade(VelaTheme.motion.transitionDurationMs)
-        .precision(Precision.INEXACT)
-        .build()
-    SubcomposeAsyncImage(
-        model = request,
-        contentDescription = contentDescription,
-        modifier = modifier,
-        contentScale = contentScale,
-        alignment = alignment,
-        colorFilter = colorFilter,
-    ) {
-        val state = painter.state.collectAsState().value
-        when (state) {
-            is AsyncImagePainter.State.Success -> SubcomposeAsyncImageContent()
-            else -> if (placeholder != null) placeholder() else ArtPlaceholder(accent)
+    val request = rememberArtworkRequest(model)
+    val painter = rememberAsyncImagePainter(model = request, contentScale = contentScale)
+    val state by painter.state.collectAsState()
+    Box(modifier, propagateMinConstraints = true) {
+        Image(
+            painter = painter,
+            contentDescription = contentDescription,
+            alignment = alignment,
+            contentScale = contentScale,
+            colorFilter = colorFilter,
+        )
+        if (state !is AsyncImagePainter.State.Success) {
+            if (placeholder != null) placeholder() else ArtPlaceholder(accent)
         }
     }
 }
@@ -154,54 +167,45 @@ fun FittedArtwork(
     placeholder: (@Composable () -> Unit)? = null,
 ) {
     val context = LocalContext.current
-    val request = ImageRequest.Builder(context)
-        .data(model)
-        .crossfade(VelaTheme.motion.transitionDurationMs)
-        .precision(Precision.INEXACT)
-        .build()
-    SubcomposeAsyncImage(
-        model = request,
-        contentDescription = contentDescription,
-        modifier = modifier,
-        contentScale = ContentScale.Fit,
-    ) {
-        val state = painter.state.collectAsState().value
-        if (state is AsyncImagePainter.State.Success) {
-            val intrinsic = state.painter.intrinsicSize
-            val portraitish = intrinsic.height >= intrinsic.width * 1.25f
-            Box(Modifier.fillMaxSize()) {
-                if (!portraitish) {
-                    // Fill behind with a soft copy: a 40px decode of the same art stretched with bilinear
-                    // filtering reads as a blur but costs nothing per frame, unlike a RenderEffect blur
-                    // (which made grids with dozens of cards stutter on mid-range phones).
-                    val soft = ImageRequest.Builder(context)
-                        .data(model)
-                        .size(40)
-                        .precision(Precision.EXACT)
-                        .scale(Scale.FILL)
-                        .crossfade(false)
-                        .build()
-                    AsyncImage(
-                        model = soft,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        filterQuality = FilterQuality.Low,
-                        alpha = 0.7f,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                    Box(Modifier.fillMaxSize().background(VelaTheme.colors.background.copy(alpha = 0.25f)))
-                }
-                Image(
-                    painter = state.painter,
-                    contentDescription = contentDescription,
-                    contentScale = if (portraitish) ContentScale.Crop else ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize(),
-                )
+    val request = rememberArtworkRequest(model)
+    val painter = rememberAsyncImagePainter(model = request, contentScale = ContentScale.Fit)
+    val state by painter.state.collectAsState()
+    val success = state as? AsyncImagePainter.State.Success
+    val portraitish = success?.let { s -> s.painter.intrinsicSize.let { it.height >= it.width * 1.25f } } ?: false
+    Box(modifier, propagateMinConstraints = true) {
+        if (success != null && !portraitish) {
+            // Fill behind with a soft copy: a 40px decode of the same art stretched with bilinear
+            // filtering reads as a blur but costs nothing per frame, unlike a RenderEffect blur
+            // (which made grids with dozens of cards stutter on mid-range phones).
+            val soft = remember(model, context) {
+                ImageRequest.Builder(context)
+                    .data(model)
+                    .size(40)
+                    .precision(Precision.EXACT)
+                    .scale(Scale.FILL)
+                    .crossfade(false)
+                    .build()
             }
-        } else if (placeholder != null) {
-            placeholder()
-        } else {
-            ArtPlaceholder(accent)
+            AsyncImage(
+                model = soft,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                filterQuality = FilterQuality.Low,
+                alpha = 0.7f,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Box(Modifier.fillMaxSize().background(VelaTheme.colors.background.copy(alpha = 0.25f)))
+        }
+        // The loaded painter is drawn directly (no crossfade), as before; until then the async
+        // painter draws nothing but tells Coil the size to decode at.
+        Image(
+            painter = success?.painter ?: painter,
+            contentDescription = contentDescription,
+            contentScale = if (portraitish) ContentScale.Crop else ContentScale.Fit,
+            modifier = Modifier.fillMaxSize(),
+        )
+        if (success == null) {
+            if (placeholder != null) placeholder() else ArtPlaceholder(accent)
         }
     }
 }

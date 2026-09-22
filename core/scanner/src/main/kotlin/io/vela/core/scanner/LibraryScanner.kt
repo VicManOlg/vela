@@ -112,6 +112,20 @@ class LibraryScanner @Inject constructor(
         var skipped = 0
         val seenIds = ArrayList<Long>(512)
         val pendingInserts = ArrayList<GameEntity>(256)
+        // Changed files and platform fixes are written in batches: one transaction instead of one
+        // commit (and one fsync) per file.
+        val pendingTouches = ArrayList<Touch>(128)
+        val pendingPlatformFixes = ArrayList<Pair<Long, String>>(64)
+
+        suspend fun flushUpdates() {
+            if (pendingTouches.isEmpty() && pendingPlatformFixes.isEmpty()) return
+            db.withTransaction {
+                for (t in pendingTouches) db.gameDao().touchScanned(t.id, t.fileSize, t.lastModified, generation, t.platformId, t.fileName)
+                for ((id, platformId) in pendingPlatformFixes) db.gameDao().setPlatform(id, platformId)
+            }
+            pendingTouches.clear()
+            pendingPlatformFixes.clear()
+        }
         var currentDir: List<String>? = null
         val dirBatch = ArrayList<Pair<ScannedFile, Platform>>()
 
@@ -124,11 +138,11 @@ class LibraryScanner @Inject constructor(
                     pendingInserts += newGame(file, platform, source, locationType, disc, hidden, generation)
                     added++
                 } else if (sig.fileSize != file.size || sig.lastModified != file.lastModified) {
-                    db.gameDao().touchScanned(sig.id, file.size, file.lastModified, generation, platform.id.value, file.name)
+                    pendingTouches += Touch(sig.id, file.size, file.lastModified, platform.id.value, file.name)
                     updated++
                 } else {
                     if (sig.platformId != platform.id.value) {
-                        db.gameDao().setPlatform(sig.id, platform.id.value)
+                        pendingPlatformFixes += sig.id to platform.id.value
                         updated++
                     }
                     seenIds += sig.id
@@ -137,6 +151,7 @@ class LibraryScanner @Inject constructor(
             skipped += dirBatch.size - accepted.size
             dirBatch.clear()
             if (pendingInserts.size >= 200) flushInserts(pendingInserts)
+            if (pendingTouches.size + pendingPlatformFixes.size >= 200) flushUpdates()
             if (seenIds.size >= 500) { db.gameDao().markSeen(seenIds, generation); seenIds.clear() }
         }
 
@@ -154,6 +169,7 @@ class LibraryScanner @Inject constructor(
         }
         flushDir()
         flushInserts(pendingInserts)
+        flushUpdates()
         if (seenIds.isNotEmpty()) db.gameDao().markSeen(seenIds, generation)
 
         val removed = db.gameDao().markMissingForSource(source.id, generation)
@@ -170,6 +186,9 @@ class LibraryScanner @Inject constructor(
     }
 
     private data class Accepted(val file: ScannedFile, val platform: Platform, val disc: Int?, val hidden: Boolean)
+
+    /** A known file whose size or date changed; written to the database in batches. */
+    private data class Touch(val id: Long, val fileSize: Long, val lastModified: Long, val platformId: String, val fileName: String)
 
     /**
      * Within one directory: files referenced by an .m3u playlist are dropped (the playlist is the

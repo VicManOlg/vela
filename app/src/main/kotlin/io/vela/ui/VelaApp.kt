@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -306,7 +307,8 @@ private fun LaunchOverlay(viewModel: AppViewModel) {
     AnimatedVisibility(visible = launching != null, enter = fadeIn(tween(220)), exit = fadeOut(tween(450))) {
         val game = launching?.game
         val player = launching?.playerName
-        val pulse by rememberInfiniteTransition(label = "launchPulse").animateFloat(
+        // Read in the draw phase only: the pulse must not recompose the overlay 60 times a second.
+        val pulse = rememberInfiniteTransition(label = "launchPulse").animateFloat(
             initialValue = 0.25f, targetValue = 1f,
             animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "launchPulseValue",
         )
@@ -326,7 +328,8 @@ private fun LaunchOverlay(viewModel: AppViewModel) {
                 Spacer(Modifier.height(18.dp))
                 Text(if (player != null) "Launching in $player…" else "Launching…", style = VelaTheme.typography.body, color = colors.muted)
                 Spacer(Modifier.height(26.dp))
-                Box(Modifier.width(180.dp).height(3.dp).clip(VelaTheme.shapes.chip).background(VelaTheme.liveAccent.copy(alpha = pulse)))
+                val pulseColor = VelaTheme.liveAccent
+                Box(Modifier.width(180.dp).height(3.dp).clip(VelaTheme.shapes.chip).drawBehind { drawRect(pulseColor.copy(alpha = pulse.value)) })
             }
         }
     }

@@ -36,6 +36,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -117,7 +119,8 @@ internal fun SystemStage(
         delay(300)
         runCatching { autoFocus.requestFocus() }
     }
-    val position by animateFloatAsState(selected.toFloat(), tween(motion.transitionDurationMs, easing = FastOutSlowInEasing), label = "dial")
+    // Read by the dial in its layout and layer phases only; the slide never recomposes the stage.
+    val position = animateFloatAsState(selected.toFloat(), tween(motion.transitionDurationMs, easing = FastOutSlowInEasing), label = "dial")
 
     fun pick(index: Int) {
         val target = index.coerceIn(0, entries.lastIndex)
@@ -262,7 +265,7 @@ private fun CoverShelf(covers: List<String>, accent: Color) {
 @Composable
 private fun Dial(
     entries: List<StageEntry>,
-    position: Float,
+    position: State<Float>,
     selected: Int,
     focused: Boolean,
     onPick: (Int) -> Unit,
@@ -274,23 +277,30 @@ private fun Dial(
         val chip = 54.dp
         val spacing = 84.dp
         val centerX = maxWidth / 2 - chip / 2
-        // Far beads first so the middle draws on top.
-        entries.indices.sortedByDescending { abs(it - position) }.forEach { i ->
+        // Far beads first so the middle draws on top. Beads within reach of the slide are composed;
+        // position, size and fade are computed per frame in the layout and layer phases.
+        entries.indices.sortedByDescending { abs(it - selected) }.forEach { i ->
             val e = entries[i]
-            val d = i - position
-            val ad = abs(d)
-            if (ad > 6f) return@forEach
-            val scale = (1.3f - 0.3f * min(ad, 1f) - 0.07f * max(ad - 1f, 0f)).coerceAtLeast(0.55f)
-            val alpha = (1f - 0.14f * ad).coerceIn(0.18f, 1f)
-            val x = centerX + spacing * d * (1f - 0.03f * ad)
-            val sink = (ad.pow(1.4f) * 5f).dp
+            if (abs(i - selected) > 7) return@forEach
             val accent = Color(e.accent)
             val isSelected = i == selected
             Box(
                 Modifier
-                    .offset(x = x, y = 10.dp + sink)
+                    .offset {
+                        val d = i - position.value
+                        val ad = abs(d)
+                        val x = centerX + spacing * d * (1f - 0.03f * ad)
+                        val sink = (ad.pow(1.4f) * 5f).dp
+                        IntOffset(x.roundToPx(), (10.dp + sink).roundToPx())
+                    }
                     .size(chip)
-                    .graphicsLayer { scaleX = scale; scaleY = scale; this.alpha = alpha }
+                    .graphicsLayer {
+                        val ad = abs(i - position.value)
+                        val scale = (1.3f - 0.3f * min(ad, 1f) - 0.07f * max(ad - 1f, 0f)).coerceAtLeast(0.55f)
+                        scaleX = scale
+                        scaleY = scale
+                        this.alpha = if (ad > 6f) 0f else (1f - 0.14f * ad).coerceIn(0.18f, 1f)
+                    }
                     .clip(CircleShape)
                     .background(if (isSelected) accent.copy(alpha = 0.9f) else colors.surfaceElevated.copy(alpha = 0.8f))
                     .then(if (isSelected && focused) Modifier.drawBehind { drawCircle(colors.focusRing, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx())) } else Modifier)

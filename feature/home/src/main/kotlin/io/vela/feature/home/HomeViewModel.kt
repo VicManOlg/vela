@@ -52,7 +52,8 @@ data class HomeUiState(
     val totalGames: Int = 0,
     val isEmpty: Boolean = false,
 ) {
-    fun platformOf(game: GameSummary): PlatformEntry? = platforms.firstOrNull { it.id == game.platformId }
+    private val platformById: Map<PlatformId, PlatformEntry> by lazy { platforms.associateBy { it.id } }
+    fun platformOf(game: GameSummary): PlatformEntry? = platformById[game.platformId]
 }
 
 @HiltViewModel
