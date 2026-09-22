@@ -136,3 +136,19 @@ fun CollectionWithStats.toDomain(): GameCollection = GameCollection(
     gameCount = gameCount,
     coverArt = coverArt,
 )
+
+/** Card-sized view of a full record, for rails and overlays that already hold the [Game]. */
+fun Game.toSummary(): GameSummary = GameSummary(
+    id = id,
+    platformId = platformId,
+    kind = kind,
+    title = displayTitle,
+    boxArt = artwork[ArtworkType.BOX_FRONT],
+    logo = artwork[ArtworkType.LOGO],
+    background = artwork[ArtworkType.BACKGROUND] ?: artwork[ArtworkType.HERO] ?: artwork[ArtworkType.SCREENSHOT],
+    favorite = favorite,
+    lastPlayedAt = lastPlayedAt,
+    playCount = playCount,
+    totalPlayTimeMs = totalPlayTimeMs,
+    packageName = (location as? GameLocation.AndroidApp)?.packageName,
+)

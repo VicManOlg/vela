@@ -63,6 +63,25 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import io.vela.core.ui.image.VelaImage
+import io.vela.core.ui.image.artworkModel
+import io.vela.core.ui.sound.LocalUiSounds
+import io.vela.core.ui.sound.UiSound
+import io.vela.core.ui.sound.UiSounds
+import kotlinx.coroutines.flow.Flow
 
 @Serializable private data object SetupRoute
 @Serializable private data class ShellRoute(val tab: String = ShellTab.HOME.name)
@@ -70,17 +89,24 @@ import androidx.compose.ui.graphics.Color
 
 private enum class ShellTab(val label: String) { HOME("Home"), LIBRARY("Library"), COLLECTIONS("Collections"), SEARCH("Search"), SETTINGS("Settings") }
 
-/** Root composable: theme, backdrop, navigation, hints and transient messages. */
+/** Root composable: theme, backdrop, navigation, hints, launch overlay and transient messages. */
 @Composable
-fun VelaApp(gamepad: GamepadInputController, viewModel: AppViewModel = hiltViewModel()) {
+fun VelaApp(
+    gamepad: GamepadInputController,
+    homePresses: Flow<Unit>,
+    sounds: UiSounds?,
+    viewModel: AppViewModel = hiltViewModel(),
+) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val theme by viewModel.theme.collectAsStateWithLifecycle()
     val backdrop by viewModel.backdrop.collectAsStateWithLifecycle()
     val prefs = settings ?: return
 
     VelaTheme(spec = theme, uiScale = prefs.uiScale, reduceMotion = prefs.reduceMotion) {
-        CompositionLocalProvider(LocalGamepad provides gamepad) {
+        CompositionLocalProvider(LocalGamepad provides gamepad, LocalUiSounds provides sounds) {
             val navController = rememberNavController()
+            // The Home button (Vela as launcher) always lands on the shell.
+            LaunchedEffect(navController) { homePresses.collect { navController.popBackStack<ShellRoute>(inclusive = false) } }
             Box(Modifier.fillMaxSize().background(VelaTheme.colors.background)) {
                 DynamicBackground(artwork = backdrop.artwork, accent = Color(backdrop.accent))
                 NavHost(
@@ -92,7 +118,7 @@ fun VelaApp(gamepad: GamepadInputController, viewModel: AppViewModel = hiltViewM
                     }
                     composable<ShellRoute> { entry ->
                         val route: ShellRoute = entry.toRoute()
-                        Shell(navController, route, viewModel, swapped = prefs.confirmButton == ConfirmButton.B)
+                        Shell(navController, route, viewModel, homePresses, swapped = prefs.confirmButton == ConfirmButton.B)
                     }
                     composable<GameGridRoute> {
                         Column(Modifier.fillMaxSize()) {
@@ -126,6 +152,7 @@ fun VelaApp(gamepad: GamepadInputController, viewModel: AppViewModel = hiltViewM
                         }
                     }
                 }
+                LaunchOverlay(viewModel)
                 MessageToast(viewModel)
             }
         }
@@ -133,9 +160,18 @@ fun VelaApp(gamepad: GamepadInputController, viewModel: AppViewModel = hiltViewM
 }
 
 @Composable
-private fun Shell(navController: NavHostController, route: ShellRoute, appViewModel: AppViewModel, swapped: Boolean) {
+private fun Shell(navController: NavHostController, route: ShellRoute, appViewModel: AppViewModel, homePresses: Flow<Unit>, swapped: Boolean) {
     var tab by rememberSaveable { mutableStateOf(runCatching { ShellTab.valueOf(route.tab) }.getOrDefault(ShellTab.HOME)) }
     val tabs = remember { ShellTab.entries.map { TopTab(it.name, it.label) } }
+    val sounds = LocalUiSounds.current
+    var seenTab by remember { mutableStateOf(tab) }
+    LaunchedEffect(tab) {
+        if (tab != seenTab) {
+            seenTab = tab
+            sounds?.play(UiSound.TAB)
+        }
+    }
+    LaunchedEffect(Unit) { homePresses.collect { tab = ShellTab.HOME } }
 
     GamepadHandler { button ->
         when (button) {
@@ -189,6 +225,67 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
             },
             swapped = swapped,
         )
+    }
+}
+
+/**
+ * Full-screen hand-off while the emulator starts: the game's logo or title, which player is
+ * launching, and a pulsing accent bar. It fades out once the app has left and come back, or
+ * after a safety timeout if the emulator never took the screen.
+ */
+@Composable
+private fun LaunchOverlay(viewModel: AppViewModel) {
+    val launching by viewModel.launching.collectAsStateWithLifecycle()
+    val sounds = LocalUiSounds.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val colors = VelaTheme.colors
+
+    LaunchedEffect(launching) {
+        val current = launching ?: return@LaunchedEffect
+        sounds?.play(UiSound.LAUNCH)
+        var wentAway = false
+        lifecycle.currentStateFlow.collect { state ->
+            if (state < Lifecycle.State.RESUMED) {
+                wentAway = true
+            } else if (wentAway && viewModel.launching.value === current) {
+                delay(350)
+                viewModel.clearLaunching()
+            }
+        }
+    }
+    LaunchedEffect(launching) {
+        if (launching != null) {
+            delay(15_000)
+            viewModel.clearLaunching()
+        }
+    }
+
+    AnimatedVisibility(visible = launching != null, enter = fadeIn(tween(220)), exit = fadeOut(tween(450))) {
+        val game = launching?.game
+        val player = launching?.playerName
+        val pulse by rememberInfiniteTransition(label = "launchPulse").animateFloat(
+            initialValue = 0.25f, targetValue = 1f,
+            animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "launchPulseValue",
+        )
+        Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = 0.96f)), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                if (game?.logo != null) {
+                    VelaImage(
+                        model = artworkModel(game.logo),
+                        contentDescription = game.title,
+                        modifier = Modifier.height(120.dp).fillMaxWidth(0.5f),
+                        contentScale = ContentScale.Fit,
+                        placeholder = {},
+                    )
+                } else {
+                    Text(game?.title ?: "", style = VelaTheme.typography.display, color = colors.onBackground, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(0.7f))
+                }
+                Spacer(Modifier.height(18.dp))
+                Text(if (player != null) "Launching in $player…" else "Launching…", style = VelaTheme.typography.body, color = colors.muted)
+                Spacer(Modifier.height(26.dp))
+                Box(Modifier.width(180.dp).height(3.dp).clip(VelaTheme.shapes.chip).background(colors.accent.copy(alpha = pulse)))
+            }
+        }
     }
 }
 

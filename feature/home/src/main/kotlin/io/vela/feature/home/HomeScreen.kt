@@ -48,6 +48,7 @@ import io.vela.core.ui.input.GamepadButton
 import io.vela.core.ui.input.GamepadHandler
 import io.vela.core.ui.theme.VelaTheme
 import io.vela.core.model.HomeLayout
+import io.vela.core.ui.components.VelaButton
 
 /** Navigation the Home feature can request; the app module wires these to routes. */
 class HomeNavigation(
@@ -139,6 +140,22 @@ fun HomeScreen(
                     HomeRail.RECOMMENDED -> gameRail(rail.name, "Because you play", state.recommended, state, viewModel, navigation, subtitle = "Unplayed games from the systems you use most", autoFocus = first)
                     HomeRail.RECENTLY_ADDED -> gameRail(rail.name, "Recently added", state.recentlyAdded, state, viewModel, navigation, autoFocus = first)
                     HomeRail.ANDROID -> gameRail(rail.name, "Android games", state.android, state, viewModel, navigation, accentOverride = Color(0xFF3DDC84), autoFocus = first)
+                    HomeRail.APPS -> if (state.quickApps.isNotEmpty()) {
+                        item(key = rail.name) {
+                            Rail("Quick apps", subtitle = "Pinned apps, one press away from the games", autoFocus = first, trailing = { VelaButton("Edit", navigation.openAndroid) }) {
+                                items(state.quickApps, key = { it.id.value }) { app ->
+                                    GameCard(
+                                        game = app,
+                                        accent = Color(0xFF8AB4F8),
+                                        width = VelaTheme.dimens.cardWidth * 0.8f,
+                                        onClick = { viewModel.launch(app) },
+                                        onLongPress = { viewModel.openMenu(app) },
+                                        onFocused = { viewModel.spotlightGame(app) },
+                                    )
+                                }
+                            }
+                        }
+                    }
                     HomeRail.PLATFORMS -> if (state.platforms.isNotEmpty()) {
                         item(key = rail.name) {
                             Rail("Systems", subtitle = "${state.platforms.size} systems, ${state.totalGames} games", autoFocus = first) {
@@ -180,6 +197,7 @@ fun HomeScreen(
                     HomeRail.RECOMMENDED -> if (state.recommended.isNotEmpty()) 1 else 0
                     HomeRail.RECENTLY_ADDED -> if (state.recentlyAdded.isNotEmpty()) 1 else 0
                     HomeRail.ANDROID -> if (state.android.isNotEmpty()) 1 else 0
+                    HomeRail.APPS -> if (state.quickApps.isNotEmpty()) 1 else 0
                     HomeRail.PLATFORMS -> if (state.platforms.isNotEmpty()) 1 else 0
                     HomeRail.COLLECTIONS -> if (state.collections.isNotEmpty()) 1 else 0
                 }

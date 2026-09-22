@@ -36,6 +36,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.vela.core.ui.theme.VelaTheme
+import io.vela.core.ui.sound.LocalUiSounds
+import io.vela.core.ui.sound.UiSound
 
 /**
  * The one focus treatment used everywhere: scale up, thin light ring, optional glow underneath.
@@ -61,11 +63,17 @@ fun Modifier.velaFocusable(
     val ringWidth = shapes.focusBorderWidth
     val density = LocalDensity.current
     val latestFocused = rememberUpdatedState(onFocused)
+    val sounds = LocalUiSounds.current
     val longPress = rememberUpdatedState(onLongPress)
     val downTime = remember { longArrayOf(0L) }
 
     this
-        .onFocusChanged { if (it.isFocused) latestFocused.value?.invoke() }
+        .onFocusChanged {
+            if (it.isFocused) {
+                sounds?.play(UiSound.FOCUS)
+                latestFocused.value?.invoke()
+            }
+        }
         .then(
             if (onLongPress != null) {
                 Modifier.onPreviewKeyEvent { event ->
@@ -118,7 +126,10 @@ fun Modifier.velaFocusable(
             }
         }
         .border(ringWidth, colors.focusRing.copy(alpha = ring), shape)
-        .clickable(interactionSource = interactionSource, indication = null, enabled = enabled, onClick = onClick)
+        .clickable(interactionSource = interactionSource, indication = null, enabled = enabled) {
+            sounds?.play(UiSound.CONFIRM)
+            onClick()
+        }
         .focusable(enabled, interactionSource)
 }
 

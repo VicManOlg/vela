@@ -451,6 +451,17 @@ private fun Scope.appearanceSection(vm: SettingsViewModel, settings: AppSettings
     }
     item { SettingRow("Video previews", description = "Play a muted clip after resting on a game", checked = settings.videoPreviews, onClick = { vm.update { it.copy(videoPreviews = !it.videoPreviews) } }) }
     item { SettingRow("Reduce motion", description = "Turns off scaling, parallax and crossfades", checked = settings.reduceMotion, onClick = { vm.update { it.copy(reduceMotion = !it.reduceMotion) } }) }
+    item { SectionHeader("Sound") }
+    item { SettingRow("Interface sounds", description = "Ticks on focus, chimes on confirm and back, a swell when a game launches", checked = settings.uiSounds, onClick = { vm.update { it.copy(uiSounds = !it.uiSounds) } }) }
+    item {
+        var picking by remember { mutableStateOf(false) }
+        SettingRow("Sound volume", value = "${(settings.uiSoundVolume * 100).toInt()}%", enabled = settings.uiSounds, onClick = { picking = true })
+        if (picking) {
+            VelaMenuDialog("Sound volume", listOf(0.25f, 0.5f, 0.75f, 1f).map { MenuOption(it.toString(), "${(it * 100).toInt()}%", selected = it == settings.uiSoundVolume) },
+                onSelect = { opt -> vm.update { it.copy(uiSoundVolume = opt.id.toFloat()) }; picking = false }, onDismiss = { picking = false })
+        }
+    }
+    item { SectionHeader("Status bar") }
     item { SettingRow("Show clock", checked = settings.showClock, onClick = { vm.update { it.copy(showClock = !it.showClock) } }) }
     item { SettingRow("Show battery", checked = settings.showBattery, onClick = { vm.update { it.copy(showBattery = !it.showBattery) } }) }
     item { SectionHeader("Custom themes") }

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
+import io.vela.core.data.usecase.LaunchingGame
 
 /** What the current screen wants painted behind everything. */
 data class Backdrop(val artwork: String? = null, val accent: Long = 0xFF3D7BFF)
@@ -24,7 +25,7 @@ data class Backdrop(val artwork: String? = null, val accent: Long = 0xFF3D7BFF)
 class AppViewModel @Inject constructor(
     settings: SettingsRepository,
     private val themes: ThemeCatalog,
-    actions: GameActions,
+    private val actions: GameActions,
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings?> = settings.settings
@@ -34,6 +35,9 @@ class AppViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.Eagerly, themes.default)
 
     val messages: SharedFlow<UiMessage> = actions.messages
+
+    val launching: StateFlow<LaunchingGame?> = actions.launching
+    fun clearLaunching() = actions.clearLaunching()
 
     val backdrop = MutableStateFlow(Backdrop())
 

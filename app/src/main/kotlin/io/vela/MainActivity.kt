@@ -18,6 +18,10 @@ import io.vela.ui.VelaApp
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.content.Intent
+import io.vela.core.ui.sound.UiSound
+import io.vela.core.ui.sound.UiSounds
+import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
  * The only Activity. Owns the gamepad controller so every key/motion event is seen before Compose,
@@ -30,13 +34,16 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var startup: StartupCoordinator
 
     private lateinit var gamepad: GamepadInputController
+    private val sounds: UiSounds by lazy { (application as VelaApplication).uiSounds }
+    /** Emits when the Home button brings the app back while it is already running. */
+    private val homePresses = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         gamepad = GamepadInputController(lifecycleScope)
         gamepad.dispatchSyntheticKey = { event -> window.decorView.dispatchKeyEvent(event) }
-        gamepad.performBack = { onBackPressedDispatcher.onBackPressed() }
+        gamepad.performBack = { sounds.play(UiSound.BACK); onBackPressedDispatcher.onBackPressed() }
 
         lifecycleScope.launch {
             settings.settings.collectLatest { s ->
@@ -49,10 +56,12 @@ class MainActivity : ComponentActivity() {
                     repeatFastAfterMs = s.repeatFastAfterMs.toLong(),
                     repeatFastIntervalMs = s.repeatFastIntervalMs.toLong(),
                 )
+                sounds.enabled = s.uiSounds
+                sounds.volume = s.uiSoundVolume
             }
         }
 
-        setContent { VelaApp(gamepad) }
+        setContent { VelaApp(gamepad, homePresses, sounds) }
         startup.onAppStarted()
     }
 
@@ -72,9 +81,15 @@ class MainActivity : ComponentActivity() {
         controller.hide(WindowInsetsCompat.Type.systemBars())
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.hasCategory(Intent.CATEGORY_HOME)) homePresses.tryEmit(Unit)
+    }
+
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         // Synthetic D-pad events we injected carry FLAG_SOFT_KEYBOARD; let them straight through.
         if (event.flags and KeyEvent.FLAG_SOFT_KEYBOARD != 0) return super.dispatchKeyEvent(event)
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0 && event.keyCode == KeyEvent.KEYCODE_BACK) sounds.play(UiSound.BACK)
         val forwarded = gamepad.onKeyEvent(event) ?: return true
         return super.dispatchKeyEvent(forwarded)
     }

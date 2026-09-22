@@ -46,6 +46,7 @@ data class HomeUiState(
     val platforms: List<PlatformEntry> = emptyList(),
     val collections: List<GameCollection> = emptyList(),
     val android: List<GameSummary> = emptyList(),
+    val quickApps: List<GameSummary> = emptyList(),
     val recommended: List<GameSummary> = emptyList(),
     val recentlyAdded: List<GameSummary> = emptyList(),
     val totalGames: Int = 0,
@@ -77,21 +78,23 @@ class HomeViewModel @Inject constructor(
         lists,
         library.observeAllPlatforms(),
         collections.observeCollections(),
-        apps.observeAndroidGames(40),
+        combine(apps.observeAndroidGames(40), apps.observeApps(20)) { games, pinned -> games to pinned },
         settings.settings,
-    ) { l, platforms, cols, android, prefs ->
+    ) { l, platforms, cols, (android, pinned), prefs ->
         val total = platforms.sumOf { it.gameCount }
         // "Continue playing": games marked Playing, else the most recent ones with play time.
         val continuePlaying = l.playing.ifEmpty { l.recent.filter { it.totalPlayTimeMs > 0 }.take(8) }
         HomeUiState(
             layout = prefs.homeLayout,
-            rails = prefs.homeRails,
+            // Rails added after a user's settings were first saved still show up, at the end.
+            rails = prefs.homeRails + HomeRail.entries.filter { it !in prefs.homeRails },
             continuePlaying = continuePlaying,
             recent = l.recent,
             favorites = l.favorites,
             platforms = platforms.filter { it.settings.enabled && it.gameCount > 0 && it.platform.kind == io.vela.core.model.PlatformKind.EMULATED },
             collections = cols,
             android = android,
+            quickApps = pinned,
             recommended = l.recommended,
             recentlyAdded = l.added,
             totalGames = total,
