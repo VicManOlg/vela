@@ -67,7 +67,7 @@ fun SystemCard(
         modifier
             .width(width)
             .aspectRatio(ASPECT)
-            .velaFocusable(shape, interactionSource, onClick, onFocused = onFocused, scaleOverride = 1.06f)
+            .velaFocusable(shape, interactionSource, onClick, onFocused = onFocused, scaleOverride = 1.06f, edge = true)
             .clip(shape)
             .drawBehind {
                 drawRect(
@@ -114,10 +114,10 @@ fun SystemCard(
             Box(Modifier.fillMaxWidth().weight(0.34f), contentAlignment = Alignment.BottomCenter) {
                 if (covers.isNotEmpty()) CoverFan(covers.take(3))
             }
-            Column(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp)) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Text(name, style = VelaTheme.typography.title, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (subtitle != null) {
-                    Text(subtitle, style = VelaTheme.typography.caption, color = colors.onBackground.copy(alpha = 0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(subtitle, style = VelaTheme.typography.caption, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }

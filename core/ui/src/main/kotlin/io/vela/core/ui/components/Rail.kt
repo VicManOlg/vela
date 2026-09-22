@@ -66,7 +66,7 @@ fun Rail(
                 }
                 trailing?.invoke()
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
         }
         LazyRow(
             state = state,

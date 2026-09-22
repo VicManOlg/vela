@@ -82,6 +82,14 @@ import io.vela.core.ui.sound.LocalUiSounds
 import io.vela.core.ui.sound.UiSound
 import io.vela.core.ui.sound.UiSounds
 import kotlinx.coroutines.flow.Flow
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import io.vela.core.ui.theme.LocalDynamicAccent
+import io.vela.core.ui.theme.liveAccent
 
 @Serializable private data object SetupRoute
 @Serializable private data class ShellRoute(val tab: String = ShellTab.HOME.name)
@@ -103,7 +111,7 @@ fun VelaApp(
     val prefs = settings ?: return
 
     VelaTheme(spec = theme, uiScale = prefs.uiScale, reduceMotion = prefs.reduceMotion) {
-        CompositionLocalProvider(LocalGamepad provides gamepad, LocalUiSounds provides sounds) {
+        CompositionLocalProvider(LocalGamepad provides gamepad, LocalUiSounds provides sounds, LocalDynamicAccent provides backdrop.dynamicAccent?.let(::Color)) {
             val navController = rememberNavController()
             // The Home button (Vela as launcher) always lands on the shell.
             LaunchedEffect(navController) { homePresses.collect { navController.popBackStack<ShellRoute>(inclusive = false) } }
@@ -112,6 +120,10 @@ fun VelaApp(
                 NavHost(
                     navController = navController,
                     startDestination = if (prefs.setupCompleted) ShellRoute() else SetupRoute,
+                    enterTransition = { fadeIn(tween(260)) + slideInHorizontally(tween(280)) { it / 14 } },
+                    exitTransition = { fadeOut(tween(180)) + scaleOut(tween(280), targetScale = 0.98f) },
+                    popEnterTransition = { fadeIn(tween(260)) + scaleIn(tween(280), initialScale = 0.98f) },
+                    popExitTransition = { fadeOut(tween(180)) + slideOutHorizontally(tween(280)) { it / 14 } },
                 ) {
                     composable<SetupRoute> {
                         SetupScreen(onDone = { navController.navigate(ShellRoute()) { popUpTo<SetupRoute> { inclusive = true } } })
@@ -190,7 +202,15 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
     Column(Modifier.fillMaxSize()) {
         TopBar(tabs = tabs, selectedId = tab.name, onSelect = { id -> tab = ShellTab.valueOf(id) })
         Box(Modifier.weight(1f)) {
-            when (tab) {
+            AnimatedContent(
+                targetState = tab,
+                transitionSpec = {
+                    val forward = targetState.ordinal >= initialState.ordinal
+                    (fadeIn(tween(220)) + slideInHorizontally(tween(260)) { if (forward) it / 16 else -it / 16 }) togetherWith fadeOut(tween(150))
+                },
+                label = "tab",
+            ) { current ->
+            when (current) {
                 ShellTab.HOME -> HomeScreen(
                     navigation = HomeNavigation(
                         openGame = openGame,
@@ -213,6 +233,7 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
                 ShellTab.COLLECTIONS -> CollectionsScreen(onOpenCollection = openCollection)
                 ShellTab.SEARCH -> SearchScreen(onOpenGame = openGame, onBackgroundArtwork = appViewModel::setBackdrop)
                 ShellTab.SETTINGS -> SettingsScreen(onBackgroundAccent = { appViewModel.setBackdrop(null, it) })
+            }
             }
         }
         ButtonHints(
@@ -283,7 +304,7 @@ private fun LaunchOverlay(viewModel: AppViewModel) {
                 Spacer(Modifier.height(18.dp))
                 Text(if (player != null) "Launching in $player…" else "Launching…", style = VelaTheme.typography.body, color = colors.muted)
                 Spacer(Modifier.height(26.dp))
-                Box(Modifier.width(180.dp).height(3.dp).clip(VelaTheme.shapes.chip).background(colors.accent.copy(alpha = pulse)))
+                Box(Modifier.width(180.dp).height(3.dp).clip(VelaTheme.shapes.chip).background(VelaTheme.liveAccent.copy(alpha = pulse)))
             }
         }
     }

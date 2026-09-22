@@ -45,6 +45,10 @@ import androidx.compose.foundation.clickable
 import io.vela.core.ui.input.LocalGamepad
 import io.vela.core.ui.sound.LocalUiSounds
 import io.vela.core.ui.sound.UiSound
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Column
+import io.vela.core.ui.theme.liveAccent
 
 /** Top-level destinations shown in the header. */
 data class TopTab(val id: String, val label: String)
@@ -66,7 +70,7 @@ fun TopBar(
     Row(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = dimens.screenPadding, vertical = 18.dp),
+            .padding(horizontal = dimens.screenPadding, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         VelaMark()
@@ -102,26 +106,25 @@ private fun TabChip(label: String, selected: Boolean, onClick: () -> Unit, modif
     val shape = VelaTheme.shapes.chip
     val interaction = remember { MutableInteractionSource() }
     val focused by rememberFocusState(interaction)
-    Box(
+    val underline by animateFloatAsState(if (selected) 1f else 0f, tween(VelaTheme.motion.transitionDurationMs), label = "tabUnderline")
+    Column(
         modifier
-            .velaFocusable(shape, interaction, onClick, scaleOverride = 1.06f)
+            .velaFocusable(shape, interaction, onClick, scaleOverride = 1.04f)
             .clip(shape)
-            .background(
-                when {
-                    selected -> colors.onBackground
-                    focused -> colors.surfaceElevated
-                    else -> Color.Transparent
-                },
-            )
-            .padding(horizontal = 13.dp, vertical = 7.dp),
+            .background(if (focused) colors.surfaceElevated.copy(alpha = 0.9f) else Color.Transparent)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             label,
             style = VelaTheme.typography.bodyStrong,
             maxLines = 1,
             softWrap = false,
-            color = if (selected) colors.background else colors.onBackground.copy(alpha = if (focused) 1f else 0.72f),
+            color = if (selected || focused) colors.onBackground else colors.muted,
         )
+        Spacer(Modifier.height(4.dp))
+        // The selected tab is marked by a short accent underline that grows in, not a solid pill.
+        Box(Modifier.height(2.dp).fillMaxWidth(underline.coerceIn(0.001f, 1f)).clip(shape).background(VelaTheme.liveAccent.copy(alpha = underline)))
     }
 }
 
@@ -219,7 +222,8 @@ fun ButtonHints(hints: List<ButtonHint>, modifier: Modifier = Modifier, swapped:
     Row(
         modifier
             .fillMaxWidth()
-            .padding(horizontal = VelaTheme.dimens.screenPadding, vertical = 14.dp),
+            .background(Brush.verticalGradient(listOf(Color.Transparent, colors.background.copy(alpha = 0.8f))))
+            .padding(horizontal = VelaTheme.dimens.screenPadding, vertical = 16.dp),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -240,7 +244,7 @@ fun ButtonHints(hints: List<ButtonHint>, modifier: Modifier = Modifier, swapped:
             ) {
                 ButtonGlyph(hint.button, swapped)
                 Spacer(Modifier.width(8.dp))
-                Text(hint.label, style = VelaTheme.typography.label, color = colors.onBackground.copy(alpha = 0.85f))
+                Text(hint.label, style = VelaTheme.typography.label, color = colors.muted)
             }
         }
     }

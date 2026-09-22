@@ -51,6 +51,8 @@ import coil3.size.Precision
 import io.vela.core.ui.image.artworkModel
 import io.vela.core.ui.theme.VelaTheme
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 
 /** The Vela sail: a tall right triangle with a soft foot. */
 object SailShape : Shape {
@@ -135,6 +137,20 @@ fun DynamicBackground(
                     }
                 }
             }
+        }
+        if (style.mode == "hero" || style.mode == "artwork") {
+            // Depth: the scene stays brightest around where the focused art sits and falls off into a vignette.
+            Box(
+                Modifier.fillMaxSize().drawBehind {
+                    drawRect(
+                        Brush.radialGradient(
+                            listOf(Color.Transparent, Color.Transparent, colors.background.copy(alpha = 0.6f)),
+                            center = Offset(size.width * 0.58f, size.height * 0.42f),
+                            radius = size.maxDimension * 0.72f,
+                        ),
+                    )
+                },
+            )
         }
         // Scrim: darker at the top-left where text lives, transparent to the right where art shows.
         Box(

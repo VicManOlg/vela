@@ -70,7 +70,7 @@ fun GameCard(
         modifier
             .then(if (width != null) Modifier.width(width) else Modifier)
             .aspectRatio(VelaTheme.dimens.boxArtAspect)
-            .velaFocusable(shape, interactionSource, onClick, onLongPress, onFocused)
+            .velaFocusable(shape, interactionSource, onClick, onLongPress, onFocused, edge = true)
             .clip(shape)
             .background(colors.surface),
     ) {
@@ -103,7 +103,7 @@ fun GameCard(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .background(Brush.verticalGradient(listOf(Color.Transparent, colors.background.copy(alpha = 0.85f))))
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
             ) {
                 Text(game.title, style = VelaTheme.typography.label, color = colors.onBackground, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
@@ -169,7 +169,7 @@ fun HeroCard(
         modifier
             .width(width)
             .aspectRatio(VelaTheme.dimens.heroAspect)
-            .velaFocusable(shape, interactionSource, onClick, onLongPress, onFocused, scaleOverride = 1.04f)
+            .velaFocusable(shape, interactionSource, onClick, onLongPress, onFocused, scaleOverride = 1.04f, edge = true)
             .clip(shape)
             .background(colors.surface),
     ) {
@@ -233,7 +233,7 @@ fun PlatformTile(
         modifier
             .then(if (width != null) Modifier.width(width) else Modifier)
             .aspectRatio(1.6f)
-            .velaFocusable(shape, interactionSource, onClick, onFocused = onFocused, scaleOverride = 1.05f)
+            .velaFocusable(shape, interactionSource, onClick, onFocused = onFocused, scaleOverride = 1.05f, edge = true)
             .clip(shape)
             .drawBehind {
                 // The accent light slides across the tile as it gains focus.
@@ -281,14 +281,14 @@ fun PlatformTile(
         Row(
             Modifier
                 .fillMaxSize()
-                .padding(14.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
             Column(Modifier.weight(1f)) {
                 Text(shortName, style = VelaTheme.typography.title, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(name, style = VelaTheme.typography.caption, color = colors.onBackground.copy(alpha = 0.75f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(name, style = VelaTheme.typography.caption, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            if (count >= 0) Text("$count", style = VelaTheme.typography.label, color = colors.onBackground.copy(alpha = 0.85f))
+            if (count >= 0) Text("$count", style = VelaTheme.typography.label, color = colors.muted)
         }
     }
 }
@@ -313,7 +313,7 @@ fun CollectionTile(
         modifier
             .then(if (width != null) Modifier.width(width) else Modifier)
             .aspectRatio(2.2f)
-            .velaFocusable(shape, interactionSource, onClick, onLongPress, onFocused, scaleOverride = 1.05f)
+            .velaFocusable(shape, interactionSource, onClick, onLongPress, onFocused, scaleOverride = 1.05f, edge = true)
             .clip(shape)
             .background(colors.surfaceElevated),
     ) {

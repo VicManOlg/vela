@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.dp
 import io.vela.core.ui.theme.VelaTheme
 import io.vela.core.ui.sound.LocalUiSounds
 import io.vela.core.ui.sound.UiSound
+import androidx.compose.ui.draw.drawWithContent
+import io.vela.core.ui.theme.LocalDynamicAccent
 
 /**
  * The one focus treatment used everywhere: scale up, thin light ring, optional glow underneath.
@@ -51,12 +53,15 @@ fun Modifier.velaFocusable(
     onFocused: (() -> Unit)? = null,
     scaleOverride: Float? = null,
     enabled: Boolean = true,
+    /** Hairline edge at rest; for cards and tiles, not for chips and buttons. */
+    edge: Boolean = false,
 ): Modifier = composed {
     val focused by interactionSource.collectIsFocusedAsState()
     val motion = VelaTheme.motion
     val colors = VelaTheme.colors
     val shapes = VelaTheme.shapes
     val effects = VelaTheme.effects
+    val glow = LocalDynamicAccent.current ?: colors.accent
     val targetScale = if (focused) (scaleOverride ?: motion.focusScale) else 1f
     val scale by animateFloatAsState(targetScale, tween(motion.focusDurationMs), label = "focusScale")
     val ring by animateFloatAsState(if (focused) 1f else 0f, tween(motion.focusDurationMs), label = "focusRing")
@@ -108,6 +113,8 @@ fun Modifier.velaFocusable(
             scaleY = scale
             // Focused items draw above their neighbours while scaled.
             shadowElevation = if (focused && effects.cardShadow) with(density) { 18.dp.toPx() } else 0f
+            spotShadowColor = glow
+            ambientShadowColor = glow
             this.shape = shape
             clip = false
         }
@@ -118,13 +125,25 @@ fun Modifier.velaFocusable(
                 drawOutline(
                     outline,
                     brush = Brush.radialGradient(
-                        listOf(colors.accent.copy(alpha = 0.35f * ring), Color.Transparent),
+                        listOf(glow.copy(alpha = 0.4f * ring), Color.Transparent),
                         center = Offset(size.width / 2, size.height),
                         radius = size.maxDimension,
                     ),
                 )
             }
         }
+        .drawWithContent {
+            drawContent()
+            if (ring > 0f) {
+                // Specular sheen along the top edge while focused.
+                drawOutline(
+                    shape.createOutline(size, layoutDirection, this),
+                    brush = Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.14f * ring), Color.Transparent), endY = size.height * 0.45f),
+                )
+            }
+        }
+        // Hairline edge at rest so cards read as objects, replaced by the ring when focused.
+        .then(if (edge) Modifier.border(1.dp, colors.onBackground.copy(alpha = 0.10f * (1f - ring)), shape) else Modifier)
         .border(ringWidth, colors.focusRing.copy(alpha = ring), shape)
         .clickable(interactionSource = interactionSource, indication = null, enabled = enabled) {
             sounds?.play(UiSound.CONFIRM)

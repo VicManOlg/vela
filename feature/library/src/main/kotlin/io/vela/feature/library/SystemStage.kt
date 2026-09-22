@@ -62,7 +62,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import io.vela.core.ui.components.Pill
 import io.vela.core.ui.components.rememberAutoFocus
 import io.vela.core.ui.components.rememberFocusState
 import io.vela.core.ui.image.VelaImage
@@ -201,10 +200,14 @@ internal fun SystemStage(
                     Spacer(Modifier.width(22.dp))
                     Column(Modifier.weight(1f)) {
                         Text(e.title, style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        Spacer(Modifier.height(10.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            e.subtitle.split("   ").filter { it.isNotBlank() }.take(3).forEach { Pill(it, tint = accent) }
-                        }
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            e.subtitle.split("   ").filter { it.isNotBlank() }.joinToString("  ·  ").uppercase(),
+                            style = VelaTheme.typography.overline,
+                            color = colors.muted,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
                 }
             }

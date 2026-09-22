@@ -44,7 +44,7 @@ data class ThemeTypography(
     /** Font family key resolved by the UI (`outfit`, `manrope`, `system`). */
     val displayFamily: String = "outfit",
     val bodyFamily: String = "manrope",
-    val displaySize: Float = 40f,
+    val displaySize: Float = 42f,
     val titleSize: Float = 24f,
     val headlineSize: Float = 18f,
     val bodySize: Float = 15f,

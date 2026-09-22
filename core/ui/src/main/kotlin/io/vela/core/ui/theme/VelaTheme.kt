@@ -48,6 +48,8 @@ data class VelaTypography(
     val bodyStrong: TextStyle,
     val label: TextStyle,
     val caption: TextStyle,
+    /** Small spaced capitals for system/maker lines: "NINTENDO · 1990 · 12 GAMES". */
+    val overline: TextStyle,
 )
 
 @Immutable
@@ -174,13 +176,14 @@ fun resolveTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = f
     val body = VelaFonts.family(t.bodyFamily)
     val s = uiScale
     val typography = VelaTypography(
-        display = TextStyle(fontFamily = display, fontWeight = FontWeight.SemiBold, fontSize = (t.displaySize * s).sp, lineHeight = (t.displaySize * s * 1.08f).sp, letterSpacing = (t.letterSpacingDisplay * t.displaySize).sp),
+        display = TextStyle(fontFamily = display, fontWeight = FontWeight.Medium, fontSize = (t.displaySize * s).sp, lineHeight = (t.displaySize * s * 1.08f).sp, letterSpacing = (t.letterSpacingDisplay * t.displaySize).sp),
         title = TextStyle(fontFamily = display, fontWeight = FontWeight.Medium, fontSize = (t.titleSize * s).sp, lineHeight = (t.titleSize * s * 1.2f).sp, letterSpacing = (-0.01f * t.titleSize).sp),
         headline = TextStyle(fontFamily = display, fontWeight = FontWeight.Medium, fontSize = (t.headlineSize * s).sp, lineHeight = (t.headlineSize * s * 1.3f).sp),
         body = TextStyle(fontFamily = body, fontWeight = FontWeight.Normal, fontSize = (t.bodySize * s).sp, lineHeight = (t.bodySize * s * 1.5f).sp),
         bodyStrong = TextStyle(fontFamily = body, fontWeight = FontWeight.SemiBold, fontSize = (t.bodySize * s).sp, lineHeight = (t.bodySize * s * 1.5f).sp),
         label = TextStyle(fontFamily = body, fontWeight = FontWeight.Medium, fontSize = (t.labelSize * s).sp, lineHeight = (t.labelSize * s * 1.4f).sp, letterSpacing = 0.2.sp),
         caption = TextStyle(fontFamily = body, fontWeight = FontWeight.Normal, fontSize = (t.labelSize * s * 0.92f).sp, lineHeight = (t.labelSize * s * 1.35f).sp),
+        overline = TextStyle(fontFamily = body, fontWeight = FontWeight.SemiBold, fontSize = (t.labelSize * s * 0.86f).sp, lineHeight = (t.labelSize * s * 1.3f).sp, letterSpacing = 1.6.sp),
     )
     val sh = spec.shapes
     val shapes = VelaShapes(

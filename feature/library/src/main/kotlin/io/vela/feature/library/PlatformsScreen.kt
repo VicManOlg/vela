@@ -125,16 +125,16 @@ fun PlatformsScreen(
     Column(modifier.fillMaxSize()) {
         if (layout != LibraryLayout.STAGE) Column(Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding).height(96.dp), verticalArrangement = Arrangement.Bottom) {
             Text(spot?.title ?: "Library", style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(8.dp))
             Text(
-                spot?.subtitle ?: "${platforms.size + 1} systems   ${total + android.games} games",
-                style = VelaTheme.typography.body,
+                (spot?.subtitle ?: "${platforms.size + 1} systems   ${total + android.games} games").split("   ").filter { it.isNotBlank() }.joinToString("  ·  ").uppercase(),
+                style = VelaTheme.typography.overline,
                 color = colors.muted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        if (layout != LibraryLayout.STAGE) Spacer(Modifier.height(6.dp))
+        if (layout != LibraryLayout.STAGE) Spacer(Modifier.height(8.dp))
         if (platforms.isEmpty() && android.count == 0) {
             EmptyState(
                 title = "No systems yet",

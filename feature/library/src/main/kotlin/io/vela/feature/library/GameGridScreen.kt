@@ -372,11 +372,11 @@ private fun GridHeader(header: GameGridHeader, focusedTitle: String?, view: Libr
     ) {
         Column(Modifier.weight(1f)) {
             Text(header.title, style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(8.dp))
             Text(
-                focusedTitle ?: header.subtitle,
-                style = VelaTheme.typography.body,
-                color = if (focusedTitle != null) colors.onBackground.copy(alpha = 0.85f) else colors.muted,
+                focusedTitle ?: header.subtitle.split("   ").filter { it.isNotBlank() }.joinToString("  ·  ").uppercase(),
+                style = if (focusedTitle != null) VelaTheme.typography.body else VelaTheme.typography.overline,
+                color = if (focusedTitle != null) colors.onBackground else colors.muted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -387,5 +387,5 @@ private fun GridHeader(header: GameGridHeader, focusedTitle: String?, view: Libr
             Text("${view.label}   Sorted by ${header.sort.label().lowercase()}", style = VelaTheme.typography.caption, color = colors.muted)
         }
     }
-    Spacer(Modifier.height(6.dp))
+    Spacer(Modifier.height(8.dp))
 }

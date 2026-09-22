@@ -18,9 +18,12 @@ import javax.inject.Inject
 import io.vela.core.data.usecase.LaunchingGame
 import io.vela.core.data.repository.ThemeRepository
 import kotlinx.coroutines.flow.combine
+import io.vela.core.ui.image.ArtworkPalette
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 /** What the current screen wants painted behind everything. */
-data class Backdrop(val artwork: String? = null, val accent: Long = 0xFF3D7BFF)
+data class Backdrop(val artwork: String? = null, val accent: Long = 0xFF3D7BFF, /** Vivid colour taken from [artwork], when it has one. */ val dynamicAccent: Long? = null)
 
 @HiltViewModel
 class AppViewModel @Inject constructor(
@@ -42,8 +45,18 @@ class AppViewModel @Inject constructor(
 
     val backdrop = MutableStateFlow(Backdrop())
 
+    private var paletteJob: Job? = null
+
     fun setBackdrop(artwork: String?, accent: Long) {
-        val next = Backdrop(artwork, accent)
-        if (backdrop.value != next) backdrop.value = next
+        val current = backdrop.value
+        if (current.artwork == artwork && current.accent == accent) return
+        backdrop.value = Backdrop(artwork, accent, dynamicAccent = if (artwork == current.artwork) current.dynamicAccent else null)
+        paletteJob?.cancel()
+        if (artwork == null) return
+        paletteJob = viewModelScope.launch {
+            val colour = ArtworkPalette.dominant(artwork)
+            val latest = backdrop.value
+            if (latest.artwork == artwork) backdrop.value = latest.copy(dynamicAccent = colour)
+        }
     }
 }
