@@ -1,6 +1,5 @@
 package io.vela
 
-import io.vela.core.catalog.ThemeCatalog
 import io.vela.core.common.ApplicationScope
 import io.vela.core.data.repository.AppsRepository
 import io.vela.core.data.repository.LibraryRepository
@@ -23,6 +22,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
+import io.vela.core.data.repository.ThemeRepository
 
 /**
  * Process-wide background work kept out of the Activity so rotation and re-launches never repeat
@@ -38,7 +38,7 @@ class StartupCoordinator @Inject constructor(
     private val library: LibraryRepository,
     private val apps: AppsRepository,
     private val scrape: ScrapeRepository,
-    private val themes: ThemeCatalog,
+    private val themes: ThemeRepository,
     private val platformIcons: PlatformIconStore,
     private val network: NetworkStatus,
     private val scope: ApplicationScope,
@@ -66,12 +66,11 @@ class StartupCoordinator @Inject constructor(
     /** Re-syncs when the theme (icon set) or the Wi-Fi-only preference changes, and when connectivity comes back. */
     @OptIn(FlowPreview::class)
     private suspend fun syncPlatformIcons() {
-        val prefs = settings.settings.map { it.themeId to it.scraping.wifiOnly }.distinctUntilChanged()
+        val prefs = combine(settings.settings, themes.catalog) { s, catalog -> catalog.byId(s.themeId).platformIcons to s.scraping.wifiOnly }.distinctUntilChanged()
         val connectivity = network.changes.onStart { emit(Unit) }
         combine(prefs, connectivity) { p, _ -> p }
             .debounce(1500)
-            .collectLatest { (themeId, wifiOnly) ->
-                val spec = themes.byId(themeId).platformIcons
+            .collectLatest { (spec, wifiOnly) ->
                 runCatching { platformIcons.sync(spec, allowNetwork = !wifiOnly || network.isUnmetered()) }
                     .onFailure { if (it is kotlinx.coroutines.CancellationException) throw it else Timber.w(it, "Platform icon sync failed") }
             }

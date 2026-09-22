@@ -171,12 +171,12 @@ fun FittedArtwork(
             val portraitish = intrinsic.height >= intrinsic.width * 1.25f
             Box(Modifier.fillMaxSize()) {
                 if (!portraitish) {
-                    // Fill behind with a soft copy: a 24px decode of the same art stretched with bilinear
+                    // Fill behind with a soft copy: a 40px decode of the same art stretched with bilinear
                     // filtering reads as a blur but costs nothing per frame, unlike a RenderEffect blur
                     // (which made grids with dozens of cards stutter on mid-range phones).
                     val soft = ImageRequest.Builder(context)
                         .data(model)
-                        .size(24)
+                        .size(40)
                         .precision(Precision.EXACT)
                         .scale(Scale.FILL)
                         .crossfade(false)

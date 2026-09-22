@@ -20,6 +20,6 @@ class ThemeCatalog(userThemes: List<String> = emptyList()) {
 
     companion object {
         const val DEFAULT_ID = "vela-night"
-        private val BUILT_IN = listOf("vela-night", "vela-ember", "vela-mono")
+        private val BUILT_IN = listOf("vela-night", "vela-day", "vela-ember", "vela-mono")
     }
 }

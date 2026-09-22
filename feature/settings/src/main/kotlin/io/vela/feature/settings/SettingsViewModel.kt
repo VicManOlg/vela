@@ -13,7 +13,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.vela.core.catalog.PlayerCatalog
-import io.vela.core.catalog.ThemeCatalog
 import io.vela.core.data.repository.LibraryRepository
 import io.vela.core.data.repository.PlatformEntry
 import io.vela.core.data.repository.ScrapeRepository
@@ -39,6 +38,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
+import io.vela.core.data.repository.ThemeRepository
 
 enum class SettingsSection(val title: String, val summary: String) {
     LIBRARY("Library", "Folders, scanning, hidden games"),
@@ -63,7 +63,7 @@ class SettingsViewModel @Inject constructor(
     private val play: PlayGame,
     private val players: PlayerCatalog,
     private val installed: InstalledPackages,
-    val themes: ThemeCatalog,
+    val themes: ThemeRepository,
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings> = settingsRepository.settings
@@ -170,6 +170,19 @@ class SettingsViewModel @Inject constructor(
     fun androidSettingsIntent(): Intent = Intent(Settings.ACTION_SETTINGS)
 
     fun themeById(id: String): ThemeSpec = themes.byId(id)
+    fun reloadThemes() = themes.reload()
+    fun importTheme(uri: Uri) = viewModelScope.launch {
+        themes.import(uri)
+            .onSuccess { spec -> settingsRepository.update { it.copy(themeId = spec.id) } }
+    }
+    /** Applies [transform] to the theme in use and saves the result as the custom theme. */
+    fun customizeTheme(transform: (ThemeSpec) -> ThemeSpec) = viewModelScope.launch {
+        val base = themes.byId(settings.value.themeId)
+        val edited = transform(base)
+        val name = if (base.id == ThemeRepository.CUSTOM_ID) base.name else "Custom · ${base.name}"
+        themes.saveCustom(edited.copy(name = name))
+    }
+    fun resetCustomTheme() = viewModelScope.launch { themes.clearCustom() }
 
     val appVersion: String
         get() = runCatching {

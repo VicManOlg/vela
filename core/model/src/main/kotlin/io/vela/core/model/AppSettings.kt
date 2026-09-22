@@ -95,6 +95,8 @@ data class AppSettings(
     /** Player JSON overrides supplied by the user (same schema as catalog/players.json). */
     val userPlayersJson: String? = null,
     val userPlatformsJson: String? = null,
+    /** Theme written by the in-app editor (id "custom"); null until the user customizes one. */
+    val customThemeJson: String? = null,
 )
 
 @Serializable

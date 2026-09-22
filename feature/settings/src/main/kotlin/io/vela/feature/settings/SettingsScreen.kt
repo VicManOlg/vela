@@ -403,11 +403,26 @@ private fun CredentialRow(title: String, value: String, secret: Boolean = false,
 private fun Scope.appearanceSection(vm: SettingsViewModel, settings: AppSettings) {
     item {
         var picking by remember { mutableStateOf(false) }
+        val allThemes by vm.themes.themes.collectAsStateWithLifecycle()
+        LaunchedEffect(Unit) { vm.reloadThemes() }
         SettingRow("Theme", value = vm.themeById(settings.themeId).name, onClick = { picking = true })
         if (picking) {
-            VelaMenuDialog("Theme", vm.themes.themes.map { MenuOption(it.id, it.name, description = it.author.takeIf { a -> a.isNotBlank() }?.let { a -> "by $a" }, selected = it.id == settings.themeId) },
+            VelaMenuDialog("Theme", allThemes.map { MenuOption(it.id, it.name, description = it.author.takeIf { a -> a.isNotBlank() }?.let { a -> "by $a" }, selected = it.id == settings.themeId) },
                 onSelect = { opt -> vm.update { it.copy(themeId = opt.id) }; picking = false }, onDismiss = { picking = false })
         }
+    }
+    item {
+        var editing by remember { mutableStateOf(false) }
+        val current = vm.themeById(settings.themeId)
+        SettingRow("Customize theme", description = "Accent, background, console icons, card size, corners, panels", value = if (settings.customThemeJson != null) "Custom" else null, onClick = { editing = true })
+        if (editing) ThemeEditorDialogs(current = current, onApply = { vm.customizeTheme(it) }, onClose = { editing = false })
+    }
+    item {
+        val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? -> uri?.let(vm::importTheme) }
+        SettingRow("Import theme file", description = "A JSON with the same schema as the bundled themes; it is copied into Android/data/io.vela.frontend/files/themes/", onClick = { picker.launch(arrayOf("application/json", "text/plain", "*/*")) })
+    }
+    if (settings.customThemeJson != null) {
+        item { SettingRow("Reset custom theme", description = "Removes your edits and returns to the theme it was based on", onClick = vm::resetCustomTheme) }
     }
     item {
         var picking by remember { mutableStateOf(false) }
@@ -464,8 +479,6 @@ private fun Scope.appearanceSection(vm: SettingsViewModel, settings: AppSettings
     item { SectionHeader("Status bar") }
     item { SettingRow("Show clock", checked = settings.showClock, onClick = { vm.update { it.copy(showClock = !it.showClock) } }) }
     item { SettingRow("Show battery", checked = settings.showBattery, onClick = { vm.update { it.copy(showBattery = !it.showBattery) } }) }
-    item { SectionHeader("Custom themes") }
-    item { SettingRow("Theme files", description = "Copy a theme JSON (same schema as the built-in ones) into Android/data/io.vela.frontend/files/themes/ and restart", onClick = {}) }
 }
 
 // ---- Controller -------------------------------------------------------------------------------

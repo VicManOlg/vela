@@ -198,6 +198,11 @@ icons. ScreenScraper needs developer credentials in `secrets.properties`.
 
 ## Adding a theme
 
+In the app: Settings > Appearance > Customize theme edits the theme in use (accent, background,
+console icons, card size, corners, panels) and saves it as "Custom"; Import theme file copies a
+JSON into `Android/data/io.vela.frontend/files/themes/`, which is also read on every visit to
+Appearance. Four themes ship: Vela Night, Vela Day (light), Vela Ember and Vela Mono.
+
 Copy one of `core/catalog/src/main/resources/catalog/themes/*.json`, change `id`, colours,
 typography families (`outfit`, `manrope`, `serif`, `mono`, `system`), shapes, layout sizes, motion
 background mode (`artwork`, `hero`, `platform`, `static`) and `platformIcons` (`set`: `systematic`, `flatui`,

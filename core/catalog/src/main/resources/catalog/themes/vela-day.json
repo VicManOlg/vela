@@ -1,0 +1,23 @@
+{
+  "id": "vela-day",
+  "name": "Vela Day",
+  "author": "Vela",
+  "colors": {
+    "background": "#FFF3F5F9",
+    "surface": "#FFFFFFFF",
+    "surfaceElevated": "#FFE6EAF2",
+    "accent": "#FF1F6FEB",
+    "accentSecondary": "#FF3D7BFF",
+    "onBackground": "#FF0E1424",
+    "onSurface": "#FF1A2233",
+    "muted": "#FF5B6577",
+    "focusRing": "#FF0E1424",
+    "danger": "#FFD63A4A",
+    "success": "#FF1E9E6A",
+    "scrim": "#66F3F5F9"
+  },
+  "typography": { "displayFamily": "outfit", "bodyFamily": "manrope" },
+  "background": { "mode": "hero", "blurRadius": 0, "dim": 0.72, "saturation": 1.0 },
+  "effects": { "glassPanels": true, "panelAlpha": 0.8, "focusGlow": false, "videoPreviews": true },
+  "platformIcons": { "set": "systematic" }
+}

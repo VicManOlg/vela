@@ -3,7 +3,6 @@ package io.vela.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.vela.core.catalog.ThemeCatalog
 import io.vela.core.data.usecase.GameActions
 import io.vela.core.data.usecase.UiMessage
 import io.vela.core.model.AppSettings
@@ -17,6 +16,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import io.vela.core.data.usecase.LaunchingGame
+import io.vela.core.data.repository.ThemeRepository
+import kotlinx.coroutines.flow.combine
 
 /** What the current screen wants painted behind everything. */
 data class Backdrop(val artwork: String? = null, val accent: Long = 0xFF3D7BFF)
@@ -24,15 +25,15 @@ data class Backdrop(val artwork: String? = null, val accent: Long = 0xFF3D7BFF)
 @HiltViewModel
 class AppViewModel @Inject constructor(
     settings: SettingsRepository,
-    private val themes: ThemeCatalog,
+    private val themes: ThemeRepository,
     private val actions: GameActions,
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings?> = settings.settings
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val theme: StateFlow<ThemeSpec> = settings.settings.map { themes.byId(it.themeId) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, themes.default)
+    val theme: StateFlow<ThemeSpec> = combine(settings.settings, themes.catalog) { s, catalog -> catalog.byId(s.themeId) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, themes.catalog.value.default)
 
     val messages: SharedFlow<UiMessage> = actions.messages
 
