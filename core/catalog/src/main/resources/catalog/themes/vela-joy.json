@@ -1,0 +1,26 @@
+{
+  "id": "vela-joy",
+  "name": "Vela Joy",
+  "author": "Vela · inspired by a hybrid handheld",
+  "colors": {
+    "background": "#FFEBEBEB",
+    "surface": "#FFFFFFFF",
+    "surfaceElevated": "#FFF4F4F4",
+    "accent": "#FF00C3E3",
+    "accentSecondary": "#FFFF3C28",
+    "onBackground": "#FF2D2D2D",
+    "onSurface": "#FF2D2D2D",
+    "muted": "#FF7A7A7A",
+    "focusRing": "#FF00D2E6",
+    "danger": "#FFFF3C28",
+    "success": "#FF1DB954",
+    "scrim": "#33EBEBEB"
+  },
+  "typography": { "displayFamily": "outfit", "bodyFamily": "manrope", "displaySize": 38, "titleSize": 22, "letterSpacingDisplay": -0.01 },
+  "shapes": { "cardRadius": 4, "tileRadius": 6, "chipRadius": 999, "focusBorderWidth": 4 },
+  "layout": { "cardWidth": 140, "railSpacing": 10, "sectionSpacing": 24, "gridColumns": 7 },
+  "motion": { "focusScale": 1.04, "focusDurationMs": 120, "transitionDurationMs": 220, "backgroundCrossfadeMs": 300, "parallax": false },
+  "background": { "mode": "static", "blurRadius": 0, "dim": 1.0, "saturation": 1.0, "staticColor": "#FFEBEBEB" },
+  "effects": { "glassPanels": false, "panelAlpha": 1.0, "cardShadow": true, "focusGlow": true, "videoPreviews": true },
+  "platformIcons": { "set": "flatui", "tint": false, "alpha": 1.0 }
+}

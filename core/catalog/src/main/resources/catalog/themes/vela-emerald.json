@@ -1,0 +1,26 @@
+{
+  "id": "vela-emerald",
+  "name": "Vela Emerald",
+  "author": "Vela · inspired by a green-and-black console",
+  "colors": {
+    "background": "#FF0F0F0F",
+    "surface": "#FF1B1B1B",
+    "surfaceElevated": "#FF262626",
+    "accent": "#FF107C10",
+    "accentSecondary": "#FF16C60C",
+    "onBackground": "#FFF5F5F5",
+    "onSurface": "#FFE8E8E8",
+    "muted": "#FF9A9A9A",
+    "focusRing": "#FFFFFFFF",
+    "danger": "#FFE81123",
+    "success": "#FF16C60C",
+    "scrim": "#990F0F0F"
+  },
+  "typography": { "displayFamily": "system", "bodyFamily": "system", "displaySize": 40, "titleSize": 22, "letterSpacingDisplay": -0.01 },
+  "shapes": { "cardRadius": 4, "tileRadius": 4, "chipRadius": 4, "focusBorderWidth": 4 },
+  "layout": { "cardWidth": 160, "railSpacing": 8, "sectionSpacing": 28, "gridColumns": 6 },
+  "motion": { "focusScale": 1.05, "focusDurationMs": 140, "transitionDurationMs": 240, "backgroundCrossfadeMs": 500, "parallax": false },
+  "background": { "mode": "platform", "blurRadius": 0, "dim": 0.7, "saturation": 1.0 },
+  "effects": { "glassPanels": false, "panelAlpha": 1.0, "cardShadow": true, "focusGlow": true, "videoPreviews": true },
+  "platformIcons": { "set": "flatui", "tint": false, "alpha": 1.0 }
+}

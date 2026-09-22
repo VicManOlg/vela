@@ -1,0 +1,26 @@
+{
+  "id": "vela-azure",
+  "name": "Vela Azure",
+  "author": "Vela · inspired by a living-room console",
+  "colors": {
+    "background": "#FF060B1A",
+    "surface": "#FF0F1730",
+    "surfaceElevated": "#FF18244A",
+    "accent": "#FF3D8BFF",
+    "accentSecondary": "#FF7AA9FF",
+    "onBackground": "#FFF4F7FF",
+    "onSurface": "#FFE4EBFF",
+    "muted": "#FF8FA0C7",
+    "focusRing": "#FFFFFFFF",
+    "danger": "#FFFF5C6C",
+    "success": "#FF4CD6A2",
+    "scrim": "#8C060B1A"
+  },
+  "typography": { "displayFamily": "outfit", "bodyFamily": "manrope", "displaySize": 44, "titleSize": 24, "letterSpacingDisplay": -0.02 },
+  "shapes": { "cardRadius": 12, "tileRadius": 16, "chipRadius": 999, "focusBorderWidth": 3 },
+  "layout": { "cardWidth": 168, "railSpacing": 14, "sectionSpacing": 32, "gridColumns": 5 },
+  "motion": { "focusScale": 1.07, "focusDurationMs": 220, "transitionDurationMs": 360, "backgroundCrossfadeMs": 800, "parallax": true },
+  "background": { "mode": "hero", "blurRadius": 0, "dim": 0.58, "saturation": 1.1 },
+  "effects": { "glassPanels": true, "panelAlpha": 0.5, "cardShadow": true, "focusGlow": true, "videoPreviews": true },
+  "platformIcons": { "set": "monochrome", "tint": true, "alpha": 0.92 }
+}

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -121,7 +122,9 @@ fun VelaMenuDialog(
                     Text(title, style = VelaTheme.typography.title, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (subtitle != null) Text(subtitle, style = VelaTheme.typography.caption, color = colors.muted, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(12.dp))
-                    LazyColumn(Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    // Start scrolled to the selected option so it is composed and can take focus.
+                    val listState = rememberLazyListState(initialFirstVisibleItemIndex = options.indexOfFirst { it.selected }.coerceAtLeast(0))
+                    LazyColumn(state = listState, modifier = Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         itemsIndexed(options, key = { _, o -> o.id }) { index, option ->
                             SettingRow(
                                 title = option.label,
