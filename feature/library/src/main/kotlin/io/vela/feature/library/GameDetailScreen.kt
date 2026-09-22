@@ -44,6 +44,7 @@ import io.vela.core.ui.components.GameMenuCallbacks
 import io.vela.core.ui.components.GameMenuHost
 import io.vela.core.ui.components.GlassPanel
 import io.vela.core.ui.components.Pill
+import io.vela.core.ui.components.RatingStars
 import io.vela.core.ui.components.VelaButton
 import io.vela.core.ui.components.color
 import io.vela.core.ui.components.completionLabel
@@ -205,7 +206,10 @@ fun GameDetailScreen(
                 if (!isApp) VelaButton("Launch with", viewModel::openLaunchWith)
                 VelaButton("More", viewModel::openMenu, icon = Icons.Rounded.MoreHoriz)
             }
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(12.dp))
+            // The user's own stars: walk them with the D-pad, confirm to set, confirm again to clear.
+            RatingStars(rating = game.userRating, onRate = viewModel::setUserRating)
+            Spacer(Modifier.height(12.dp))
 
             GlassPanel(Modifier.fillMaxWidth()) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(28.dp)) {

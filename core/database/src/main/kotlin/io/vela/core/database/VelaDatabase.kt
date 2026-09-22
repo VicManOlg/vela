@@ -1,5 +1,6 @@
 package io.vela.core.database
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
@@ -24,8 +25,10 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    version = 2,
+    version = 3,
     exportSchema = true,
+    // 2 -> 3: game_summaries gains userRating (view only, no table change).
+    autoMigrations = [AutoMigration(from = 2, to = 3)],
     entities = [
         GameEntity::class,
         GameFtsEntity::class,

@@ -6,6 +6,8 @@ import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarBorder
 import androidx.compose.material.icons.rounded.SportsEsports
 import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.outlined.CollectionsBookmark
@@ -20,7 +22,7 @@ import io.vela.core.model.Platform
 fun Platform.color(): Color = Color(accentColor)
 
 /** Actions of the shared game context menu (X button / long press). */
-enum class GameMenuAction { PLAY, DETAILS, FAVORITE, COLLECTIONS, LAUNCH_WITH, COMPLETION, REFRESH_METADATA, HIDE }
+enum class GameMenuAction { PLAY, DETAILS, FAVORITE, COLLECTIONS, LAUNCH_WITH, COMPLETION, RATE, REFRESH_METADATA, HIDE }
 
 /**
  * The same menu on every screen: play, details, favourite, collections, launch with, status,
@@ -54,6 +56,7 @@ fun GameContextMenu(
                 icon = Icons.Rounded.Flag,
             ),
         )
+        add(MenuOption(GameMenuAction.RATE.name, ratingLabel(game.userRating), icon = if (game.userRating != null) Icons.Rounded.Star else Icons.Rounded.StarBorder))
         if (isRom) add(MenuOption(GameMenuAction.REFRESH_METADATA.name, "Refresh metadata", icon = Icons.Rounded.Refresh))
         add(MenuOption(GameMenuAction.HIDE.name, "Hide", icon = Icons.Rounded.VisibilityOff, danger = true))
     }

@@ -68,4 +68,4 @@ data class GameCollection(
 )
 
 /** Sort options shared by grids and search. */
-enum class GameSort { TITLE, LAST_PLAYED, MOST_PLAYED, RECENTLY_ADDED, RELEASE_YEAR, RATING }
+enum class GameSort { TITLE, LAST_PLAYED, MOST_PLAYED, RECENTLY_ADDED, RELEASE_YEAR, RATING, USER_RATING }

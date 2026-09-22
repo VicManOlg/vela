@@ -148,6 +148,7 @@ fun HomeScreen(
                     HomeRail.FAVORITES -> gameRail(rail.name, "Favorites", state.favorites, state, viewModel, navigation, autoFocus = first)
                     HomeRail.RECOMMENDED -> gameRail(rail.name, "Because you play", state.recommended, state, viewModel, navigation, subtitle = "Unplayed games from the systems you use most", autoFocus = first)
                     HomeRail.RECENTLY_ADDED -> gameRail(rail.name, "Recently added", state.recentlyAdded, state, viewModel, navigation, autoFocus = first)
+                    HomeRail.TOP_RATED -> gameRail(rail.name, "Your top rated", state.topRated, state, viewModel, navigation, subtitle = "Games you gave the most stars", autoFocus = first)
                     HomeRail.ANDROID -> gameRail(rail.name, "Android games", state.android, state, viewModel, navigation, accentOverride = Color(0xFF3DDC84), autoFocus = first)
                     HomeRail.APPS -> if (state.quickApps.isNotEmpty()) {
                         item(key = rail.name) {
@@ -205,6 +206,7 @@ fun HomeScreen(
                     HomeRail.FAVORITES -> if (state.favorites.isNotEmpty()) 1 else 0
                     HomeRail.RECOMMENDED -> if (state.recommended.isNotEmpty()) 1 else 0
                     HomeRail.RECENTLY_ADDED -> if (state.recentlyAdded.isNotEmpty()) 1 else 0
+                    HomeRail.TOP_RATED -> if (state.topRated.isNotEmpty()) 1 else 0
                     HomeRail.ANDROID -> if (state.android.isNotEmpty()) 1 else 0
                     HomeRail.APPS -> if (state.quickApps.isNotEmpty()) 1 else 0
                     HomeRail.PLATFORMS -> if (state.platforms.isNotEmpty()) 1 else 0

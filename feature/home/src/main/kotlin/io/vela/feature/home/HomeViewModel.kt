@@ -49,6 +49,7 @@ data class HomeUiState(
     val quickApps: List<GameSummary> = emptyList(),
     val recommended: List<GameSummary> = emptyList(),
     val recentlyAdded: List<GameSummary> = emptyList(),
+    val topRated: List<GameSummary> = emptyList(),
     val totalGames: Int = 0,
     val isEmpty: Boolean = false,
 ) {
@@ -68,12 +69,11 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val lists = combine(
-        games.observePlaying(12),
-        games.observeRecentlyPlayed(20),
-        games.observeFavorites(30),
+        combine(games.observePlaying(12), games.observeRecentlyPlayed(20), games.observeFavorites(30)) { p, r, f -> Triple(p, r, f) },
         games.observeRecommendations(20),
         games.observeRecentlyAdded(20),
-    ) { playing, recent, favs, recommended, added -> Lists(playing, recent, favs, recommended, added) }
+        games.observeTopRated(20),
+    ) { (playing, recent, favs), recommended, added, topRated -> Lists(playing, recent, favs, recommended, added, topRated) }
 
     val state: StateFlow<HomeUiState> = combine(
         lists,
@@ -98,6 +98,7 @@ class HomeViewModel @Inject constructor(
             quickApps = pinned,
             recommended = l.recommended,
             recentlyAdded = l.added,
+            topRated = l.topRated,
             totalGames = total,
             isEmpty = total == 0,
         )
@@ -175,6 +176,7 @@ class HomeViewModel @Inject constructor(
         val favorites: List<GameSummary>,
         val recommended: List<GameSummary>,
         val added: List<GameSummary>,
+        val topRated: List<GameSummary>,
     )
 
     private fun formatLastPlayedShort(at: Long?): String? = io.vela.core.ui.components.formatLastPlayed(at)

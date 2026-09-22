@@ -46,7 +46,7 @@ enum class LibraryView(val label: String, val description: String) {
 }
 
 @Serializable
-enum class HomeRail { CONTINUE_PLAYING, RECENT, FAVORITES, PLATFORMS, COLLECTIONS, ANDROID, RECOMMENDED, RECENTLY_ADDED, APPS }
+enum class HomeRail { CONTINUE_PLAYING, RECENT, FAVORITES, PLATFORMS, COLLECTIONS, ANDROID, RECOMMENDED, RECENTLY_ADDED, APPS, TOP_RATED }
 
 /** Everything the user can tune, persisted through DataStore. Mutations go through `SettingsRepository`. */
 @Serializable

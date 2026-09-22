@@ -140,4 +140,5 @@ fun GameSort.label(): String = when (this) {
     GameSort.RECENTLY_ADDED -> "Recently added"
     GameSort.RELEASE_YEAR -> "Release year"
     GameSort.RATING -> "Rating"
+    GameSort.USER_RATING -> "Your rating"
 }

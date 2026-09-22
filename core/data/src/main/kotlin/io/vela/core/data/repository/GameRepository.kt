@@ -72,6 +72,7 @@ class GameRepository @Inject constructor(
     fun observeRecentlyPlayed(limit: Int = 20): Flow<List<GameSummary>> = gameDao.observeRecentlyPlayed(limit).map { it.map { v -> v.toDomain() } }
     fun observeFavorites(limit: Int = 30): Flow<List<GameSummary>> = gameDao.observeFavorites(limit).map { it.map { v -> v.toDomain() } }
     fun observePlaying(limit: Int = 12): Flow<List<GameSummary>> = gameDao.observePlaying(limit).map { it.map { v -> v.toDomain() } }
+    fun observeTopRated(limit: Int = 20): Flow<List<GameSummary>> = gameDao.observeTopRated(limit).map { it.map { v -> v.toDomain() } }
     fun observeRecentlyAdded(limit: Int = 20): Flow<List<GameSummary>> = gameDao.observeRecentlyAdded(limit).map { it.map { v -> v.toDomain() } }
     fun observeRecommendations(limit: Int = 20): Flow<List<GameSummary>> = gameDao.observeRecommendations(limit).map { it.map { v -> v.toDomain() } }
     fun observeTotalCount(): Flow<Int> = gameDao.observeTotalCount()
@@ -139,6 +140,7 @@ class GameRepository @Inject constructor(
             GameSort.RECENTLY_ADDED -> "addedAt DESC, sortTitle ASC"
             GameSort.RELEASE_YEAR -> "releaseDate DESC NULLS LAST, sortTitle ASC"
             GameSort.RATING -> "rating DESC NULLS LAST, sortTitle ASC"
+            GameSort.USER_RATING -> "userRating DESC NULLS LAST, rating DESC NULLS LAST, sortTitle ASC"
         }
         val sql = "SELECT * FROM game_summaries WHERE ${where.joinToString(" AND ")} ORDER BY $order" +
             (limit?.let { " LIMIT $it" } ?: "")

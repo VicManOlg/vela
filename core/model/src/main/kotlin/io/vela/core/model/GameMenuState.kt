@@ -21,6 +21,9 @@ sealed interface GameMenuState {
 
     data class Completion(val game: GameSummary, val current: CompletionStatus) : GameMenuState
 
+    /** Star picker; [current] is the user's rating (1..5) or null. */
+    data class Rate(val game: GameSummary, val current: Int?) : GameMenuState
+
     data class ConfirmHide(val game: GameSummary) : GameMenuState
 }
 

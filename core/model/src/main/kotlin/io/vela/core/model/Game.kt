@@ -73,6 +73,8 @@ data class GameSummary(
     val playCount: Int = 0,
     val totalPlayTimeMs: Long = 0,
     val packageName: String? = null,
+    /** The user's own 1..5 stars, null when unrated. */
+    val userRating: Int? = null,
 )
 
 /** Scraped or hand-edited descriptive data. */

@@ -77,6 +77,11 @@ class GameActions @Inject constructor(
         games.setCompletion(id, status)
     }
 
+    /** 1..5 stars, null clears. */
+    suspend fun setUserRating(id: GameId, rating: Int?) {
+        games.setUserRating(id, rating?.coerceIn(1, 5))
+    }
+
     suspend fun hide(id: GameId) {
         games.setHidden(id, true)
         _messages.emit(UiMessage("Hidden. Show hidden games from Settings > Library."))

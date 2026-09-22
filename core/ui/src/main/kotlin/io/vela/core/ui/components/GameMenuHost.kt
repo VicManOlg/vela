@@ -77,6 +77,11 @@ fun GameMenuHost(state: GameMenuState, callbacks: GameMenuCallbacks) {
             onSelect = callbacks.onSetCompletion,
             onDismiss = callbacks.onDismiss,
         )
+        is GameMenuState.Rate -> RatingMenu(
+            current = state.current,
+            onSelect = { callbacks.onAction("RATE:${it ?: 0}") },
+            onDismiss = callbacks.onDismiss,
+        )
         is GameMenuState.ConfirmHide -> ConfirmDialog(
             title = "Hide ${state.game.title}?",
             message = "It disappears from every list. You can show hidden games again from Settings > Library.",

@@ -81,6 +81,7 @@ class GameDetailViewModel @Inject constructor(
     fun toggleFavorite() = viewModelScope.launch { actions.toggleFavorite(gameId) }
     fun refreshMetadata() = viewModelScope.launch { actions.refreshMetadata(gameId) }
     fun setCompletion(status: CompletionStatus) = viewModelScope.launch { actions.setCompletion(gameId, status); menu.dismiss() }
+    fun setUserRating(rating: Int?) = viewModelScope.launch { actions.setUserRating(gameId, rating) }
 
     fun openMenu() = viewModelScope.launch { state.value.game?.let { menu.open(it.toSummary()) } }
     fun openLaunchWith() = viewModelScope.launch { state.value.game?.let { menu.open(it.toSummary()); menu.onAction("LAUNCH_WITH") } }
@@ -101,5 +102,6 @@ class GameDetailViewModel @Inject constructor(
         background = artwork[io.vela.core.model.ArtworkType.BACKGROUND] ?: artwork[io.vela.core.model.ArtworkType.SCREENSHOT],
         favorite = favorite, lastPlayedAt = lastPlayedAt, playCount = playCount, totalPlayTimeMs = totalPlayTimeMs,
         packageName = (location as? io.vela.core.model.GameLocation.AndroidApp)?.packageName,
+        userRating = userRating,
     )
 }

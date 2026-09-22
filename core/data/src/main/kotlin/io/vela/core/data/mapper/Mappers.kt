@@ -92,6 +92,7 @@ fun GameSummaryView.toDomain(): GameSummary = GameSummary(
     playCount = playCount,
     totalPlayTimeMs = totalPlayTimeMs,
     packageName = packageName,
+    userRating = userRating,
 )
 
 fun LibrarySourceEntity.toDomain(): LibrarySource = LibrarySource(
@@ -151,4 +152,5 @@ fun Game.toSummary(): GameSummary = GameSummary(
     playCount = playCount,
     totalPlayTimeMs = totalPlayTimeMs,
     packageName = (location as? GameLocation.AndroidApp)?.packageName,
+    userRating = userRating,
 )

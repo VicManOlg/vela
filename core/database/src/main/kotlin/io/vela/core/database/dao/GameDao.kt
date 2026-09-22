@@ -133,6 +133,12 @@ interface GameDao {
     fun observePlaying(limit: Int): Flow<List<GameSummaryView>>
 
     @Query(
+        """SELECT * FROM game_summaries WHERE hidden = 0 AND present = 1 AND userRating IS NOT NULL
+           ORDER BY userRating DESC, lastPlayedAt DESC, sortTitle LIMIT :limit""",
+    )
+    fun observeTopRated(limit: Int): Flow<List<GameSummaryView>>
+
+    @Query(
         """SELECT * FROM game_summaries WHERE hidden = 0 AND present = 1
            ORDER BY addedAt DESC LIMIT :limit""",
     )

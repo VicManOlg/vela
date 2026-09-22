@@ -146,5 +146,6 @@ fun gameFacts(game: GameSummary, platformLabel: String? = null): String = listOf
     platformLabel,
     game.totalPlayTimeMs.takeIf { it > 0 }?.let(::formatPlayTime),
     formatLastPlayed(game.lastPlayedAt),
+    ratingStars(game.userRating),
     if (game.favorite) "Favorite" else null,
 ).joinToString("   ")

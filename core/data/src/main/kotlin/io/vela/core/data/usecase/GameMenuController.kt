@@ -41,6 +41,13 @@ class GameMenuController @Inject constructor(
     /** @return true when the caller should navigate to details. */
     suspend fun onAction(action: String): MenuResult {
         val game = currentGame() ?: return MenuResult.None
+        // "RATE:n" comes back from the star picker (n = 0 clears), so every screen's plain
+        // string action channel is enough and no extra callback is needed.
+        if (action.startsWith("RATE:")) {
+            dismiss()
+            actions.setUserRating(game.id, action.substringAfter(':').toIntOrNull()?.takeIf { it > 0 })
+            return MenuResult.None
+        }
         return when (action) {
             "PLAY" -> { dismiss(); actions.launch(game.id); MenuResult.Launched }
             "DETAILS" -> { dismiss(); MenuResult.OpenDetails(game) }
@@ -53,6 +60,7 @@ class GameMenuController @Inject constructor(
                 MenuResult.None
             }
             "REFRESH_METADATA" -> { dismiss(); actions.refreshMetadata(game.id); MenuResult.None }
+            "RATE" -> { _state.value = GameMenuState.Rate(game, game.userRating); MenuResult.None }
             "HIDE" -> { _state.value = GameMenuState.ConfirmHide(game); MenuResult.None }
             else -> MenuResult.None
         }
@@ -100,6 +108,7 @@ class GameMenuController @Inject constructor(
         is GameMenuState.NewCollection -> s.game
         is GameMenuState.LaunchWith -> s.game
         is GameMenuState.Completion -> s.game
+        is GameMenuState.Rate -> s.game
         is GameMenuState.ConfirmHide -> s.game
     }
 
