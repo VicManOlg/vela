@@ -15,7 +15,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -38,6 +37,9 @@ import coil3.request.crossfade
 import coil3.size.Precision
 import io.vela.core.ui.theme.VelaTheme
 import java.io.File
+import coil3.compose.AsyncImage
+import coil3.size.Scale
+import androidx.compose.ui.graphics.FilterQuality
 
 /** Model for app icons: `appicon://<package>`. */
 fun appIconModel(packageName: String): String = "appicon://$packageName"
@@ -140,7 +142,7 @@ fun PainterImage(painter: Painter, modifier: Modifier = Modifier, contentScale: 
 
 /**
  * Box art that is never cropped: the image is fitted inside the card and the empty bands are
- * filled with a blurred, dimmed copy of the same art, so landscape boxes (SNES, N64) and
+ * filled with a soft, dimmed copy of the same art, so landscape boxes (SNES, N64) and
  * portrait boxes (PS1, GBA) share one card size without looking cut.
  */
 @Composable
@@ -169,15 +171,23 @@ fun FittedArtwork(
             val portraitish = intrinsic.height >= intrinsic.width * 1.25f
             Box(Modifier.fillMaxSize()) {
                 if (!portraitish) {
-                    // Fill behind with a soft copy, then the real art fitted on top.
-                    Image(
-                        painter = state.painter,
+                    // Fill behind with a soft copy: a 24px decode of the same art stretched with bilinear
+                    // filtering reads as a blur but costs nothing per frame, unlike a RenderEffect blur
+                    // (which made grids with dozens of cards stutter on mid-range phones).
+                    val soft = ImageRequest.Builder(context)
+                        .data(model)
+                        .size(24)
+                        .precision(Precision.EXACT)
+                        .scale(Scale.FILL)
+                        .crossfade(false)
+                        .build()
+                    AsyncImage(
+                        model = soft,
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .blur(22.dp)
-                            .alpha(0.7f),
+                        filterQuality = FilterQuality.Low,
+                        alpha = 0.7f,
+                        modifier = Modifier.fillMaxSize(),
                     )
                     Box(Modifier.fillMaxSize().background(VelaTheme.colors.background.copy(alpha = 0.25f)))
                 }

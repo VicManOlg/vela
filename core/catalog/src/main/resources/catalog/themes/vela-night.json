@@ -17,7 +17,7 @@
     "scrim": "#99050710"
   },
   "typography": { "displayFamily": "outfit", "bodyFamily": "manrope" },
-  "background": { "mode": "hero", "blurRadius": 2, "dim": 0.5, "saturation": 1.15 },
+  "background": { "mode": "hero", "blurRadius": 0, "dim": 0.5, "saturation": 1.15 },
   "effects": { "glassPanels": true, "panelAlpha": 0.62, "focusGlow": true, "videoPreviews": true },
   "platformIcons": { "set": "systematic" }
 }

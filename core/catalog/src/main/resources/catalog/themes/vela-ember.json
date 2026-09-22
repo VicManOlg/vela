@@ -18,7 +18,7 @@
   },
   "typography": { "displayFamily": "outfit", "bodyFamily": "manrope" },
   "shapes": { "cardRadius": 10, "tileRadius": 14 },
-  "background": { "mode": "hero", "blurRadius": 5, "dim": 0.55, "saturation": 1.25 },
+  "background": { "mode": "hero", "blurRadius": 0, "dim": 0.55, "saturation": 1.25 },
   "effects": { "glassPanels": true, "panelAlpha": 0.7, "focusGlow": true, "videoPreviews": true },
   "platformIcons": { "set": "systematic" }
 }
