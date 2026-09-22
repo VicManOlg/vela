@@ -16,6 +16,13 @@ enum class StorageMode {
 @Serializable
 enum class ConfirmButton { A, B }
 
+/** How the Library shows systems. */
+@Serializable
+enum class LibraryLayout(val label: String, val description: String) {
+    SHOWCASE("Showcase", "Poster cards with the console and your covers"),
+    GRID("Grid", "Compact colour tiles"),
+}
+
 /** Home screen arrangement. */
 @Serializable
 enum class HomeLayout(val label: String, val description: String) {
@@ -71,6 +78,7 @@ data class AppSettings(
     val gridColumns: Int = 0,
     val libraryView: LibraryView = LibraryView.GRID,
     val homeLayout: HomeLayout = HomeLayout.RAILS,
+    val libraryLayout: LibraryLayout = LibraryLayout.SHOWCASE,
     val reduceMotion: Boolean = false,
     val uiScale: Float = 1f,
     // Android apps

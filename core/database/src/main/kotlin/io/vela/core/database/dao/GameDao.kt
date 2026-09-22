@@ -190,6 +190,14 @@ interface GameDao {
     @Query("SELECT id FROM game_summaries WHERE boxArt IS NULL AND hidden = 0 AND present = 1 AND kind = 'ROM' ORDER BY lastPlayedAt DESC, addedAt DESC")
     suspend fun idsMissingBoxArt(): List<Long>
 
+    /** Recent art per system for the Library cards: most recently played/added first. */
+    @Query(
+        """SELECT platformId, boxArt, background FROM game_summaries
+           WHERE hidden = 0 AND present = 1 AND kind = 'ROM' AND (boxArt IS NOT NULL OR background IS NOT NULL)
+           ORDER BY lastPlayedAt DESC, addedAt DESC""",
+    )
+    fun observePlatformArt(): Flow<List<PlatformArtRow>>
+
     /** Games still lacking box art, never asked for metadata, or (when a logo source exists) lacking a logo. */
     @Query(
         """SELECT s.id FROM game_summaries s
@@ -219,6 +227,8 @@ interface GameDao {
 }
 
 /** Minimal row used by the incremental scanner to diff the filesystem against the database. */
+data class PlatformArtRow(val platformId: String, val boxArt: String?, val background: String?)
+
 data class FileSignature(
     val id: Long,
     val locationValue: String,

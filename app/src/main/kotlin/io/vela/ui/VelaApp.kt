@@ -172,7 +172,7 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
                     onOpenFavorites = { navController.navigate(GameGridRoute(favorites = true, title = "Favorites")) },
                     onOpenAll = { navController.navigate(GameGridRoute(title = "All games")) },
                     onOpenSettings = { tab = ShellTab.SETTINGS },
-                    onBackgroundAccent = { appViewModel.setBackdrop(null, it) },
+                    onBackgroundArtwork = appViewModel::setBackdrop,
                 )
                 ShellTab.COLLECTIONS -> CollectionsScreen(onOpenCollection = openCollection)
                 ShellTab.SEARCH -> SearchScreen(onOpenGame = openGame, onBackgroundArtwork = appViewModel::setBackdrop)

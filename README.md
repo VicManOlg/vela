@@ -38,6 +38,7 @@ MVP: functional, tested on an emulator and designed for 16:9 handhelds.
 | Theme system driven by JSON specs (3 bundled themes) | Done |
 | Game list views: grid, compact grid, list with preview, showcase wheel (Start or Settings > Appearance) | Done |
 | Home layouts: rails or spotlight (focused game fills the screen) | Done |
+| Library systems view: poster cards (console, your covers, scene backdrop) or compact tiles | Done |
 | Settings: library, systems, emulators, metadata, appearance, controller, Android apps, storage, advanced | Done |
 | First-run setup flow | Done |
 | Video previews, SteamGridDB, IGDB, RetroAchievements, Winlator integration, cloud sync | Planned |

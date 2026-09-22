@@ -1,13 +1,8 @@
 package io.vela.feature.library
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Android
-import androidx.compose.ui.graphics.Color
-import io.vela.core.data.repository.AppsRepository
-import kotlinx.coroutines.flow.combine
-
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -15,9 +10,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Android
+import androidx.compose.material.icons.rounded.Apps
+import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,31 +27,40 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.vela.core.data.repository.AppsRepository
 import io.vela.core.data.repository.LibraryRepository
+import io.vela.core.data.repository.PlatformArt
 import io.vela.core.data.repository.PlatformEntry
+import io.vela.core.model.LibraryLayout
 import io.vela.core.model.PlatformId
+import io.vela.core.settings.SettingsRepository
 import io.vela.core.ui.components.EmptyState
 import io.vela.core.ui.components.PlatformTile
+import io.vela.core.ui.components.SystemCard
 import io.vela.core.ui.components.color
 import io.vela.core.ui.components.focusBleed
 import io.vela.core.ui.components.rememberAutoFocus
-import androidx.compose.ui.focus.focusRequester
+import io.vela.core.ui.components.rememberEntranceClock
+import io.vela.core.ui.components.staggeredEntrance
 import io.vela.core.ui.theme.VelaTheme
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
-import androidx.compose.foundation.lazy.grid.itemsIndexed
-import io.vela.core.ui.components.rememberEntranceClock
-import io.vela.core.ui.components.staggeredEntrance
 
 /** Android shown as one more system: detected games plus pinned apps. */
 data class AndroidTile(val games: Int, val apps: Int, val accent: Long, val name: String) {
@@ -57,9 +68,16 @@ data class AndroidTile(val games: Int, val apps: Int, val accent: Long, val name
 }
 
 @HiltViewModel
-class PlatformsViewModel @Inject constructor(library: LibraryRepository, apps: AppsRepository) : ViewModel() {
+class PlatformsViewModel @Inject constructor(library: LibraryRepository, apps: AppsRepository, settings: SettingsRepository) : ViewModel() {
     val platforms: StateFlow<List<PlatformEntry>> = library.observePlatformsWithGames()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** A few recent covers and one scene per system, for the showcase cards and the backdrop. */
+    val art: StateFlow<Map<PlatformId, PlatformArt>> = library.observePlatformArt()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    val layout: StateFlow<LibraryLayout> = settings.settings.map { it.libraryLayout }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryLayout.SHOWCASE)
 
     private val androidPlatform = library.platform(PlatformId.ANDROID)
     val android: StateFlow<AndroidTile> = combine(apps.observeAndroidGames(), apps.observeApps()) { games, pinned ->
@@ -67,7 +85,10 @@ class PlatformsViewModel @Inject constructor(library: LibraryRepository, apps: A
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AndroidTile(0, 0, 0xFF3DDC84, "Android"))
 }
 
-/** Library tab: every system with games, as tiles. Also offers the two smart shelves. */
+/** What the focused card tells the header and the backdrop. */
+private data class Spot(val title: String, val subtitle: String, val artwork: String?, val accent: Long)
+
+/** Library tab: every system with games, as poster cards or compact tiles, plus the two smart shelves. */
 @Composable
 fun PlatformsScreen(
     onOpenPlatform: (PlatformId) -> Unit,
@@ -75,25 +96,42 @@ fun PlatformsScreen(
     onOpenFavorites: () -> Unit,
     onOpenAll: () -> Unit,
     onOpenSettings: () -> Unit,
-    onBackgroundAccent: (Long) -> Unit,
+    onBackgroundArtwork: (String?, Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PlatformsViewModel = hiltViewModel(),
 ) {
     val platforms by viewModel.platforms.collectAsStateWithLifecycle()
     val android by viewModel.android.collectAsStateWithLifecycle()
-    var focusedName by remember { mutableStateOf<String?>(null) }
+    val art by viewModel.art.collectAsStateWithLifecycle()
+    val layout by viewModel.layout.collectAsStateWithLifecycle()
+    var spot by remember { mutableStateOf<Spot?>(null) }
     val colors = VelaTheme.colors
     val clock = rememberEntranceClock()
     val total = platforms.sumOf { it.gameCount }
+    val allCovers = remember(art, platforms) { platforms.mapNotNull { art[it.id]?.covers?.firstOrNull() }.take(3) }
+
+    LaunchedEffect(spot) { onBackgroundArtwork(spot?.artwork, spot?.accent ?: 0xFF3D7BFF) }
+
+    val allSpot = Spot("All games", "Every system   $total games", art.values.firstNotNullOfOrNull { it.background }, 0xFF7FD7FF)
+    val favoritesSpot = Spot("Favorites", "Your picks", null, 0xFF3D7BFF)
+    val androidSpot = Spot(android.name, "${android.games} games   ${android.apps} apps", null, android.accent)
+    fun spotOf(entry: PlatformEntry) = Spot(
+        title = entry.displayName,
+        subtitle = listOfNotNull(entry.platform.manufacturer, entry.platform.releaseYear?.toString(), "${entry.gameCount} games").joinToString("   "),
+        artwork = art[entry.id]?.background,
+        accent = entry.platform.accentColor,
+    )
 
     Column(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding).height(96.dp), verticalArrangement = Arrangement.Bottom) {
-            Text("Library", style = VelaTheme.typography.display, color = colors.onBackground)
+            Text(spot?.title ?: "Library", style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(4.dp))
             Text(
-                focusedName ?: "${platforms.size + 1} systems   ${total + android.games} games",
+                spot?.subtitle ?: "${platforms.size + 1} systems   ${total + android.games} games",
                 style = VelaTheme.typography.body,
                 color = colors.muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
         Spacer(Modifier.height(6.dp))
@@ -106,55 +144,159 @@ fun PlatformsScreen(
             )
             return@Column
         }
-        val autoFocus = rememberAutoFocus(keys = arrayOf(platforms.isNotEmpty()))
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(VelaTheme.dimens.cardWidth * 1.35f),
-            modifier = Modifier.fillMaxSize().focusRequester(autoFocus).focusRestorer().focusGroup(),
-            contentPadding = PaddingValues(start = VelaTheme.dimens.screenPadding, end = VelaTheme.dimens.screenPadding, top = focusBleed(), bottom = 90.dp),
-            horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
-            verticalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
+        when (layout) {
+            LibraryLayout.SHOWCASE -> ShowcaseRow(
+                platforms, android, art, allCovers, clock,
+                onOpenPlatform, onOpenAndroid, onOpenFavorites, onOpenAll,
+                onSpot = { spot = it }, allSpot = allSpot, favoritesSpot = favoritesSpot, androidSpot = androidSpot, spotOf = ::spotOf,
+            )
+            LibraryLayout.GRID -> TileGrid(
+                platforms, android, total, clock,
+                onOpenPlatform, onOpenAndroid, onOpenFavorites, onOpenAll,
+                onSpot = { spot = it }, allSpot = allSpot, favoritesSpot = favoritesSpot, androidSpot = androidSpot, spotOf = ::spotOf,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ShowcaseRow(
+    platforms: List<PlatformEntry>,
+    android: AndroidTile,
+    art: Map<PlatformId, PlatformArt>,
+    allCovers: List<String>,
+    clock: Long,
+    onOpenPlatform: (PlatformId) -> Unit,
+    onOpenAndroid: () -> Unit,
+    onOpenFavorites: () -> Unit,
+    onOpenAll: () -> Unit,
+    onSpot: (Spot) -> Unit,
+    allSpot: Spot,
+    favoritesSpot: Spot,
+    androidSpot: Spot,
+    spotOf: (PlatformEntry) -> Spot,
+) {
+    val colors = VelaTheme.colors
+    val rowState = rememberLazyListState()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(platforms.isNotEmpty()))
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val bleed = focusBleed() * 1.4f
+        val cardHeight = (maxHeight - bleed * 2 - 24.dp).coerceIn(150.dp, 360.dp)
+        val cardWidth = cardHeight * 0.74f
+        LazyRow(
+            state = rowState,
+            modifier = Modifier
+                .fillMaxSize()
+                .focusRequester(autoFocus)
+                .focusRestorer()
+                .focusGroup(),
+            contentPadding = PaddingValues(start = VelaTheme.dimens.screenPadding, end = VelaTheme.dimens.screenPadding, top = bleed, bottom = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing * 1.4f),
+            verticalAlignment = Alignment.Top,
         ) {
             item(key = "all") {
-                PlatformTile(
-                    name = "Every system", shortName = "All games", count = total, accent = colors.accent,
-                    onClick = onOpenAll, onFocused = { focusedName = "All games"; onBackgroundAccent(0xFF7FD7FF) }, width = null,
-                    modifier = Modifier.fillMaxWidth().staggeredEntrance(0, clock),
+                SystemCard(
+                    name = "All games", subtitle = allSpot.subtitle.substringAfterLast("   "), accent = colors.accent,
+                    covers = allCovers, iconVector = Icons.Rounded.Apps, width = cardWidth,
+                    onClick = onOpenAll, onFocused = { onSpot(allSpot) }, modifier = Modifier.staggeredEntrance(0, clock),
                 )
             }
             item(key = "favorites") {
-                PlatformTile(
-                    name = "Your picks", shortName = "Favorites", count = -1, accent = colors.accentSecondary,
-                    onClick = onOpenFavorites, onFocused = { focusedName = "Favorites"; onBackgroundAccent(0xFF3D7BFF) }, width = null,
-                    modifier = Modifier.fillMaxWidth().staggeredEntrance(1, clock),
+                SystemCard(
+                    name = "Favorites", subtitle = "Your picks", accent = colors.accentSecondary,
+                    iconVector = Icons.Rounded.Favorite, width = cardWidth,
+                    onClick = onOpenFavorites, onFocused = { onSpot(favoritesSpot) }, modifier = Modifier.staggeredEntrance(1, clock),
                 )
             }
             itemsIndexed(platforms, key = { _, it -> it.id.value }) { index, entry ->
-                PlatformTile(
-                    name = entry.displayName,
-                    shortName = entry.platform.shortName,
-                    count = entry.gameCount,
+                SystemCard(
+                    // Short name on the card; the header spells the full name out.
+                    name = entry.platform.shortName,
+                    subtitle = if (entry.gameCount == 1) "1 game" else "${entry.gameCount} games",
                     accent = entry.platform.color(),
                     icon = entry.iconPath,
+                    covers = art[entry.id]?.covers.orEmpty(),
+                    width = cardWidth,
                     onClick = { onOpenPlatform(entry.id) },
-                    onFocused = { focusedName = "${entry.platform.name}   ${entry.gameCount} games"; onBackgroundAccent(entry.platform.accentColor) },
-                    width = null,
-                    modifier = Modifier.fillMaxWidth().staggeredEntrance(index + 2, clock),
+                    onFocused = { onSpot(spotOf(entry)) },
+                    modifier = Modifier.staggeredEntrance(index + 2, clock),
                 )
             }
             item(key = "android") {
-                PlatformTile(
-                    name = "Games and apps",
-                    shortName = android.name,
-                    count = android.count,
-                    accent = Color(android.accent),
-                    onClick = onOpenAndroid,
-                    iconVector = Icons.Rounded.Android,
-                    onFocused = { focusedName = "Android   ${android.games} games   ${android.apps} apps"; onBackgroundAccent(android.accent) },
-                    width = null,
-                    modifier = Modifier.fillMaxWidth().staggeredEntrance(platforms.size + 2, clock),
+                SystemCard(
+                    name = android.name, subtitle = "${android.games} games   ${android.apps} apps", accent = Color(android.accent),
+                    iconVector = Icons.Rounded.Android, width = cardWidth,
+                    onClick = onOpenAndroid, onFocused = { onSpot(androidSpot) }, modifier = Modifier.staggeredEntrance(platforms.size + 2, clock),
                 )
             }
         }
     }
-    LaunchedEffect(Unit) { onBackgroundAccent(0xFF3D7BFF) }
+}
+
+@Composable
+private fun TileGrid(
+    platforms: List<PlatformEntry>,
+    android: AndroidTile,
+    total: Int,
+    clock: Long,
+    onOpenPlatform: (PlatformId) -> Unit,
+    onOpenAndroid: () -> Unit,
+    onOpenFavorites: () -> Unit,
+    onOpenAll: () -> Unit,
+    onSpot: (Spot) -> Unit,
+    allSpot: Spot,
+    favoritesSpot: Spot,
+    androidSpot: Spot,
+    spotOf: (PlatformEntry) -> Spot,
+) {
+    val colors = VelaTheme.colors
+    val autoFocus = rememberAutoFocus(keys = arrayOf(platforms.isNotEmpty()))
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(VelaTheme.dimens.cardWidth * 1.35f),
+        modifier = Modifier.fillMaxSize().focusRequester(autoFocus).focusRestorer().focusGroup(),
+        contentPadding = PaddingValues(start = VelaTheme.dimens.screenPadding, end = VelaTheme.dimens.screenPadding, top = focusBleed(), bottom = 90.dp),
+        horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
+        verticalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
+    ) {
+        item(key = "all") {
+            PlatformTile(
+                name = "Every system", shortName = "All games", count = total, accent = colors.accent,
+                onClick = onOpenAll, onFocused = { onSpot(allSpot) }, width = null,
+                modifier = Modifier.fillMaxWidth().staggeredEntrance(0, clock),
+            )
+        }
+        item(key = "favorites") {
+            PlatformTile(
+                name = "Your picks", shortName = "Favorites", count = -1, accent = colors.accentSecondary,
+                onClick = onOpenFavorites, onFocused = { onSpot(favoritesSpot) }, width = null,
+                modifier = Modifier.fillMaxWidth().staggeredEntrance(1, clock),
+            )
+        }
+        itemsIndexed(platforms, key = { _, it -> it.id.value }) { index, entry ->
+            PlatformTile(
+                name = entry.displayName,
+                shortName = entry.platform.shortName,
+                count = entry.gameCount,
+                accent = entry.platform.color(),
+                icon = entry.iconPath,
+                onClick = { onOpenPlatform(entry.id) },
+                onFocused = { onSpot(spotOf(entry)) },
+                width = null,
+                modifier = Modifier.fillMaxWidth().staggeredEntrance(index + 2, clock),
+            )
+        }
+        item(key = "android") {
+            PlatformTile(
+                name = "Games and apps",
+                shortName = android.name,
+                count = android.count,
+                accent = Color(android.accent),
+                onClick = onOpenAndroid,
+                iconVector = Icons.Rounded.Android,
+                onFocused = { onSpot(androidSpot) },
+                width = null,
+                modifier = Modifier.fillMaxWidth().staggeredEntrance(platforms.size + 2, clock),
+            )
+        }
+    }
 }

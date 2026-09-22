@@ -39,6 +39,9 @@ data class PlatformEntry(
     val displayName: String get() = settings.customName ?: platform.name
 }
 
+/** Up to three recent covers and one scene of a system, for its Library card and the backdrop. */
+data class PlatformArt(val covers: List<String>, val background: String?)
+
 @Singleton
 class LibraryRepository @Inject constructor(
     private val catalog: PlatformCatalog,
@@ -70,6 +73,12 @@ class LibraryRepository @Inject constructor(
                 )
             }
         }
+
+    fun observePlatformArt(): Flow<Map<PlatformId, PlatformArt>> = gameDao.observePlatformArt().map { rows ->
+        rows.groupBy { it.platformId }.mapKeys { PlatformId(it.key) }.mapValues { (_, list) ->
+            PlatformArt(covers = list.mapNotNull { it.boxArt }.take(3), background = list.firstNotNullOfOrNull { it.background })
+        }
+    }
 
     fun observePlatform(id: PlatformId): Flow<PlatformEntry?> = observeAllPlatforms().map { list -> list.firstOrNull { it.id == id } }
 
