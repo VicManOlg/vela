@@ -538,6 +538,10 @@ extras (alternative): rom_uri: {rom.safUri}    (string; ES-DE) | {rom.path} (Dai
 flags: FLAG_GRANT_READ_URI_PERMISSION | FLAG_ACTIVITY_CLEAR_TASK | FLAG_ACTIVITY_CLEAR_TOP
 source: ES-DE-SYS, DAIJI-WIKI, argosy-launcher PR #441
 
+Field note (2026-09-22, Galaxy A54, Pizza Boy GBA Pro): with only CLEAR_TOP a running Pizza Boy received the
+new intent in onNewIntent and simply resumed the previous game. Vela now sends CLEAR_TASK so MainActivity is
+recreated, and passes the FileProvider URI both as data and as the `rom_uri` extra (grant extended via clipData).
+
 id: pizzaboy-gbc
 package: it.dbtecno.pizzaboy                   # Pro: it.dbtecno.pizzaboypro
 component: it.dbtecno.pizzaboy/it.dbtecno.pizzaboy.MainActivity

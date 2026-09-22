@@ -269,8 +269,9 @@
     "activity": "{package}.MainActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
+    "extras": [{ "key": "rom_uri", "value": "{rom.uri}" }],
     "platforms": ["gba"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"]
+    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"]
   },
   {
     "id": "pizzaboy_gbc",
@@ -279,8 +280,9 @@
     "activity": "{package}.MainActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
+    "extras": [{ "key": "rom_uri", "value": "{rom.uri}" }],
     "platforms": ["gb", "gbc"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"]
+    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"]
   },
   {
     "id": "yabasanshiro",

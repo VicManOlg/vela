@@ -69,6 +69,24 @@ class LaunchIntentBuilderTest {
     }
 
     @Test
+    fun `pizza boy gets the rom as data and rom_uri extra and a fresh task`() {
+        val def = players[PlayerId("pizzaboy_gba")]!!
+        val uri = "content://com.android.externalstorage.documents/tree/primary%3AROMs/document/primary%3AROMs%2Fgba%2FGame.gba"
+        val g = game(GameLocation.Document(uri), "gba", "Game.gba")
+
+        val prepared = builder.build(g, ResolvedPlayer(def, "it.dbtecno.pizzaboygbapro", null), null)
+        val i = prepared.intent
+
+        assertThat(i.component!!.className).isEqualTo("it.dbtecno.pizzaboygbapro.MainActivity")
+        assertThat(i.action).isEqualTo(Intent.ACTION_VIEW)
+        assertThat(i.data.toString()).isEqualTo(uri)
+        assertThat(i.getStringExtra("rom_uri")).isEqualTo(uri)
+        // A running Pizza Boy must be recreated, otherwise it resumes the previous game.
+        assertThat(i.flags and Intent.FLAG_ACTIVITY_CLEAR_TASK).isNotEqualTo(0)
+        assertThat(i.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION).isNotEqualTo(0)
+    }
+
+    @Test
     fun `string extras holding content uris are granted through clipData`() {
         val def = players[PlayerId("nethersx2")]!!
         val uri = "content://com.android.externalstorage.documents/tree/primary%3AROMs/document/primary%3AROMs%2Fps2%2FGame.chd"
