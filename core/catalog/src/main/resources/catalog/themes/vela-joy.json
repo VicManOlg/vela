@@ -18,7 +18,7 @@
   },
   "typography": { "displayFamily": "outfit", "bodyFamily": "manrope", "displaySize": 38, "titleSize": 22, "letterSpacingDisplay": -0.01 },
   "shapes": { "cardRadius": 4, "tileRadius": 6, "chipRadius": 999, "focusBorderWidth": 4 },
-  "layout": { "cardWidth": 140, "railSpacing": 10, "sectionSpacing": 24, "gridColumns": 7 },
+  "layout": { "cardWidth": 150, "boxArtAspect": 1.0, "railSpacing": 12, "sectionSpacing": 24, "gridColumns": 7, "homeLayout": "tiles", "libraryLayout": "grid", "showTabs": false },
   "motion": { "focusScale": 1.04, "focusDurationMs": 120, "transitionDurationMs": 220, "backgroundCrossfadeMs": 300, "parallax": false },
   "background": { "mode": "static", "blurRadius": 0, "dim": 1.0, "saturation": 1.0, "staticColor": "#FFEBEBEB" },
   "effects": { "glassPanels": false, "panelAlpha": 1.0, "cardShadow": true, "focusGlow": true, "videoPreviews": true },

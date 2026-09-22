@@ -57,6 +57,8 @@ class HomeNavigation(
     val openCollection: (CollectionId) -> Unit,
     val openAndroid: () -> Unit,
     val openLibrary: () -> Unit,
+    val openCollections: () -> Unit,
+    val openSearch: () -> Unit,
     val openSettings: () -> Unit,
 )
 
@@ -101,9 +103,16 @@ fun HomeScreen(
             )
             return@Box
         }
-        if (state.layout == HomeLayout.SPOTLIGHT) {
-            SpotlightHome(state, spotlight, viewModel, navigation)
-            return@Box
+        val layout = when (state.layout) {
+            HomeLayout.THEME -> homeLayoutFor(VelaTheme.spec.layout.homeLayout)
+            else -> state.layout
+        }
+        when (layout) {
+            HomeLayout.SPOTLIGHT -> { SpotlightHome(state, spotlight, viewModel, navigation); return@Box }
+            HomeLayout.TILES -> { TilesHome(state, spotlight, viewModel, navigation); return@Box }
+            HomeLayout.STRIP -> { StripHome(state, spotlight, viewModel, navigation); return@Box }
+            HomeLayout.DASHBOARD -> { DashboardHome(state, viewModel, navigation); return@Box }
+            HomeLayout.RAILS, HomeLayout.THEME -> Unit
         }
 
         LazyColumn(
@@ -285,6 +294,15 @@ private fun SpotlightHeader(spotlight: Spotlight?) {
             }
         }
     }
+}
+
+/** Theme key -> layout; unknown or missing keys mean the classic rails. */
+internal fun homeLayoutFor(key: String?): HomeLayout = when (key?.lowercase()) {
+    "spotlight" -> HomeLayout.SPOTLIGHT
+    "tiles" -> HomeLayout.TILES
+    "strip" -> HomeLayout.STRIP
+    "dashboard" -> HomeLayout.DASHBOARD
+    else -> HomeLayout.RAILS
 }
 
 private fun HomeUiState.allGames(): List<GameSummary> =

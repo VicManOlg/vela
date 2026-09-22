@@ -207,7 +207,9 @@ Emerald (black and green, square tiles, system font).
 
 Copy one of `core/catalog/src/main/resources/catalog/themes/*.json`, change `id`, colours,
 typography families (`outfit`, `manrope`, `serif`, `mono`, `system`), shapes, layout sizes, motion
-background mode (`artwork`, `hero`, `platform`, `static`) and `platformIcons` (`set`: `systematic`, `flatui`,
+background mode (`artwork`, `hero`, `platform`, `static`), structure (`layout.homeLayout`: rails, spotlight, tiles,
+strip, dashboard; `layout.libraryLayout`: stage, showcase, grid; `layout.showTabs`; `layout.boxArtAspect` for square
+tiles) and `platformIcons` (`set`: `systematic`, `flatui`,
 `monochrome` or `none`; `tint`; `alpha`). System icons are downloaded once per set from the
 [RetroArch assets](https://github.com/libretro/retroarch-assets) repository (CC BY 4.0) into
 `files/platform-icons/<set>/`, named after each platform's `iconName` or `libretroName`.

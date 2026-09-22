@@ -77,7 +77,7 @@ class PlatformsViewModel @Inject constructor(library: LibraryRepository, apps: A
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     val layout: StateFlow<LibraryLayout> = settings.settings.map { it.libraryLayout }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryLayout.STAGE)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryLayout.THEME)
 
     private val androidPlatform = library.platform(PlatformId.ANDROID)
     val android: StateFlow<AndroidTile> = combine(apps.observeAndroidGames(), apps.observeApps()) { games, pinned ->
@@ -103,7 +103,14 @@ fun PlatformsScreen(
     val platforms by viewModel.platforms.collectAsStateWithLifecycle()
     val android by viewModel.android.collectAsStateWithLifecycle()
     val art by viewModel.art.collectAsStateWithLifecycle()
-    val layout by viewModel.layout.collectAsStateWithLifecycle()
+    val chosen by viewModel.layout.collectAsStateWithLifecycle()
+    val layout = if (chosen == LibraryLayout.THEME) {
+        when (VelaTheme.spec.layout.libraryLayout?.lowercase()) {
+            "showcase" -> LibraryLayout.SHOWCASE
+            "grid" -> LibraryLayout.GRID
+            else -> LibraryLayout.STAGE
+        }
+    } else chosen
     var spot by remember { mutableStateOf<Spot?>(null) }
     val colors = VelaTheme.colors
     val clock = rememberEntranceClock()
@@ -164,7 +171,7 @@ fun PlatformsScreen(
                 onOpenPlatform, onOpenAndroid, onOpenFavorites, onOpenAll,
                 onSpot = { spot = it }, allSpot = allSpot, favoritesSpot = favoritesSpot, androidSpot = androidSpot, spotOf = ::spotOf,
             )
-            LibraryLayout.GRID -> TileGrid(
+            LibraryLayout.THEME, LibraryLayout.GRID -> TileGrid(
                 platforms, android, total, clock,
                 onOpenPlatform, onOpenAndroid, onOpenFavorites, onOpenAll,
                 onSpot = { spot = it }, allSpot = allSpot, favoritesSpot = favoritesSpot, androidSpot = androidSpot, spotOf = ::spotOf,

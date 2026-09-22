@@ -90,6 +90,10 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import io.vela.core.ui.theme.LocalDynamicAccent
 import io.vela.core.ui.theme.liveAccent
+import androidx.compose.foundation.layout.Row
+import io.vela.core.ui.components.BatteryIndicator
+import io.vela.core.ui.components.Clock
+import io.vela.core.ui.components.VelaMark
 
 @Serializable private data object SetupRoute
 @Serializable private data class ShellRoute(val tab: String = ShellTab.HOME.name)
@@ -200,7 +204,23 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
     val openAndroid: () -> Unit = { navController.navigate(AndroidRoute) }
 
     Column(Modifier.fillMaxSize()) {
-        TopBar(tabs = tabs, selectedId = tab.name, onSelect = { id -> tab = ShellTab.valueOf(id) })
+        if (VelaTheme.spec.layout.showTabs || tab != ShellTab.HOME) {
+            TopBar(tabs = tabs, selectedId = tab.name, onSelect = { id -> tab = ShellTab.valueOf(id) })
+        } else {
+            // Themes with a clean Home: just the mark and the status, tabs come back on other screens.
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                VelaMark()
+                Spacer(Modifier.weight(1f))
+                if (VelaTheme.dimens.showBattery) BatteryIndicator()
+                if (VelaTheme.dimens.showClock) {
+                    Spacer(Modifier.width(18.dp))
+                    Clock()
+                }
+            }
+        }
         Box(Modifier.weight(1f)) {
             AnimatedContent(
                 targetState = tab,
@@ -218,6 +238,8 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
                         openCollection = openCollection,
                         openAndroid = openAndroid,
                         openLibrary = { tab = ShellTab.LIBRARY },
+                        openCollections = { tab = ShellTab.COLLECTIONS },
+                        openSearch = { tab = ShellTab.SEARCH },
                         openSettings = { tab = ShellTab.SETTINGS },
                     ),
                     onSpotlightChanged = { s -> appViewModel.setBackdrop(s?.artwork, s?.accent ?: 0xFF3D7BFF) },

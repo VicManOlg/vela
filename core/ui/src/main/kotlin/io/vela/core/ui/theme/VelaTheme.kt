@@ -128,6 +128,7 @@ val LocalVelaTheme = staticCompositionLocalOf<VelaThemeValues> { resolveTheme(Th
 
 /** Accessor used by every screen: `VelaTheme.colors.accent`, `VelaTheme.typography.title`... */
 object VelaTheme {
+    val spec: ThemeSpec @Composable @ReadOnlyComposable get() = LocalVelaTheme.current.spec
     val colors: VelaColors @Composable @ReadOnlyComposable get() = LocalVelaTheme.current.colors
     val typography: VelaTypography @Composable @ReadOnlyComposable get() = LocalVelaTheme.current.typography
     val shapes: VelaShapes @Composable @ReadOnlyComposable get() = LocalVelaTheme.current.shapes

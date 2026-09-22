@@ -19,6 +19,7 @@ enum class ConfirmButton { A, B }
 /** How the Library shows systems. */
 @Serializable
 enum class LibraryLayout(val label: String, val description: String) {
+    THEME("Theme default", "Whatever the active theme suggests"),
     STAGE("Stage", "One system at a time, with a dial of consoles"),
     SHOWCASE("Showcase", "Poster cards with the console and your covers"),
     GRID("Grid", "Compact colour tiles"),
@@ -27,8 +28,12 @@ enum class LibraryLayout(val label: String, val description: String) {
 /** Home screen arrangement. */
 @Serializable
 enum class HomeLayout(val label: String, val description: String) {
+    THEME("Theme default", "Whatever the active theme suggests"),
     RAILS("Rails", "Several rows: continue playing, recent, favourites, systems…"),
     SPOTLIGHT("Spotlight", "The focused game fills the screen; one row of covers and one of systems"),
+    TILES("Tiles", "One row of big square tiles with round buttons below; no tab bar"),
+    STRIP("Strip", "Small tiles along the top, the focused game large underneath"),
+    DASHBOARD("Dashboard", "Blocks: one big tile plus grids of squares"),
 }
 
 /** How a game list (platform, collection, favourites, all) is laid out. */
@@ -78,8 +83,8 @@ data class AppSettings(
     val showBattery: Boolean = true,
     val gridColumns: Int = 0,
     val libraryView: LibraryView = LibraryView.GRID,
-    val homeLayout: HomeLayout = HomeLayout.RAILS,
-    val libraryLayout: LibraryLayout = LibraryLayout.STAGE,
+    val homeLayout: HomeLayout = HomeLayout.THEME,
+    val libraryLayout: LibraryLayout = LibraryLayout.THEME,
     val reduceMotion: Boolean = false,
     val uiScale: Float = 1f,
     val uiSounds: Boolean = true,

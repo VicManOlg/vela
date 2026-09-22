@@ -75,6 +75,12 @@ data class ThemeLayout(
     val showButtonHints: Boolean = true,
     val showClock: Boolean = true,
     val showBattery: Boolean = true,
+    /** Home arrangement the theme suggests: `rails`, `spotlight`, `tiles`, `strip`, `dashboard`. Users can override in Settings. */
+    val homeLayout: String? = null,
+    /** Library systems view the theme suggests: `stage`, `showcase`, `grid`. */
+    val libraryLayout: String? = null,
+    /** False hides the tab bar on Home (a slim status row replaces it); other tabs keep it. */
+    val showTabs: Boolean = true,
 )
 
 @Serializable
