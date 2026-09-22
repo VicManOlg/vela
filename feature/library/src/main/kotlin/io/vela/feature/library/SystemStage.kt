@@ -68,6 +68,8 @@ import io.vela.core.ui.components.rememberFocusState
 import io.vela.core.ui.image.VelaImage
 import io.vela.core.ui.image.artworkModel
 import io.vela.core.ui.theme.VelaTheme
+import io.vela.core.ui.sound.UiSound
+import io.vela.core.ui.sound.LocalUiSounds
 import kotlin.math.abs
 import kotlinx.coroutines.delay
 import kotlin.math.max
@@ -109,6 +111,7 @@ internal fun SystemStage(
     val colors = VelaTheme.colors
     val interaction = remember { MutableInteractionSource() }
     val focused by rememberFocusState(interaction)
+    val sounds = LocalUiSounds.current
     val autoFocus = rememberAutoFocus(keys = arrayOf(entries.size))
     // The tab bar may claim focus right after a tab switch; ask again once things settle.
     LaunchedEffect(entries.size) {
@@ -122,6 +125,7 @@ internal fun SystemStage(
         if (target != selected) {
             direction = if (target > selected) 1 else -1
             selected = target
+            sounds?.play(UiSound.FOCUS)
         }
     }
 
@@ -139,7 +143,10 @@ internal fun SystemStage(
                     else -> false
                 }
             }
-            .clickable(interactionSource = interaction, indication = null) { entry.open() }
+            .clickable(interactionSource = interaction, indication = null) {
+                sounds?.play(UiSound.CONFIRM)
+                entry.open()
+            }
             // clickable alone is only focusable with a pointer device attached; the stage must take
             // controller focus on a touch screen too.
             .focusable(true, interaction)

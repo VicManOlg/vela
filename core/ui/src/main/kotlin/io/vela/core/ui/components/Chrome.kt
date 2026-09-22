@@ -43,6 +43,8 @@ import java.text.DateFormat
 import java.util.Date
 import androidx.compose.foundation.clickable
 import io.vela.core.ui.input.LocalGamepad
+import io.vela.core.ui.sound.LocalUiSounds
+import io.vela.core.ui.sound.UiSound
 
 /** Top-level destinations shown in the header. */
 data class TopTab(val id: String, val label: String)
@@ -222,13 +224,18 @@ fun ButtonHints(hints: List<ButtonHint>, modifier: Modifier = Modifier, swapped:
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val gamepad = LocalGamepad.current
+        val sounds = LocalUiSounds.current
         hints.forEach { hint ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .padding(start = 10.dp)
                     .clip(VelaTheme.shapes.chip)
-                    .clickable(enabled = gamepad != null) { gamepad?.press(hint.button) }
+                    .clickable(enabled = gamepad != null) {
+                        // A and B make their own sound downstream; the rest chime here.
+                        if (hint.button != GamepadButton.A && hint.button != GamepadButton.B) sounds?.play(UiSound.CONFIRM)
+                        gamepad?.press(hint.button)
+                    }
                     .padding(horizontal = 12.dp, vertical = 6.dp),
             ) {
                 ButtonGlyph(hint.button, swapped)

@@ -65,6 +65,8 @@ import io.vela.core.ui.input.GamepadButton
 import io.vela.core.ui.input.GamepadHandler
 import io.vela.core.ui.theme.VelaTheme
 import kotlin.math.abs
+import io.vela.core.ui.sound.LocalUiSounds
+import io.vela.core.ui.sound.UiSound
 
 /**
  * Games of a platform, a collection, favourites or everything, in the view the user picked:
@@ -380,7 +382,8 @@ private fun GridHeader(header: GameGridHeader, focusedTitle: String?, view: Libr
             )
         }
         // Touch users tap this; controller users press Start.
-        Box(Modifier.padding(bottom = 6.dp).clickable(onClick = onOpenDisplay)) {
+        val sounds = LocalUiSounds.current
+        Box(Modifier.padding(bottom = 6.dp).clickable { sounds?.play(UiSound.CONFIRM); onOpenDisplay() }) {
             Text("${view.label}   Sorted by ${header.sort.label().lowercase()}", style = VelaTheme.typography.caption, color = colors.muted)
         }
     }

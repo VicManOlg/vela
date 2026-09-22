@@ -51,6 +51,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import io.vela.core.ui.input.GamepadButton
 import io.vela.core.ui.theme.VelaTheme
+import io.vela.core.ui.sound.LocalUiSounds
+import io.vela.core.ui.sound.UiSound
 
 /**
  * Dialogs get their own window, which would bring the system bars back. Hide them so menus feel
@@ -96,6 +98,7 @@ fun VelaMenuDialog(
     subtitle: String? = null,
 ) {
     val colors = VelaTheme.colors
+    val sounds = LocalUiSounds.current
     val firstFocus = remember { FocusRequester() }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         ImmersiveDialogWindow()
@@ -104,7 +107,7 @@ fun VelaMenuDialog(
             Modifier
                 .fillMaxSize()
                 .background(colors.background.copy(alpha = 0.55f))
-                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
+                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { sounds?.play(UiSound.BACK); onDismiss() },
             contentAlignment = Alignment.CenterEnd,
         ) {
             GlassPanel(
