@@ -77,7 +77,7 @@ class PlatformsViewModel @Inject constructor(library: LibraryRepository, apps: A
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     val layout: StateFlow<LibraryLayout> = settings.settings.map { it.libraryLayout }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryLayout.SHOWCASE)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryLayout.STAGE)
 
     private val androidPlatform = library.platform(PlatformId.ANDROID)
     val android: StateFlow<AndroidTile> = combine(apps.observeAndroidGames(), apps.observeApps()) { games, pinned ->
@@ -86,7 +86,7 @@ class PlatformsViewModel @Inject constructor(library: LibraryRepository, apps: A
 }
 
 /** What the focused card tells the header and the backdrop. */
-private data class Spot(val title: String, val subtitle: String, val artwork: String?, val accent: Long)
+internal data class Spot(val title: String, val subtitle: String, val artwork: String?, val accent: Long)
 
 /** Library tab: every system with games, as poster cards or compact tiles, plus the two smart shelves. */
 @Composable
@@ -123,7 +123,7 @@ fun PlatformsScreen(
     )
 
     Column(modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding).height(96.dp), verticalArrangement = Arrangement.Bottom) {
+        if (layout != LibraryLayout.STAGE) Column(Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding).height(96.dp), verticalArrangement = Arrangement.Bottom) {
             Text(spot?.title ?: "Library", style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(4.dp))
             Text(
@@ -134,7 +134,7 @@ fun PlatformsScreen(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        Spacer(Modifier.height(6.dp))
+        if (layout != LibraryLayout.STAGE) Spacer(Modifier.height(6.dp))
         if (platforms.isEmpty() && android.count == 0) {
             EmptyState(
                 title = "No systems yet",
@@ -145,6 +145,20 @@ fun PlatformsScreen(
             return@Column
         }
         when (layout) {
+            LibraryLayout.STAGE -> {
+                val entries = remember(platforms, android, art, allCovers) {
+                    buildList {
+                        add(StageEntry("all", "All games", "Every system   $total games", 0xFF7FD7FF, null, Icons.Rounded.Apps, allCovers, art.values.firstNotNullOfOrNull { it.background }, onOpenAll))
+                        add(StageEntry("favorites", "Favorites", "Your picks", 0xFF3D7BFF, null, Icons.Rounded.Favorite, emptyList(), null, onOpenFavorites))
+                        platforms.forEach { entry ->
+                            val a = art[entry.id]
+                            add(StageEntry(entry.id.value, entry.displayName, spotOf(entry).subtitle, entry.platform.accentColor, entry.iconPath, null, a?.covers.orEmpty(), a?.background) { onOpenPlatform(entry.id) })
+                        }
+                        add(StageEntry("android", android.name, "${android.games} games   ${android.apps} apps", android.accent, null, Icons.Rounded.Android, emptyList(), null, onOpenAndroid))
+                    }
+                }
+                SystemStage(entries, initialIndex = if (platforms.isNotEmpty()) 2 else 0, onSpot = { spot = it }, modifier = Modifier.weight(1f))
+            }
             LibraryLayout.SHOWCASE -> ShowcaseRow(
                 platforms, android, art, allCovers, clock,
                 onOpenPlatform, onOpenAndroid, onOpenFavorites, onOpenAll,

@@ -19,6 +19,7 @@ enum class ConfirmButton { A, B }
 /** How the Library shows systems. */
 @Serializable
 enum class LibraryLayout(val label: String, val description: String) {
+    STAGE("Stage", "One system at a time, with a dial of consoles"),
     SHOWCASE("Showcase", "Poster cards with the console and your covers"),
     GRID("Grid", "Compact colour tiles"),
 }
@@ -78,7 +79,7 @@ data class AppSettings(
     val gridColumns: Int = 0,
     val libraryView: LibraryView = LibraryView.GRID,
     val homeLayout: HomeLayout = HomeLayout.RAILS,
-    val libraryLayout: LibraryLayout = LibraryLayout.SHOWCASE,
+    val libraryLayout: LibraryLayout = LibraryLayout.STAGE,
     val reduceMotion: Boolean = false,
     val uiScale: Float = 1f,
     // Android apps
