@@ -223,7 +223,7 @@ fun SearchScreen(
         }
         if (query.isNotBlank()) {
             Text(
-                if (state.results.isEmpty()) "No matches" else "${state.results.size} results",
+                when (state.results.size) { 0 -> "No matches"; 1 -> "1 result"; else -> "${state.results.size} results" },
                 style = VelaTheme.typography.caption,
                 color = colors.muted,
                 modifier = Modifier.padding(horizontal = VelaTheme.dimens.screenPadding, vertical = 6.dp),

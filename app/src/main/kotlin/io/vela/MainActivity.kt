@@ -56,6 +56,7 @@ class MainActivity : ComponentActivity() {
                     repeatIntervalMs = s.repeatIntervalMs.toLong(),
                     repeatFastAfterMs = s.repeatFastAfterMs.toLong(),
                     repeatFastIntervalMs = s.repeatFastIntervalMs.toLong(),
+                    keyboardShortcuts = BuildConfig.DEBUG,
                 )
                 sounds.enabled = s.uiSounds
                 sounds.volume = s.uiSoundVolume

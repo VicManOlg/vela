@@ -28,6 +28,8 @@ data class GamepadConfig(
     val repeatIntervalMs: Long = 90,
     val repeatFastAfterMs: Long = 1500,
     val repeatFastIntervalMs: Long = 40,
+    /** Map X/Y/Q/E/PageUp/PageDown to buttons (emulator development only): with a keyboard it hijacks typing. */
+    val keyboardShortcuts: Boolean = false,
 )
 
 /**
@@ -80,7 +82,7 @@ class GamepadInputController(private val scope: CoroutineScope) {
                 KeyEvent.KEYCODE_BUTTON_B -> e = e.withKeyCode(KeyEvent.KEYCODE_BUTTON_A)
             }
         }
-        val button = buttonFor(e.keyCode) ?: return e
+        val button = buttonFor(e.keyCode, config.keyboardShortcuts) ?: return e
         if (button == GamepadButton.A || button == GamepadButton.B) return e
         when (e.action) {
             KeyEvent.ACTION_DOWN -> if (e.repeatCount == 0) {
@@ -201,7 +203,7 @@ class GamepadInputController(private val scope: CoroutineScope) {
         KeyEvent(downTime, eventTime, action, code, repeatCount, metaState, deviceId, scanCode, flags, source)
 
     companion object {
-        fun buttonFor(keyCode: Int): GamepadButton? = when (keyCode) {
+        fun buttonFor(keyCode: Int, keyboardShortcuts: Boolean = false): GamepadButton? = when (keyCode) {
             KeyEvent.KEYCODE_BUTTON_A -> GamepadButton.A
             KeyEvent.KEYCODE_BUTTON_B -> GamepadButton.B
             KeyEvent.KEYCODE_BUTTON_X -> GamepadButton.X
@@ -214,12 +216,13 @@ class GamepadInputController(private val scope: CoroutineScope) {
             KeyEvent.KEYCODE_BUTTON_SELECT -> GamepadButton.SELECT
             KeyEvent.KEYCODE_BUTTON_THUMBL -> GamepadButton.L3
             KeyEvent.KEYCODE_BUTTON_THUMBR -> GamepadButton.R3
-            // Keyboard equivalents for development on desktop / emulator.
-            KeyEvent.KEYCODE_X -> GamepadButton.X
-            KeyEvent.KEYCODE_Y -> GamepadButton.Y
-            KeyEvent.KEYCODE_Q, KeyEvent.KEYCODE_PAGE_UP -> GamepadButton.L1
-            KeyEvent.KEYCODE_E, KeyEvent.KEYCODE_PAGE_DOWN -> GamepadButton.R1
             KeyEvent.KEYCODE_MENU -> GamepadButton.START
+            // Keyboard equivalents for development on desktop / emulator; never in normal builds,
+            // where a Bluetooth keyboard must be able to type "zelda" into the search box.
+            KeyEvent.KEYCODE_X -> if (keyboardShortcuts) GamepadButton.X else null
+            KeyEvent.KEYCODE_Y -> if (keyboardShortcuts) GamepadButton.Y else null
+            KeyEvent.KEYCODE_Q, KeyEvent.KEYCODE_PAGE_UP -> if (keyboardShortcuts) GamepadButton.L1 else null
+            KeyEvent.KEYCODE_E, KeyEvent.KEYCODE_PAGE_DOWN -> if (keyboardShortcuts) GamepadButton.R1 else null
             else -> null
         }
     }
