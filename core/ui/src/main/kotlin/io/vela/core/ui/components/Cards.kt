@@ -114,16 +114,29 @@ fun GameCard(
 @Composable
 private fun AppIconTile(model: Any?, accent: Color, title: String) {
     val colors = VelaTheme.colors
-    Column(
+    // The icon sits at the exact centre of the card; the name is a strip along the bottom, like the
+    // title on a cover, so square tiles and portrait cards both read as centred.
+    Box(
         Modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(accent.copy(alpha = 0.35f), colors.surface))),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
     ) {
-        VelaImage(model = model, contentDescription = null, modifier = Modifier.size(64.dp), contentScale = ContentScale.Fit, accent = accent)
-        Spacer(Modifier.height(12.dp))
-        Text(title, style = VelaTheme.typography.label, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 10.dp))
+        VelaImage(
+            model = model,
+            contentDescription = null,
+            modifier = Modifier.align(Alignment.Center).fillMaxSize(0.42f).aspectRatio(1f),
+            contentScale = ContentScale.Fit,
+            accent = accent,
+        )
+        Box(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(Color.Transparent, colors.background.copy(alpha = 0.7f))))
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+        ) {
+            Text(title, style = VelaTheme.typography.label, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(Alignment.Center))
+        }
     }
 }
 
