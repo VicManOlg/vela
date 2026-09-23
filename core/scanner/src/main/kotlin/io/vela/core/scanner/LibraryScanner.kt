@@ -74,13 +74,19 @@ class LibraryScanner @Inject constructor(
                         added = total.added + r.added, updated = total.updated + r.updated,
                         removed = total.removed + r.removed, skipped = total.skipped + r.skipped,
                     )
+                    errors += r.errors
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e, "Failed scanning %s", source.uri)
                     errors += "${source.displayName}: ${e.message}"
                 }
             }
-            if (purgeMissing) db.gameDao().purgeMissingUnplayed()
+            // Never purge after a pass in which any source could not be read: that is exactly when
+            // "missing" games are only temporarily out of reach.
+            if (purgeMissing && errors.isEmpty()) {
+                db.gameDao().purgeMissingUnplayed()
+                pruneOrphans()
+            }
             val result = total.copy(durationMs = System.currentTimeMillis() - start, errors = errors)
             _progress.value = ScanProgress.Finished(result)
             Timber.i("Scan finished: %s", result)
@@ -136,7 +142,6 @@ class LibraryScanner @Inject constructor(
                 val sig = existing[file.location]
                 if (sig == null) {
                     pendingInserts += newGame(file, platform, source, locationType, disc, hidden, generation)
-                    added++
                 } else if (sig.fileSize != file.size || sig.lastModified != file.lastModified) {
                     pendingTouches += Touch(sig.id, file.size, file.lastModified, platform.id.value, file.name)
                     updated++
@@ -150,7 +155,7 @@ class LibraryScanner @Inject constructor(
             }
             skipped += dirBatch.size - accepted.size
             dirBatch.clear()
-            if (pendingInserts.size >= 200) flushInserts(pendingInserts)
+            if (pendingInserts.size >= 200) added += flushInserts(pendingInserts)
             if (pendingTouches.size + pendingPlatformFixes.size >= 200) flushUpdates()
             if (seenIds.size >= 500) { db.gameDao().markSeen(seenIds, generation); seenIds.clear() }
         }
@@ -168,9 +173,16 @@ class LibraryScanner @Inject constructor(
             }
         }
         flushDir()
-        flushInserts(pendingInserts)
+        added += flushInserts(pendingInserts)
         flushUpdates()
         if (seenIds.isNotEmpty()) db.gameDao().markSeen(seenIds, generation)
+
+        // A folder that used to hold games and now yields nothing is almost always an unmounted
+        // card, a revoked permission or a renamed root, not an empty library. Keep everything.
+        if (seenFiles == 0 && existing.isNotEmpty()) {
+            Timber.w("Source %s returned no files; keeping its %d games untouched", source.displayName, existing.size)
+            return ScanResult(0, 0, 0, 0, 0, errors = listOf("${source.displayName}: folder unreadable, library kept as it was"))
+        }
 
         val removed = db.gameDao().markMissingForSource(source.id, generation)
         val count = existing.size + added - removed
@@ -179,10 +191,18 @@ class LibraryScanner @Inject constructor(
         return ScanResult(added, updated, removed, skipped, 0)
     }
 
-    private suspend fun flushInserts(batch: MutableList<GameEntity>) {
-        if (batch.isEmpty()) return
-        db.withTransaction { db.gameDao().insertAllIgnore(batch.toList()) }
+    /** @return how many rows were really inserted (duplicates across overlapping folders are ignored). */
+    private suspend fun flushInserts(batch: MutableList<GameEntity>): Int {
+        if (batch.isEmpty()) return 0
+        val ids = db.withTransaction { db.gameDao().insertAllIgnore(batch.toList()) }
         batch.clear()
+        return ids.count { it != -1L }
+    }
+
+    /** Drops metadata, artwork rows, collection links and sessions whose game no longer exists, plus their files. */
+    private suspend fun pruneOrphans() {
+        db.metadataDao().orphanArtworkPaths().forEach { java.io.File(it).delete() }
+        db.gameDao().pruneOrphans()
     }
 
     private data class Accepted(val file: ScannedFile, val platform: Platform, val disc: Int?, val hidden: Boolean)

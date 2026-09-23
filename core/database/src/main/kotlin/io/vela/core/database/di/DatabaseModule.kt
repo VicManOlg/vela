@@ -1,6 +1,7 @@
 package io.vela.core.database.di
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import androidx.room.Room
 import io.vela.core.database.VelaDatabase
 import io.vela.core.database.dao.CollectionDao
@@ -22,12 +23,14 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): VelaDatabase =
-        Room.databaseBuilder(context, VelaDatabase::class.java, VelaDatabase.NAME)
+    fun provideDatabase(@ApplicationContext context: Context): VelaDatabase {
+        val debuggable = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        return Room.databaseBuilder(context, VelaDatabase::class.java, VelaDatabase.NAME)
             .addMigrations(MIGRATION_1_2)
-            // Last resort for schema jumps without a migration; never expected on release builds.
-            .fallbackToDestructiveMigration(dropAllTables = true)
+            // Debug builds may wipe on a schema jump; a user's library must never be dropped silently.
+            .apply { if (debuggable) fallbackToDestructiveMigration(dropAllTables = true) }
             .build()
+    }
 
     @Provides fun provideGameDao(db: VelaDatabase): GameDao = db.gameDao()
     @Provides fun provideMetadataDao(db: VelaDatabase): MetadataDao = db.metadataDao()

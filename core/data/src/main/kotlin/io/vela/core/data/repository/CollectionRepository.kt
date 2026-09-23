@@ -41,7 +41,7 @@ class CollectionRepository @Inject constructor(
     suspend fun delete(id: CollectionId) = withContext(dispatchers.io) { dao.delete(id.value) }
 
     suspend fun addGame(id: CollectionId, gameId: GameId) = withContext(dispatchers.io) {
-        dao.addGame(CollectionGameEntity(id.value, gameId.value, dao.nextPosition(id.value), System.currentTimeMillis()))
+        dao.addGameAtEnd(id.value, gameId.value, System.currentTimeMillis())
     }
 
     suspend fun removeGame(id: CollectionId, gameId: GameId) = withContext(dispatchers.io) { dao.removeGame(id.value, gameId.value) }

@@ -4,6 +4,9 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
+import kotlinx.coroutines.flow.catch
+import java.io.IOException
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.Module
@@ -30,27 +33,37 @@ class SettingsRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>,
 ) {
     val settings: Flow<AppSettings> = dataStore.data
-        .map { prefs -> prefs[KEY]?.let(::decode) ?: AppSettings() }
+        .catch { e ->
+            if (e is IOException) { Timber.e(e, "Settings store unreadable, using defaults"); emit(emptyPreferences()) } else throw e
+        }
+        .map { prefs -> prefs[KEY]?.let(::decodeOrNull) ?: AppSettings() }
         .distinctUntilChanged()
 
     suspend fun current(): AppSettings = settings.first()
 
     suspend fun update(transform: (AppSettings) -> AppSettings) {
         dataStore.edit { prefs ->
-            val current = prefs[KEY]?.let(::decode) ?: AppSettings()
-            prefs[KEY] = VelaJson.encodeToString(AppSettings.serializer(), transform(current))
+            val raw = prefs[KEY]
+            val decoded = raw?.let(::decodeOrNull)
+            if (raw != null && decoded == null) {
+                // Never overwrite a document we could not read: keep it aside for recovery.
+                Timber.w("Settings JSON unreadable; keeping a copy under %s", BROKEN_KEY.name)
+                prefs[BROKEN_KEY] = raw
+            }
+            prefs[KEY] = VelaJson.encodeToString(AppSettings.serializer(), transform(decoded ?: AppSettings()))
         }
     }
 
-    private fun decode(json: String): AppSettings = try {
+    private fun decodeOrNull(json: String): AppSettings? = try {
         VelaJson.decodeFromString(AppSettings.serializer(), json)
     } catch (e: Exception) {
         Timber.w(e, "Settings JSON unreadable, falling back to defaults")
-        AppSettings()
+        null
     }
 
     private companion object {
         val KEY = stringPreferencesKey("app_settings_json")
+        val BROKEN_KEY = stringPreferencesKey("app_settings_json_broken")
     }
 }
 

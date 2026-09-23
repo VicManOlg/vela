@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import io.vela.core.database.entity.CollectionEntity
 import io.vela.core.database.entity.CollectionGameEntity
@@ -65,4 +66,9 @@ interface CollectionDao {
 
     @Query("SELECT COALESCE(MAX(position), -1) + 1 FROM collection_games WHERE collectionId = :collectionId")
     suspend fun nextPosition(collectionId: Long): Int
+
+    @Transaction
+    suspend fun addGameAtEnd(collectionId: Long, gameId: Long, addedAt: Long) {
+        addGame(CollectionGameEntity(collectionId, gameId, nextPosition(collectionId), addedAt))
+    }
 }

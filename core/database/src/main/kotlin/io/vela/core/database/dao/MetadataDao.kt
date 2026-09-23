@@ -48,6 +48,9 @@ interface MetadataDao {
     @Query("SELECT localPath FROM artwork")
     suspend fun allArtworkPaths(): List<String>
 
-    @Query("SELECT SUM(LENGTH(localPath)) FROM artwork")
+    @Query("SELECT COUNT(*) FROM artwork")
     suspend fun artworkCount(): Int
+
+    @Query("SELECT localPath FROM artwork WHERE gameId NOT IN (SELECT id FROM games)")
+    suspend fun orphanArtworkPaths(): List<String>
 }

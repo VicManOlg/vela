@@ -15,7 +15,7 @@ import javax.inject.Singleton
 /**
  * Mirrors installed Android games into the `games` table (platform `android`) so they share
  * favourites, recents, collections and search with ROMs. Apps the user pins explicitly live in
- * platform `android_apps`. Uninstalled packages are removed; user edits (favourite, hidden,
+ * platform `android_apps`. Uninstalled packages are flagged absent; user edits (favourite, hidden,
  * moved between games/apps) are preserved across syncs because existing rows are never rewritten.
  */
 @Singleton
@@ -30,7 +30,10 @@ class AndroidAppsSync @Inject constructor(
         val existing = gameDao.androidApps()
         val existingPackages = existing.map { it.locationValue }.toSet()
 
+        // Absent packages are flagged present = 0, never deleted: a disabled app, a profile switch or
+        // an unmounted volume must not cost the user their play time, rating or collections.
         val removed = existing.filter { it.locationValue !in installedByPackage }.map { it.locationValue }
+        val returning = existing.filter { !it.present && it.locationValue in installedByPackage }.map { it.locationValue }
         val now = System.currentTimeMillis()
         val additions = if (autoDetectGames) {
             installed.filter { it.isGame && it.packageName !in existingPackages && (!it.isSystem || includeSystem) }
@@ -38,8 +41,8 @@ class AndroidAppsSync @Inject constructor(
         } else {
             emptyList()
         }
-        gameDao.replaceAndroidApps(additions, removed)
-        Timber.i("Android apps synced: +%d -%d", additions.size, removed.size)
+        gameDao.replaceAndroidApps(additions, removed, returning)
+        Timber.i("Android apps synced: +%d -%d back %d", additions.size, removed.size, returning.size)
     }
 
     /** Adds one package as a game or as an app. Re-adding moves it between the two sections. */
@@ -53,6 +56,7 @@ class AndroidAppsSync @Inject constructor(
         } else {
             gameDao.setPlatform(current.id, platform.value)
             gameDao.setHidden(current.id, false)
+            gameDao.setPresent(current.id, true)
         }
     }
 

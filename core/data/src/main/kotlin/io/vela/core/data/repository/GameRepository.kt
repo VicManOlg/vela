@@ -118,7 +118,11 @@ class GameRepository @Inject constructor(
         gameDao.rename(id.value, title, sort, "${game.platformId}:$sort")
     }
 
-    suspend fun delete(id: GameId) = withContext(dispatchers.io) { gameDao.delete(id.value) }
+    /** Removes the game, its metadata, artwork rows and files, collection links and sessions. */
+    suspend fun delete(id: GameId) = withContext(dispatchers.io) {
+        metadataDao.artwork(id.value).forEach { java.io.File(it.localPath).delete() }
+        gameDao.deleteCascade(id.value)
+    }
 
     private fun buildQuery(q: GameQuery, limit: Int? = null): SimpleSQLiteQuery {
         val where = mutableListOf("present = 1")
@@ -130,17 +134,21 @@ class GameRepository @Inject constructor(
         q.genre?.let { where += "genres LIKE ?"; args += "%$it%" }
         if (q.hideDuplicateRegions) {
             // One row per duplicateKey: the one the user played, else the lowest id (stable).
+            // The winner must be visible too, or a hidden disc 2 would hide disc 1 with it.
+            val visible = if (q.showHidden) "" else "AND s2.hidden = 0"
             where += """id IN (SELECT id FROM game_summaries s2 WHERE s2.duplicateKey = game_summaries.duplicateKey
-                AND s2.present = 1 ORDER BY s2.playCount DESC, s2.id ASC LIMIT 1)"""
+                AND s2.present = 1 $visible ORDER BY s2.playCount DESC, s2.id ASC LIMIT 1)"""
         }
+        // "NULLS LAST" needs SQLite 3.30 (Android 12); "(col IS NULL), col DESC" works everywhere.
+        fun nullsLastDesc(col: String) = "($col IS NULL), $col DESC"
         val order = when (q.sort) {
             GameSort.TITLE -> "sortTitle ASC"
-            GameSort.LAST_PLAYED -> "lastPlayedAt DESC NULLS LAST, sortTitle ASC"
+            GameSort.LAST_PLAYED -> "${nullsLastDesc("lastPlayedAt")}, sortTitle ASC"
             GameSort.MOST_PLAYED -> "playCount DESC, totalPlayTimeMs DESC, sortTitle ASC"
             GameSort.RECENTLY_ADDED -> "addedAt DESC, sortTitle ASC"
-            GameSort.RELEASE_YEAR -> "releaseDate DESC NULLS LAST, sortTitle ASC"
-            GameSort.RATING -> "rating DESC NULLS LAST, sortTitle ASC"
-            GameSort.USER_RATING -> "userRating DESC NULLS LAST, rating DESC NULLS LAST, sortTitle ASC"
+            GameSort.RELEASE_YEAR -> "${nullsLastDesc("releaseDate")}, sortTitle ASC"
+            GameSort.RATING -> "${nullsLastDesc("rating")}, sortTitle ASC"
+            GameSort.USER_RATING -> "${nullsLastDesc("userRating")}, ${nullsLastDesc("rating")}, sortTitle ASC"
         }
         val sql = "SELECT * FROM game_summaries WHERE ${where.joinToString(" AND ")} ORDER BY $order" +
             (limit?.let { " LIMIT $it" } ?: "")

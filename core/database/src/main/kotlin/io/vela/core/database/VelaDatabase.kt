@@ -25,10 +25,10 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    version = 3,
+    version = 4,
     exportSchema = true,
-    // 2 -> 3: game_summaries gains userRating (view only, no table change).
-    autoMigrations = [AutoMigration(from = 2, to = 3)],
+    // 2 -> 3: game_summaries gains userRating (view only). 3 -> 4: list and franchise indices.
+    autoMigrations = [AutoMigration(from = 2, to = 3), AutoMigration(from = 3, to = 4)],
     entities = [
         GameEntity::class,
         GameFtsEntity::class,

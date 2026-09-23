@@ -26,9 +26,11 @@ class PlatformDetector @Inject constructor(private val catalog: PlatformCatalog)
         }
 
         // Closest folder wins: ROMs/Nintendo/SNES/game.sfc -> SNES, not "nintendo".
+        // A folder that matches a system but not the extension is not the answer: keep walking up
+        // (ROMs/PSX/covers-backup/game.chd), then fall back to the extension.
         for (folder in file.folderChain.asReversed()) {
             val platform = catalog.byFolderName(folder) ?: continue
-            return if (platform.accepts(ext)) platform else null
+            if (platform.accepts(ext)) return platform
         }
 
         val byExtension = catalog.byExtension(ext)

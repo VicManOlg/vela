@@ -47,6 +47,7 @@ class LibraryRepository @Inject constructor(
     private val catalog: PlatformCatalog,
     private val libraryDao: LibraryDao,
     private val gameDao: GameDao,
+    private val metadataDao: io.vela.core.database.dao.MetadataDao,
     private val scanner: LibraryScanner,
     private val settingsRepository: SettingsRepository,
     private val platformIcons: PlatformIconStore,
@@ -107,6 +108,8 @@ class LibraryRepository @Inject constructor(
     suspend fun removeSource(id: LibrarySourceId) = withContext(dispatchers.io) {
         gameDao.deleteBySource(id.value)
         libraryDao.deleteSource(id.value)
+        metadataDao.orphanArtworkPaths().forEach { java.io.File(it).delete() }
+        gameDao.pruneOrphans()
     }
 
     suspend fun setSourceEnabled(source: LibrarySource, enabled: Boolean) = withContext(dispatchers.io) {

@@ -88,8 +88,41 @@ interface GameDao {
     @Query("DELETE FROM games WHERE id = :id")
     suspend fun delete(id: Long)
 
-    @Query("DELETE FROM games WHERE locationType = 'ANDROID_APP' AND locationValue IN (:packages)")
-    suspend fun deleteAndroidApps(packages: List<String>)
+    @Query("UPDATE games SET present = 0 WHERE locationType = 'ANDROID_APP' AND locationValue IN (:packages)")
+    suspend fun markAndroidAppsMissing(packages: List<String>)
+
+    @Query("UPDATE games SET present = 1 WHERE locationType = 'ANDROID_APP' AND locationValue IN (:packages)")
+    suspend fun markAndroidAppsPresent(packages: List<String>)
+
+    @Query("UPDATE games SET present = :present WHERE id = :id")
+    suspend fun setPresent(id: Long, present: Boolean)
+
+    @Query("DELETE FROM game_metadata WHERE gameId NOT IN (SELECT id FROM games)")
+    suspend fun deleteOrphanMetadata()
+
+    @Query("DELETE FROM artwork WHERE gameId NOT IN (SELECT id FROM games)")
+    suspend fun deleteOrphanArtwork()
+
+    @Query("DELETE FROM collection_games WHERE gameId NOT IN (SELECT id FROM games)")
+    suspend fun deleteOrphanCollectionLinks()
+
+    @Query("DELETE FROM play_sessions WHERE gameId NOT IN (SELECT id FROM games)")
+    suspend fun deleteOrphanSessions()
+
+    /** There are no foreign keys, so every delete path calls this to keep the side tables honest. */
+    @Transaction
+    suspend fun pruneOrphans() {
+        deleteOrphanMetadata()
+        deleteOrphanArtwork()
+        deleteOrphanCollectionLinks()
+        deleteOrphanSessions()
+    }
+
+    @Transaction
+    suspend fun deleteCascade(id: Long) {
+        delete(id)
+        pruneOrphans()
+    }
 
     // ---- Reads --------------------------------------------------------------------------------
 
@@ -162,7 +195,7 @@ interface GameDao {
            ORDER BY (s.genres IS NOT NULL AND s.genres IN (
                SELECT m.genres FROM game_metadata m JOIN games g ON g.id = m.gameId
                WHERE g.lastPlayedAt IS NOT NULL ORDER BY g.lastPlayedAt DESC LIMIT 10)) DESC,
-             s.rating DESC, RANDOM()
+             s.rating DESC, (s.id * 40503) % 65536
            LIMIT :limit""",
     )
     fun observeRecommendations(limit: Int): Flow<List<GameSummaryView>>
@@ -226,8 +259,9 @@ interface GameDao {
     suspend fun allGenreStrings(): List<String>
 
     @Transaction
-    suspend fun replaceAndroidApps(current: List<GameEntity>, removedPackages: List<String>) {
-        if (removedPackages.isNotEmpty()) deleteAndroidApps(removedPackages)
+    suspend fun replaceAndroidApps(current: List<GameEntity>, removedPackages: List<String>, returningPackages: List<String>) {
+        if (removedPackages.isNotEmpty()) markAndroidAppsMissing(removedPackages)
+        if (returningPackages.isNotEmpty()) markAndroidAppsPresent(returningPackages)
         insertAllIgnore(current)
     }
 }

@@ -40,8 +40,9 @@ class ArtworkStore @Inject constructor(
             val existing = metadataDao.artwork(gameId.value).firstOrNull { it.type == candidate.type.name }
             if (existing != null && !overwrite && File(existing.localPath).exists()) return@withContext true
 
-            val ext = candidate.format?.lowercase()?.takeIf { it.length in 2..4 }
-                ?: candidate.url.substringAfterLast('.', "").substringBefore('?').lowercase().takeIf { it.length in 2..4 }
+            val extPattern = Regex("[a-z0-9]{2,4}")
+            val ext = candidate.format?.lowercase()?.takeIf(extPattern::matches)
+                ?: candidate.url.substringAfterLast('.', "").substringBefore('?').lowercase().takeIf(extPattern::matches)
                 ?: if (candidate.type.isVideo) "mp4" else "png"
             val target = fileFor(gameId, candidate.type, ext)
             target.parentFile?.mkdirs()
@@ -50,6 +51,12 @@ class ArtworkStore @Inject constructor(
                 client.newCall(Request.Builder().url(candidate.url).build()).execute().use { response ->
                     if (!response.isSuccessful) {
                         Timber.d("Artwork %s -> HTTP %d", candidate.url, response.code)
+                        return@withContext false
+                    }
+                    // A CDN interstitial or a rate-limit page is bigger than MIN_BYTES; the type gives it away.
+                    val contentType = response.header("Content-Type").orEmpty().lowercase()
+                    if (contentType.startsWith("text/") || contentType.contains("html") || contentType.contains("json")) {
+                        Timber.d("Artwork %s -> not an image (%s)", candidate.url, contentType)
                         return@withContext false
                     }
                     val body = response.body

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
@@ -35,7 +36,13 @@ class ThemeRepository @Inject constructor(
     scope: ApplicationScope,
 ) {
     private val folder: File get() = File(context.getExternalFilesDir(null) ?: context.filesDir, "themes")
-    private val fileThemes = MutableStateFlow(readFolder())
+    private val scope = scope
+    // Filled off the main thread: this singleton is created during startup injection.
+    private val fileThemes = MutableStateFlow<List<String>>(emptyList())
+
+    init {
+        reload()
+    }
 
     val catalog: StateFlow<ThemeCatalog> = combine(
         fileThemes,
@@ -49,7 +56,7 @@ class ThemeRepository @Inject constructor(
     fun byId(id: String): ThemeSpec = catalog.value.byId(id)
 
     fun reload() {
-        fileThemes.value = readFolder()
+        scope.launch(dispatchers.io) { fileThemes.value = readFolder() }
     }
 
     /** Copies a picked JSON file into the themes folder (named after its id) and reloads. */
@@ -61,7 +68,7 @@ class ThemeRepository @Inject constructor(
             require(spec.id.isNotBlank()) { "The theme has no id" }
             folder.mkdirs()
             File(folder, spec.id.replace(Regex("[^A-Za-z0-9._-]"), "_") + ".json").writeText(text)
-            reload()
+            fileThemes.value = readFolder()
             spec
         }.onFailure { Timber.w(it, "Theme import failed") }
     }

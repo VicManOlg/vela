@@ -32,6 +32,7 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var settings: SettingsRepository
     @Inject lateinit var startup: StartupCoordinator
+    @Inject lateinit var installedPackages: io.vela.core.launcher.InstalledPackages
 
     private lateinit var gamepad: GamepadInputController
     private val sounds: UiSounds by lazy { (application as VelaApplication).uiSounds }
@@ -68,6 +69,8 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         hideSystemBars()
+        // The user may have installed or removed an emulator while we were in the background.
+        installedPackages.invalidate()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

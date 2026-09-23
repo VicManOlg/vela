@@ -1,6 +1,12 @@
 package io.vela.core.model
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 /** Preferred way of reading ROM folders. */
 @Serializable
@@ -48,6 +54,15 @@ enum class LibraryView(val label: String, val description: String) {
 @Serializable
 enum class HomeRail { CONTINUE_PLAYING, RECENT, FAVORITES, PLATFORMS, COLLECTIONS, ANDROID, RECOMMENDED, RECENTLY_ADDED, APPS, TOP_RATED }
 
+/** Rails are stored by name; names this build does not know (newer builds, downgrades) are skipped, not fatal. */
+object HomeRailListSerializer : KSerializer<List<HomeRail>> {
+    private val delegate = ListSerializer(String.serializer())
+    override val descriptor: SerialDescriptor = delegate.descriptor
+    override fun serialize(encoder: Encoder, value: List<HomeRail>) = delegate.serialize(encoder, value.map { it.name })
+    override fun deserialize(decoder: Decoder): List<HomeRail> =
+        delegate.deserialize(decoder).mapNotNull { name -> HomeRail.entries.firstOrNull { it.name == name } }.distinct()
+}
+
 /** Everything the user can tune, persisted through DataStore. Mutations go through `SettingsRepository`. */
 @Serializable
 data class AppSettings(
@@ -58,6 +73,7 @@ data class AppSettings(
     val showHiddenGames: Boolean = false,
     val hideDuplicateRegions: Boolean = true,
     val purgeMissingGames: Boolean = false,
+    @Serializable(with = HomeRailListSerializer::class)
     val homeRails: List<HomeRail> = listOf(
         HomeRail.CONTINUE_PLAYING,
         HomeRail.RECENT,

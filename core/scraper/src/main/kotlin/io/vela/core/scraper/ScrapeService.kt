@@ -60,7 +60,7 @@ class ScrapeService @Inject constructor(
 
     private val mutex = Mutex()
     private var job: Job? = null
-    private val notFound = HashSet<Long>()
+    private val notFound: MutableSet<Long> = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
     val isRunning: Boolean get() = job?.isActive == true
 
@@ -158,7 +158,9 @@ class ScrapeService @Inject constructor(
                     is Outcome.Success -> {
                         val best = r.value.maxByOrNull { it.score }?.takeIf { it.metadata.hasContent() }
                         if (best != null) {
-                            metadataDao.upsertMetadata(best.metadata.toEntity(game.id))
+                            // A refresh fills gaps and updates what the provider knows; it never blanks
+                            // fields another provider (or Wikipedia) filled earlier.
+                            metadataDao.upsertMetadata(best.metadata.toEntity(game.id).fillingFrom(existing))
                             stored = true
                         } else if (existing == null) {
                             // Remember the attempt so the game is not asked about on every run.
@@ -196,6 +198,16 @@ class ScrapeService @Inject constructor(
 
     private fun io.vela.core.model.GameMetadata.hasContent() =
         !description.isNullOrBlank() || !developer.isNullOrBlank() || !publisher.isNullOrBlank() || !releaseDate.isNullOrBlank() || genres.isNotEmpty() || !franchise.isNullOrBlank()
+
+    private fun GameMetadataEntity.fillingFrom(old: GameMetadataEntity?): GameMetadataEntity {
+        if (old == null) return this
+        return copy(
+            title = title ?: old.title, description = description ?: old.description, developer = developer ?: old.developer,
+            publisher = publisher ?: old.publisher, releaseDate = releaseDate ?: old.releaseDate, genres = genres ?: old.genres,
+            players = players ?: old.players, rating = rating ?: old.rating, region = region ?: old.region,
+            franchise = franchise ?: old.franchise, ageRating = ageRating ?: old.ageRating, sourceUrl = sourceUrl ?: old.sourceUrl,
+        )
+    }
 
     private fun io.vela.core.model.GameMetadata.toEntity(gameId: Long) = GameMetadataEntity(
         gameId = gameId, title = title, description = description, developer = developer, publisher = publisher,

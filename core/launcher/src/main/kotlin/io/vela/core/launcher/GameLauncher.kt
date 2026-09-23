@@ -53,6 +53,27 @@ class PlaySessionTracker @Inject constructor(
 
     init {
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+        scope.launch { recoverOpenSessions() }
+    }
+
+    /**
+     * The process is routinely killed while an emulator runs. Any session left open in the
+     * database is closed now, capped like a live one, so the play time is not lost.
+     */
+    private suspend fun recoverOpenSessions() = withContext(dispatchers.io) {
+        runCatching {
+            val capMs = settings.current().playTimeCapMinutes * 60_000L
+            val now = System.currentTimeMillis()
+            var open = sessionDao.openSession()
+            var guard = 0
+            while (open != null && guard++ < 50) {
+                val duration = (now - open.startedAt).coerceIn(0, capMs)
+                sessionDao.end(open.id, open.startedAt + duration)
+                gameDao.addPlayTime(open.gameId, duration)
+                Timber.i("Recovered session for game %d: %d s", open.gameId, duration / 1000)
+                open = sessionDao.openSession()
+            }
+        }.onFailure { Timber.w(it, "Session recovery failed") }
     }
 
     /** Opens a session right before the emulator is started. */
@@ -78,8 +99,8 @@ class PlaySessionTracker @Inject constructor(
     }
 
     private suspend fun endInternal(session: ActiveSession) {
-        if (_active.value != session) return
-        _active.value = null
+        // Atomic: begin() and onStart() may race for the same session.
+        if (!_active.compareAndSet(session, null)) return
         val now = System.currentTimeMillis()
         val capMs = settings.current().playTimeCapMinutes * 60_000L
         val duration = (now - session.startedAt).coerceIn(0, capMs)
@@ -147,8 +168,9 @@ class GameLauncher @Inject constructor(
                 .onFailure { Timber.w(it, "grantUriPermission failed for %s", uri) }
         }
         return try {
-            sessions.begin(game.id)
             withContext(dispatchers.main) { context.startActivity(prepared.intent) }
+            // Only a launch that really started counts as a play.
+            sessions.begin(game.id)
             Timber.i("Launched %s with %s", game.displayTitle, prepared.targetPackage)
             Outcome.success(LaunchedGame(game, resolved))
         } catch (e: ActivityNotFoundException) {

@@ -1,6 +1,10 @@
 package io.vela.core.scraper.di
 
+import android.content.Context
 import dagger.Binds
+import dagger.hilt.android.qualifiers.ApplicationContext
+import okhttp3.Cache
+import java.io.File
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,9 +41,14 @@ abstract class ScraperBindings {
 object ScraperModule {
 
     @Provides @Singleton
-    fun provideOkHttp(): OkHttpClient = OkHttpClient.Builder()
+    fun provideOkHttp(@ApplicationContext context: Context): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        // A server that dribbles bytes must not park a 5,000-game scrape forever.
+        .callTimeout(90, TimeUnit.SECONDS)
+        .retryOnConnectionFailure(true)
+        .cache(Cache(File(context.cacheDir, "http"), 50L * 1024 * 1024))
         .followRedirects(true)
         .addInterceptor { chain ->
             chain.proceed(chain.request().newBuilder().header("User-Agent", "Vela/0.1 (Android; +https://github.com/vela-frontend)").build())

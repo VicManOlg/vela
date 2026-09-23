@@ -17,6 +17,8 @@ enum class LocationType { FILE, DOCUMENT, ANDROID_APP, EXTERNAL }
         Index(value = ["favorite"]),
         Index(value = ["sourceId"]),
         Index(value = ["duplicateKey"]),
+        // Every list reads "present = 1 AND hidden = 0 ORDER BY sortTitle".
+        Index(value = ["present", "hidden", "sortTitle"]),
     ],
 )
 data class GameEntity(
@@ -60,7 +62,7 @@ data class GameEntity(
     @ColumnInfo(defaultValue = "0") val scanGeneration: Long = 0,
 )
 
-@Entity(tableName = "game_metadata")
+@Entity(tableName = "game_metadata", indices = [Index("franchise")])
 data class GameMetadataEntity(
     @PrimaryKey val gameId: Long,
     val title: String? = null,
