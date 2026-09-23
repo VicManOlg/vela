@@ -189,7 +189,7 @@ fun GameDetailScreen(
             }
             Spacer(Modifier.height(20.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 VelaButton(
                     text = if (game.playCount > 0) "Continue" else "Play",
                     onClick = viewModel::launch,

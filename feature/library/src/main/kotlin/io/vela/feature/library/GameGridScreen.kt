@@ -105,8 +105,10 @@ fun GameGridScreen(
     }
 
     Column(modifier.fillMaxSize()) {
+        // Placeholders are enabled, so itemCount is the full result size once the first page is in.
+        val shownCount = maxOf(items.itemCount, header.count)
         GridHeader(
-            header = header,
+            header = header.copy(subtitle = listOfNotNull(header.subtitle.takeIf { it.isNotBlank() }, if (shownCount == 1) "1 game" else "$shownCount games").joinToString("   ")),
             // List names the focused game in its preview panel, Showcase under the wheel.
             focusedTitle = if (view == LibraryView.LIST || view == LibraryView.SHOWCASE) null else focused?.title,
             view = view,

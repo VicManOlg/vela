@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -189,6 +190,8 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
         }
     }
     LaunchedEffect(Unit) { homePresses.collect { tab = ShellTab.HOME } }
+    // Back from any other tab lands on Home; from Home it leaves the app as usual.
+    BackHandler(enabled = tab != ShellTab.HOME) { tab = ShellTab.HOME }
 
     GamepadHandler { button ->
         when (button) {

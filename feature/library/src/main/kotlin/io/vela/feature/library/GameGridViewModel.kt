@@ -83,10 +83,11 @@ class GameGridViewModel @Inject constructor(
 
     val header: StateFlow<GameGridHeader> = combine(platform, sort, collections.observeCollections()) { entry, s, cols ->
         val collection = cols.firstOrNull { it.id == collectionId }
+        // Known up front for a system or a collection; "All games" and "Favorites" learn it from the list.
         val count = collection?.gameCount ?: entry?.gameCount ?: 0
         GameGridHeader(
             title = route.title ?: collection?.name ?: entry?.displayName ?: if (route.favorites) "Favorites" else "All games",
-            subtitle = listOfNotNull(entry?.platform?.manufacturer, if (count == 1) "1 game" else "$count games").joinToString("   "),
+            subtitle = entry?.platform?.manufacturer ?: "",
             accent = collection?.accentColor ?: entry?.platform?.accentColor ?: 0xFF7FD7FF,
             sort = s,
             count = count,
