@@ -124,7 +124,7 @@ private fun AppIconTile(model: Any?, accent: Color, title: String) {
         VelaImage(
             model = model,
             contentDescription = null,
-            modifier = Modifier.align(Alignment.Center).fillMaxSize(0.42f).aspectRatio(1f),
+            modifier = Modifier.align(Alignment.Center).fillMaxSize(0.58f).aspectRatio(1f),
             contentScale = ContentScale.Fit,
             accent = accent,
         )
