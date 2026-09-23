@@ -38,6 +38,7 @@ import androidx.navigation.toRoute
 import io.vela.core.data.usecase.UiMessage
 import io.vela.core.model.CollectionId
 import io.vela.core.model.ConfirmButton
+import io.vela.core.model.TabBarMode
 import io.vela.core.model.GameId
 import io.vela.core.model.PlatformId
 import io.vela.core.ui.components.ButtonHint
@@ -145,7 +146,7 @@ fun VelaApp(
                     }
                     composable<ShellRoute> { entry ->
                         val route: ShellRoute = entry.toRoute()
-                        Shell(navController, route, viewModel, homePresses, swapped = prefs.confirmButton == ConfirmButton.B)
+                        Shell(navController, route, viewModel, homePresses, swapped = prefs.confirmButton == ConfirmButton.B, tabBar = prefs.tabBar)
                     }
                     composable<GameGridRoute> {
                         Column(Modifier.fillMaxSize()) {
@@ -187,7 +188,7 @@ fun VelaApp(
 }
 
 @Composable
-private fun Shell(navController: NavHostController, route: ShellRoute, appViewModel: AppViewModel, homePresses: Flow<Unit>, swapped: Boolean) {
+private fun Shell(navController: NavHostController, route: ShellRoute, appViewModel: AppViewModel, homePresses: Flow<Unit>, swapped: Boolean, tabBar: TabBarMode) {
     var tab by rememberSaveable { mutableStateOf(runCatching { ShellTab.valueOf(route.tab) }.getOrDefault(ShellTab.HOME)) }
     val tabs = remember { ShellTab.entries.map { TopTab(it.name, it.label) } }
     val sounds = LocalUiSounds.current
@@ -217,7 +218,12 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
     val openAndroid: () -> Unit = { navController.navigate(AndroidRoute) }
 
     Column(Modifier.fillMaxSize()) {
-        if (VelaTheme.spec.layout.showTabs || tab != ShellTab.HOME) {
+        val showTabs = when (tabBar) {
+            TabBarMode.THEME -> VelaTheme.spec.layout.showTabs || tab != ShellTab.HOME
+            TabBarMode.ALWAYS -> true
+            TabBarMode.HIDDEN -> false
+        }
+        if (showTabs) {
             TopBar(tabs = tabs, selectedId = tab.name, onSelect = { id -> tab = ShellTab.valueOf(id) })
         } else {
             // Themes with a clean Home: just the mark and the status, tabs come back on other screens.

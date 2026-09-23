@@ -42,6 +42,14 @@ enum class HomeLayout(val label: String, val description: String) {
     DASHBOARD("Dashboard", "Blocks: one big tile plus grids of squares"),
 }
 
+/** Whether the section tabs are shown at the top of the shell. */
+@Serializable
+enum class TabBarMode(val label: String, val description: String) {
+    THEME("Theme default", "Some themes hide the tabs on their Home"),
+    ALWAYS("Always", "Tabs on every screen"),
+    HIDDEN("Hidden", "Never; switch sections with L1 and R1 or the hint bar"),
+}
+
 /** How a game list (platform, collection, favourites, all) is laid out. */
 @Serializable
 enum class LibraryView(val label: String, val description: String) {
@@ -101,6 +109,7 @@ data class AppSettings(
     val libraryView: LibraryView = LibraryView.GRID,
     val homeLayout: HomeLayout = HomeLayout.THEME,
     val libraryLayout: LibraryLayout = LibraryLayout.THEME,
+    val tabBar: TabBarMode = TabBarMode.THEME,
     val reduceMotion: Boolean = false,
     val uiScale: Float = 1f,
     val uiSounds: Boolean = true,

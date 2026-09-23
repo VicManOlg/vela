@@ -40,6 +40,7 @@ import io.vela.core.model.AppSettings
 import io.vela.core.model.ConfirmButton
 import io.vela.core.model.LibrarySource
 import io.vela.core.model.LibraryView
+import io.vela.core.model.TabBarMode
 import io.vela.core.model.PlatformId
 import io.vela.core.model.PlatformKind
 import io.vela.core.model.PlayerId
@@ -435,6 +436,14 @@ private fun Scope.appearanceSection(vm: SettingsViewModel, settings: AppSettings
         if (picking) {
             VelaMenuDialog("Home layout", HomeLayout.entries.map { MenuOption(it.name, it.label, description = it.description, selected = it == settings.homeLayout) },
                 onSelect = { opt -> vm.update { it.copy(homeLayout = HomeLayout.valueOf(opt.id)) }; picking = false }, onDismiss = { picking = false })
+        }
+    }
+    item {
+        var picking by remember { mutableStateOf(false) }
+        SettingRow("Tab bar", description = settings.tabBar.description, value = settings.tabBar.label, onClick = { picking = true })
+        if (picking) {
+            VelaMenuDialog("Tab bar", TabBarMode.entries.map { MenuOption(it.name, it.label, description = it.description, selected = it == settings.tabBar) },
+                onSelect = { opt -> vm.update { it.copy(tabBar = TabBarMode.valueOf(opt.id)) }; picking = false }, onDismiss = { picking = false })
         }
     }
     item {
