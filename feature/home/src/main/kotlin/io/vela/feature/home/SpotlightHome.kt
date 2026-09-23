@@ -127,7 +127,7 @@ fun SpotlightHome(
                 }
             }
         }
-        if (state.platforms.isNotEmpty()) {
+        if (state.showsPlatforms && state.platforms.isNotEmpty()) {
             Spacer(Modifier.height(4.dp))
             Rail("", autoFocus = games.isEmpty()) {
                 items(state.platforms, key = { it.id.value }) { entry ->
@@ -147,7 +147,4 @@ fun SpotlightHome(
 }
 
 /** One row for the whole Home: what you were playing, then favourites, then what is new; no repeats. */
-private fun HomeUiState.spotlightGames(): List<GameSummary> =
-    (continuePlaying + favorites + recentlyAdded + recommended + recent + android)
-        .distinctBy { it.id }
-        .take(40)
+private fun HomeUiState.spotlightGames(): List<GameSummary> = gamesInOrder(40)

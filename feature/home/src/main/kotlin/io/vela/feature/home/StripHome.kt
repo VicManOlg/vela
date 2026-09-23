@@ -48,7 +48,7 @@ fun StripHome(
     modifier: Modifier = Modifier,
 ) {
     val colors = VelaTheme.colors
-    val games = remember(state) { (state.continuePlaying + state.recent + state.favorites + state.recentlyAdded + state.recommended + state.android).distinctBy { it.id }.take(40) }
+    val games = remember(state) { state.gamesInOrder(40) }
     val focusedGame = spotlight?.gameId?.let { id -> games.firstOrNull { it.id.value == id } }
     // The first tile is focused before any focus callback fires; announce it right away.
     LaunchedEffect(games.firstOrNull()?.id) { if (spotlight == null) games.firstOrNull()?.let(viewModel::spotlightGame) }
@@ -108,7 +108,7 @@ fun StripHome(
                 }
             }
         }
-        if (state.platforms.isNotEmpty()) {
+        if (state.showsPlatforms && state.platforms.isNotEmpty()) {
             Rail("") {
                 items(state.platforms, key = { it.id.value }) { entry ->
                     PlatformChip(

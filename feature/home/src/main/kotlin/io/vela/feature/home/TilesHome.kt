@@ -58,7 +58,7 @@ fun TilesHome(
     modifier: Modifier = Modifier,
 ) {
     val colors = VelaTheme.colors
-    val games = remember(state) { (state.continuePlaying + state.recent + state.recentlyAdded + state.favorites + state.android).distinctBy { it.id }.take(30) }
+    val games = remember(state) { state.gamesInOrder(30) }
     // The first tile is focused before any focus callback fires; announce it right away.
     LaunchedEffect(games.firstOrNull()?.id) { if (spotlight == null) games.firstOrNull()?.let(viewModel::spotlightGame) }
 
@@ -98,8 +98,10 @@ fun TilesHome(
             horizontalArrangement = Arrangement.spacedBy(18.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            items(state.platforms, key = { it.id.value }) { entry ->
-                RoundButton(label = entry.platform.shortName, accent = entry.platform.color(), icon = entry.iconPath, onClick = { navigation.openPlatform(entry.id) }, onFocused = { viewModel.spotlightPlatform(entry) })
+            if (state.showsPlatforms) {
+                items(state.platforms, key = { it.id.value }) { entry ->
+                    RoundButton(label = entry.platform.shortName, accent = entry.platform.color(), icon = entry.iconPath, onClick = { navigation.openPlatform(entry.id) }, onFocused = { viewModel.spotlightPlatform(entry) })
+                }
             }
             item("library") { RoundButton("Library", colors.accent, vector = Icons.Rounded.Apps, onClick = navigation.openLibrary) }
             item("collections") { RoundButton("Collections", colors.accentSecondary, vector = Icons.Rounded.CollectionsBookmark, onClick = navigation.openCollections) }

@@ -60,7 +60,18 @@ enum class LibraryView(val label: String, val description: String) {
 }
 
 @Serializable
-enum class HomeRail { CONTINUE_PLAYING, RECENT, FAVORITES, PLATFORMS, COLLECTIONS, ANDROID, RECOMMENDED, RECENTLY_ADDED, APPS, TOP_RATED }
+enum class HomeRail(val label: String, val description: String) {
+    CONTINUE_PLAYING("Continue playing", "Games marked Playing, or the last ones with play time"),
+    RECENT("Recent", "Most recently played"),
+    FAVORITES("Favorites", "Your favourites"),
+    PLATFORMS("Systems", "One tile per system"),
+    COLLECTIONS("Collections", "Your collections"),
+    ANDROID("Android games", "Games installed on the device"),
+    RECOMMENDED("Because you play", "Unplayed games from the systems you use most"),
+    RECENTLY_ADDED("Recently added", "Newest in the library"),
+    APPS("Quick apps", "Apps you pinned"),
+    TOP_RATED("Your top rated", "Games you gave the most stars"),
+}
 
 /** Rails are stored by name; names this build does not know (newer builds, downgrades) are skipped, not fatal. */
 object HomeRailListSerializer : KSerializer<List<HomeRail>> {
@@ -92,6 +103,9 @@ data class AppSettings(
         HomeRail.ANDROID,
         HomeRail.RECOMMENDED,
     ),
+    /** Sections the user switched off; kept separate so new sections still appear once. */
+    @Serializable(with = HomeRailListSerializer::class)
+    val hiddenHomeRails: List<HomeRail> = emptyList(),
     // Controller
     val confirmButton: ConfirmButton = ConfirmButton.A,
     val hapticFeedback: Boolean = true,

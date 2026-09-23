@@ -47,7 +47,7 @@ fun DashboardHome(
     modifier: Modifier = Modifier,
 ) {
     val colors = VelaTheme.colors
-    val recent = remember(state) { (state.continuePlaying + state.recent + state.recentlyAdded + state.favorites).distinctBy { it.id } }
+    val recent = remember(state) { state.gamesInOrder(25) }
     val hero = recent.firstOrNull()
     val rest = recent.drop(1).take(24)
     val gap = VelaTheme.dimens.railSpacing
@@ -99,7 +99,7 @@ fun DashboardHome(
                 }
             }
         }
-        if (state.platforms.isNotEmpty()) {
+        if (state.showsPlatforms && state.platforms.isNotEmpty()) {
             item(key = "systems") {
                 Column {
                     BlockTitle("Systems", Modifier.padding(horizontal = VelaTheme.dimens.screenPadding))
@@ -123,15 +123,16 @@ fun DashboardHome(
                 }
             }
         }
-        if (state.quickApps.isNotEmpty() || state.android.isNotEmpty()) {
+        // Android games already flow into the tiles above when their section is on; this block is the pinned apps.
+        if (state.showsQuickApps && state.quickApps.isNotEmpty()) {
             item(key = "apps") {
                 Column {
-                    BlockTitle("Apps and Android games", Modifier.padding(horizontal = VelaTheme.dimens.screenPadding))
+                    BlockTitle("Quick apps", Modifier.padding(horizontal = VelaTheme.dimens.screenPadding))
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = VelaTheme.dimens.screenPadding),
                         horizontalArrangement = Arrangement.spacedBy(gap),
                     ) {
-                        items((state.quickApps + state.android).distinctBy { it.id }, key = { it.id.value }) { app ->
+                        items(state.quickApps, key = { it.id.value }) { app ->
                             GameCard(
                                 game = app,
                                 accent = Color(0xFF3DDC84),

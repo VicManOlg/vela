@@ -1,5 +1,11 @@
 package io.vela.feature.settings
 
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.material.icons.rounded.Visibility
+import androidx.compose.material.icons.rounded.Check
+import io.vela.core.model.HomeRail
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -439,6 +445,12 @@ private fun Scope.appearanceSection(vm: SettingsViewModel, settings: AppSettings
         }
     }
     item {
+        var open by remember { mutableStateOf(false) }
+        val shown = HomeRail.entries.count { it !in settings.hiddenHomeRails }
+        SettingRow("Home sections", description = "Which rows the Home shows, and in what order", value = "$shown of ${HomeRail.entries.size}", onClick = { open = true })
+        if (open) HomeSectionsEditor(settings, vm, onClose = { open = false })
+    }
+    item {
         var picking by remember { mutableStateOf(false) }
         SettingRow("Tab bar", description = settings.tabBar.description, value = settings.tabBar.label, onClick = { picking = true })
         if (picking) {
@@ -493,6 +505,60 @@ private fun Scope.appearanceSection(vm: SettingsViewModel, settings: AppSettings
     item { SectionHeader("Status bar") }
     item { SettingRow("Show clock", checked = settings.showClock, onClick = { vm.update { it.copy(showClock = !it.showClock) } }) }
     item { SettingRow("Show battery", checked = settings.showBattery, onClick = { vm.update { it.copy(showBattery = !it.showBattery) } }) }
+}
+
+/**
+ * Two-level editor for the Home sections: pick a section, then move it up or down or hide it.
+ * Every choice is saved at once; the list reopens so several changes take a few presses.
+ */
+@Composable
+private fun HomeSectionsEditor(settings: AppSettings, vm: SettingsViewModel, onClose: () -> Unit) {
+    val ordered = settings.homeRails + HomeRail.entries.filter { it !in settings.homeRails }
+    var editing by remember { mutableStateOf<HomeRail?>(null) }
+    val target = editing
+    if (target == null) {
+        VelaMenuDialog(
+            title = "Home sections",
+            subtitle = "Pick a section to move it or hide it. Empty sections never show.",
+            options = ordered.map { r ->
+                val hidden = r in settings.hiddenHomeRails
+                MenuOption(r.name, r.label, description = if (hidden) "Hidden" else r.description, icon = if (hidden) Icons.Rounded.VisibilityOff else Icons.Rounded.Check)
+            },
+            onSelect = { editing = HomeRail.valueOf(it.id) },
+            onDismiss = onClose,
+        )
+    } else {
+        val index = ordered.indexOf(target)
+        val hidden = target in settings.hiddenHomeRails
+        VelaMenuDialog(
+            title = target.label,
+            subtitle = target.description,
+            options = buildList {
+                if (index > 0) add(MenuOption("up", "Move up", icon = Icons.Rounded.KeyboardArrowUp))
+                if (index < ordered.lastIndex) add(MenuOption("down", "Move down", icon = Icons.Rounded.KeyboardArrowDown))
+                add(if (hidden) MenuOption("show", "Show", icon = Icons.Rounded.Visibility) else MenuOption("hide", "Hide", icon = Icons.Rounded.VisibilityOff))
+            },
+            onSelect = { opt ->
+                vm.update { s ->
+                    val list = ordered.toMutableList()
+                    when (opt.id) {
+                        "up" -> java.util.Collections.swap(list, index, index - 1)
+                        "down" -> java.util.Collections.swap(list, index, index + 1)
+                    }
+                    s.copy(
+                        homeRails = list,
+                        hiddenHomeRails = when (opt.id) {
+                            "hide" -> (s.hiddenHomeRails + target).distinct()
+                            "show" -> s.hiddenHomeRails - target
+                            else -> s.hiddenHomeRails
+                        },
+                    )
+                }
+                editing = null
+            },
+            onDismiss = { editing = null },
+        )
+    }
 }
 
 // ---- Controller -------------------------------------------------------------------------------

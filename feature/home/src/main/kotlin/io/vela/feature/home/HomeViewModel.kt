@@ -55,6 +55,26 @@ data class HomeUiState(
 ) {
     private val platformById: Map<PlatformId, PlatformEntry> by lazy { platforms.associateBy { it.id } }
     fun platformOf(game: GameSummary): PlatformEntry? = platformById[game.platformId]
+
+    /** The games behind one section (systems and collections have none). */
+    fun gamesFor(rail: HomeRail): List<GameSummary> = when (rail) {
+        HomeRail.CONTINUE_PLAYING -> continuePlaying
+        HomeRail.RECENT -> recent
+        HomeRail.FAVORITES -> favorites
+        HomeRail.TOP_RATED -> topRated
+        HomeRail.RECENTLY_ADDED -> recentlyAdded
+        HomeRail.RECOMMENDED -> recommended
+        HomeRail.ANDROID -> android
+        HomeRail.APPS -> quickApps
+        HomeRail.PLATFORMS, HomeRail.COLLECTIONS -> emptyList()
+    }
+
+    /** Every visible section's games in the user's order, once each: what the tile-based Homes show. */
+    fun gamesInOrder(limit: Int = 40): List<GameSummary> = rails.flatMap(::gamesFor).distinctBy { it.id }.take(limit)
+
+    val showsPlatforms: Boolean get() = HomeRail.PLATFORMS in rails
+    val showsCollections: Boolean get() = HomeRail.COLLECTIONS in rails
+    val showsQuickApps: Boolean get() = HomeRail.APPS in rails
 }
 
 @HiltViewModel
@@ -87,8 +107,10 @@ class HomeViewModel @Inject constructor(
         val continuePlaying = l.playing.ifEmpty { l.recent.filter { it.totalPlayTimeMs > 0 }.take(8) }
         HomeUiState(
             layout = prefs.homeLayout,
-            // Rails added after a user's settings were first saved still show up, at the end.
-            rails = prefs.homeRails + HomeRail.entries.filter { it !in prefs.homeRails },
+            // User order first, sections this build added at the end, hidden ones out; never empty.
+            rails = (prefs.homeRails + HomeRail.entries.filter { it !in prefs.homeRails })
+                .filter { it !in prefs.hiddenHomeRails }
+                .ifEmpty { listOf(HomeRail.PLATFORMS) },
             continuePlaying = continuePlaying,
             recent = l.recent,
             favorites = l.favorites,
