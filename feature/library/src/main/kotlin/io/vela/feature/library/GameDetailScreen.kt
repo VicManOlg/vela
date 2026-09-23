@@ -182,7 +182,7 @@ fun GameDetailScreen(
                 platform?.let { Pill(it.shortName, tint = accent) }
                 meta?.releaseYear?.let { Pill(it.toString()) }
                 meta?.genres?.firstOrNull()?.let { Pill(it) }
-                meta?.players?.let { Pill(if (it.contains('-') || it.toIntOrNull() == 1) "$it player" else "$it players") }
+                meta?.players?.let { Pill(if (it.toIntOrNull() == 1) "1 player" else "$it players") }
                 meta?.rating?.let { Pill("${(it * 10).toInt()}/10") }
                 meta?.ageRating?.let { Pill(it) }
                 if (game.completion != io.vela.core.model.CompletionStatus.NONE) Pill(completionLabel(game.completion), tint = colors.accent)
@@ -328,8 +328,8 @@ internal fun formatReleaseDate(raw: String): String {
 }
 
 internal fun formatBytes(bytes: Long): String = when {
-    bytes >= 1L shl 30 -> "%.1f GB".format(bytes / (1L shl 30).toDouble())
-    bytes >= 1L shl 20 -> "%.1f MB".format(bytes / (1L shl 20).toDouble())
+    bytes >= 1L shl 30 -> "%.1f GB".format(java.util.Locale.US, bytes / (1L shl 30).toDouble())
+    bytes >= 1L shl 20 -> "%.1f MB".format(java.util.Locale.US, bytes / (1L shl 20).toDouble())
     bytes >= 1L shl 10 -> "${bytes shr 10} KB"
     else -> "$bytes B"
 }

@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -105,6 +106,9 @@ internal fun SystemStage(
 ) {
     if (entries.isEmpty()) return
     var selected by rememberSaveable { mutableIntStateOf(initialIndex.coerceIn(0, entries.lastIndex)) }
+    var userPicked by rememberSaveable { mutableStateOf(false) }
+    // The first composition often sees an empty list; apply the intended index when systems arrive.
+    LaunchedEffect(entries.size) { if (!userPicked) selected = initialIndex.coerceIn(0, entries.lastIndex) }
     var direction by remember { mutableIntStateOf(1) }
     var drag by remember { mutableFloatStateOf(0f) }
     val entry = entries[selected.coerceIn(0, entries.lastIndex)]
@@ -117,7 +121,7 @@ internal fun SystemStage(
     // The tab bar may claim focus right after a tab switch; ask again once things settle.
     LaunchedEffect(entries.size) {
         delay(300)
-        runCatching { autoFocus.requestFocus() }
+        if (!focused) runCatching { autoFocus.requestFocus() }
     }
     // Read by the dial in its layout and layer phases only; the slide never recomposes the stage.
     val position = animateFloatAsState(selected.toFloat(), tween(motion.transitionDurationMs, easing = FastOutSlowInEasing), label = "dial")
@@ -127,6 +131,7 @@ internal fun SystemStage(
         if (target != selected) {
             direction = if (target > selected) 1 else -1
             selected = target
+            userPicked = true
             sounds?.play(UiSound.FOCUS)
         }
     }

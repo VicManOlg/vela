@@ -1,5 +1,6 @@
 package io.vela.ui
 
+import io.vela.core.ui.components.LocalHapticsEnabled
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -116,16 +117,24 @@ fun VelaApp(
     val backdrop by viewModel.backdrop.collectAsStateWithLifecycle()
     val prefs = settings ?: return
 
-    VelaTheme(spec = theme, uiScale = prefs.uiScale, reduceMotion = prefs.reduceMotion) {
-        CompositionLocalProvider(LocalGamepad provides gamepad, LocalUiSounds provides sounds, LocalDynamicAccent provides backdrop.dynamicAccent?.let(::Color)) {
+    VelaTheme(spec = theme, uiScale = prefs.uiScale, reduceMotion = prefs.reduceMotion, showClock = prefs.showClock, showBattery = prefs.showBattery) {
+        CompositionLocalProvider(
+            LocalGamepad provides gamepad,
+            LocalUiSounds provides sounds,
+            LocalDynamicAccent provides backdrop.dynamicAccent?.let(::Color),
+            LocalHapticsEnabled provides prefs.hapticFeedback,
+        ) {
             val navController = rememberNavController()
+            // Fixed for the life of the NavHost: flipping it when setup completes would rebuild the
+            // graph underneath the setup screen's own navigation.
+            val startDestination: Any = remember { if (prefs.setupCompleted) ShellRoute() else SetupRoute }
             // The Home button (Vela as launcher) always lands on the shell.
             LaunchedEffect(navController) { homePresses.collect { navController.popBackStack<ShellRoute>(inclusive = false) } }
             Box(Modifier.fillMaxSize().background(VelaTheme.colors.background)) {
                 DynamicBackground(artwork = backdrop.artwork, accent = Color(backdrop.accent))
                 NavHost(
                     navController = navController,
-                    startDestination = if (prefs.setupCompleted) ShellRoute() else SetupRoute,
+                    startDestination = startDestination,
                     enterTransition = { fadeIn(tween(260)) + slideInHorizontally(tween(280)) { it / 14 } },
                     exitTransition = { fadeOut(tween(180)) + scaleOut(tween(280), targetScale = 0.98f) },
                     popEnterTransition = { fadeIn(tween(260)) + scaleIn(tween(280), initialScale = 0.98f) },
@@ -266,9 +275,9 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
             hints = when (tab) {
                 ShellTab.HOME -> listOf(ButtonHint(GamepadButton.A, "Play"), ButtonHint(GamepadButton.X, "Menu"), ButtonHint(GamepadButton.L1, "Tabs"))
                 ShellTab.LIBRARY -> listOf(ButtonHint(GamepadButton.A, "Open"), ButtonHint(GamepadButton.L1, "Tabs"))
-                ShellTab.COLLECTIONS -> listOf(ButtonHint(GamepadButton.A, "Open"), ButtonHint(GamepadButton.X, "New"))
-                ShellTab.SEARCH -> listOf(ButtonHint(GamepadButton.A, "Play"), ButtonHint(GamepadButton.X, "Type"), ButtonHint(GamepadButton.Y, "System"))
-                ShellTab.SETTINGS -> listOf(ButtonHint(GamepadButton.A, "Change"), ButtonHint(GamepadButton.L2, "Pages"))
+                ShellTab.COLLECTIONS -> listOf(ButtonHint(GamepadButton.A, "Open"), ButtonHint(GamepadButton.X, "New"), ButtonHint(GamepadButton.L1, "Tabs"))
+                ShellTab.SEARCH -> listOf(ButtonHint(GamepadButton.A, "Play"), ButtonHint(GamepadButton.X, "Type"), ButtonHint(GamepadButton.Y, "System"), ButtonHint(GamepadButton.L1, "Tabs"))
+                ShellTab.SETTINGS -> listOf(ButtonHint(GamepadButton.A, "Change"), ButtonHint(GamepadButton.L2, "Pages"), ButtonHint(GamepadButton.L1, "Tabs"))
             },
             swapped = swapped,
         )

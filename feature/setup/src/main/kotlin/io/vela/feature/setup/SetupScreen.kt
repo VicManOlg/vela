@@ -1,5 +1,6 @@
 package io.vela.feature.setup
 
+import androidx.activity.compose.BackHandler
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -107,10 +108,22 @@ class SetupViewModel @Inject constructor(
 
     fun startScan() = viewModelScope.launch {
         step.value = SetupStep.SCANNING
-        val result = library.scanNow()
-        apps.syncInstalled()
-        _result.value = result.added
+        val result = runCatching { library.scanNow() }.getOrNull()
+        runCatching { apps.syncInstalled() }
+        _result.value = result?.added ?: 0
         step.value = SetupStep.DONE
+    }
+
+    /** B on the wizard: one step back, never out of the app. */
+    fun back(): Boolean {
+        val previous = when (step.value) {
+            SetupStep.STORAGE -> SetupStep.WELCOME
+            SetupStep.FOLDERS -> SetupStep.STORAGE
+            SetupStep.DONE -> SetupStep.FOLDERS
+            else -> return false
+        }
+        step.value = previous
+        return true
     }
 
     fun finish(fetchArtwork: Boolean, onDone: () -> Unit) = viewModelScope.launch {
@@ -125,6 +138,7 @@ class SetupViewModel @Inject constructor(
 fun SetupScreen(onDone: () -> Unit, modifier: Modifier = Modifier, viewModel: SetupViewModel = hiltViewModel()) {
     val step by viewModel.step.collectAsStateWithLifecycle()
     val colors = VelaTheme.colors
+    BackHandler(enabled = step != SetupStep.WELCOME && step != SetupStep.SCANNING) { viewModel.back() }
     Box(modifier.fillMaxSize().padding(VelaTheme.dimens.screenPadding), contentAlignment = Alignment.Center) {
         GlassPanel(Modifier.fillMaxWidth(0.72f).fillMaxHeight(0.92f)) {
             Column(Modifier.verticalScroll(rememberScrollState())) {

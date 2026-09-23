@@ -51,6 +51,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import io.vela.core.ui.input.GamepadButton
+import io.vela.core.ui.input.GamepadHandler
+import androidx.compose.runtime.withFrameNanos
 import io.vela.core.ui.theme.VelaTheme
 import io.vela.core.ui.sound.LocalUiSounds
 import io.vela.core.ui.sound.UiSound
@@ -104,6 +106,8 @@ fun VelaMenuDialog(
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         ImmersiveDialogWindow()
         BackHandler(onBack = onDismiss)
+        // A dialog owns the controller: X/Y/Start/L/R must not reach the screen behind it.
+        GamepadHandler { true }
         Box(
             Modifier
                 .fillMaxSize()
@@ -147,7 +151,7 @@ fun VelaMenuDialog(
                 }
             }
         }
-        LaunchedEffect(options.size) { runCatching { firstFocus.requestFocus() } }
+        LaunchedEffect(options.size) { withFrameNanos { }; withFrameNanos { }; runCatching { firstFocus.requestFocus() } }
     }
 }
 
@@ -166,6 +170,7 @@ fun ConfirmDialog(
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         ImmersiveDialogWindow()
         BackHandler(onBack = onDismiss)
+        GamepadHandler { true }
         Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
             GlassPanel(Modifier.widthIn(min = 360.dp, max = 520.dp)) {
                 Column {
@@ -181,7 +186,7 @@ fun ConfirmDialog(
                 }
             }
         }
-        LaunchedEffect(Unit) { runCatching { cancelFocus.requestFocus() } }
+        LaunchedEffect(Unit) { withFrameNanos { }; withFrameNanos { }; runCatching { cancelFocus.requestFocus() } }
     }
 }
 
@@ -201,6 +206,7 @@ fun TextInputDialog(
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         ImmersiveDialogWindow()
         BackHandler(onBack = onDismiss)
+        GamepadHandler { true }
         Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
             GlassPanel(Modifier.widthIn(min = 360.dp, max = 520.dp)) {
                 Column {
@@ -234,6 +240,6 @@ fun TextInputDialog(
                 }
             }
         }
-        LaunchedEffect(Unit) { runCatching { fieldFocus.requestFocus() } }
+        LaunchedEffect(Unit) { withFrameNanos { }; withFrameNanos { }; runCatching { fieldFocus.requestFocus() } }
     }
 }

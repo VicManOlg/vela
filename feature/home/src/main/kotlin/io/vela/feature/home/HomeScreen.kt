@@ -308,4 +308,4 @@ internal fun homeLayoutFor(key: String?): HomeLayout = when (key?.lowercase()) {
 }
 
 private fun HomeUiState.allGames(): List<GameSummary> =
-    continuePlaying + recent + favorites + android + recommended + recentlyAdded
+    continuePlaying + recent + favorites + android + recommended + recentlyAdded + topRated + quickApps

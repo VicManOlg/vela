@@ -109,6 +109,7 @@ fun formatLastPlayed(at: Long?, now: Long = System.currentTimeMillis()): String?
         hours < 24 -> if (hours == 1L) "1 hour ago" else "$hours hours ago"
         days == 1L -> "Yesterday"
         days < 30 -> "$days days ago"
+        days < 60 -> "1 month ago"
         days < 365 -> "${days / 30} months ago"
         else -> "${days / 365} years ago"
     }

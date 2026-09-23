@@ -143,12 +143,19 @@ object VelaTheme {
 private const val REFERENCE_HEIGHT_DP = 540f
 
 @Composable
-fun VelaTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = false, content: @Composable () -> Unit) {
+fun VelaTheme(
+    spec: ThemeSpec,
+    uiScale: Float = 1f,
+    reduceMotion: Boolean = false,
+    showClock: Boolean = true,
+    showBattery: Boolean = true,
+    content: @Composable () -> Unit,
+) {
     // Fit-to-screen: shorter screens get proportionally smaller cards and type so rails still fit.
     val heightDp = LocalConfiguration.current.screenHeightDp.toFloat()
     val fit = (heightDp / REFERENCE_HEIGHT_DP).coerceIn(0.72f, 1.15f)
     val effectiveScale = uiScale * fit
-    val values = remember(spec, effectiveScale, reduceMotion) { resolveTheme(spec, effectiveScale, reduceMotion) }
+    val values = remember(spec, effectiveScale, reduceMotion, showClock, showBattery) { resolveTheme(spec, effectiveScale, reduceMotion, showClock, showBattery) }
     val scheme = remember(values) { values.materialScheme() }
     CompositionLocalProvider(LocalVelaTheme provides values) {
         MaterialTheme(colorScheme = scheme, content = content)
@@ -157,7 +164,7 @@ fun VelaTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = fals
 
 fun Color.Companion.fromArgbHex(hex: String): Color = Color(ArgbHexSerializer.parse(hex))
 
-fun resolveTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = false): VelaThemeValues {
+fun resolveTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = false, showClock: Boolean = true, showBattery: Boolean = true): VelaThemeValues {
     val c = spec.colors
     val colors = VelaColors(
         background = Color.fromArgbHex(c.background),
@@ -205,8 +212,9 @@ fun resolveTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = f
         screenPadding = (l.screenPadding * s).dp,
         gridColumns = l.gridColumns,
         showButtonHints = l.showButtonHints,
-        showClock = l.showClock,
-        showBattery = l.showBattery,
+        // The theme proposes, the user's Settings switch disposes.
+        showClock = l.showClock && showClock,
+        showBattery = l.showBattery && showBattery,
     )
     val m = spec.motion
     val reduce = reduceMotion || m.reduceMotion

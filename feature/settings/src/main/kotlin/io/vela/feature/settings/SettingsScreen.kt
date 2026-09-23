@@ -220,7 +220,7 @@ private fun LibrarySources(vm: SettingsViewModel) {
                 when (opt.id) {
                     "platform" -> pendingPlatformFor = source
                     "toggle" -> vm.toggleSource(source)
-                    "rescan" -> vm.scanNow()
+                    "rescan" -> vm.rescanSource(source)
                     "remove" -> removing = source
                 }
             },
@@ -305,7 +305,10 @@ private fun PlatformsList(vm: SettingsViewModel) {
 
 @Composable
 private fun PlatformRow(entry: PlatformEntry, vm: SettingsViewModel, onEdit: (PlatformEntry) -> Unit) {
-    val playerName = entry.settings.playerId?.let { id -> vm.playerOptions(entry).firstOrNull { it.definition.id == id }?.definition?.name } ?: "Automatic"
+    // Player lookup asks the PackageManager; do it once per row, not on every recomposition.
+    val playerName = remember(entry.id, entry.settings.playerId) {
+        entry.settings.playerId?.let { id -> vm.playerOptions(entry).firstOrNull { it.definition.id == id }?.definition?.name } ?: "Automatic"
+    }
     SettingRow(
         title = entry.displayName,
         description = listOfNotNull(if (entry.gameCount > 0) "${entry.gameCount} games" else null, playerName, entry.settings.coreId).joinToString("   "),
@@ -318,13 +321,14 @@ private fun PlatformRow(entry: PlatformEntry, vm: SettingsViewModel, onEdit: (Pl
 
 private fun Scope.emulatorsSection(vm: SettingsViewModel) {
     item {
-        val all = remember { vm.allPlayers() }
+        // Re-check installed packages every time this page opens; the user may just have installed one.
+        val all = remember { vm.refreshInstalled(); vm.allPlayers() }
         var showing by remember { mutableStateOf<PlayerStatus?>(null) }
         Column {
             SectionHeader("Installed")
             all.filter { it.installedPackage != null }.forEach { p -> SettingRow(p.definition.name, description = p.installedPackage, onClick = { showing = p }) }
             SectionHeader("Supported, not installed")
-            all.filter { it.installedPackage == null }.forEach { p -> SettingRow(p.definition.name, description = p.definition.packages.first(), onClick = { showing = p }) }
+            all.filter { it.installedPackage == null }.forEach { p -> SettingRow(p.definition.name, description = p.definition.packages.firstOrNull() ?: "No package listed", onClick = { showing = p }) }
             SectionHeader("Custom emulators")
             SettingRow("Add your own", description = "Drop a players.json with the same schema as the built-in catalog into Android/data/io.vela.frontend/files/ and restart", onClick = {})
         }
@@ -379,10 +383,11 @@ private fun Scope.scrapingSection(vm: SettingsViewModel, settings: AppSettings) 
     item { SectionHeader("Preferences") }
     item {
         var picking by remember { mutableStateOf(false) }
-        SettingRow("Preferred region", value = settings.scraping.preferredRegions.first().uppercase(), onClick = { picking = true })
+        val preferred = settings.scraping.preferredRegions.firstOrNull() ?: "eu"
+        SettingRow("Preferred region", value = preferred.uppercase(), onClick = { picking = true })
         if (picking) {
             val regions = listOf("eu" to "Europe", "us" to "USA", "jp" to "Japan", "wor" to "World")
-            VelaMenuDialog("Preferred region", regions.map { MenuOption(it.first, it.second, selected = it.first == settings.scraping.preferredRegions.first()) },
+            VelaMenuDialog("Preferred region", regions.map { MenuOption(it.first, it.second, selected = it.first == preferred) },
                 onSelect = { opt -> vm.update { it.copy(scraping = it.scraping.copy(preferredRegions = listOf(opt.id) + it.scraping.preferredRegions.filter { r -> r != opt.id })) }; picking = false },
                 onDismiss = { picking = false })
         }
@@ -464,7 +469,7 @@ private fun Scope.appearanceSection(vm: SettingsViewModel, settings: AppSettings
                 onSelect = { opt -> vm.update { it.copy(uiScale = opt.id.toFloat()) }; picking = false }, onDismiss = { picking = false })
         }
     }
-    item { SettingRow("Video previews", description = "Play a muted clip after resting on a game", checked = settings.videoPreviews, onClick = { vm.update { it.copy(videoPreviews = !it.videoPreviews) } }) }
+    // Video previews are not implemented yet; the switch comes back with the feature.
     item { SettingRow("Reduce motion", description = "Turns off scaling, parallax and crossfades", checked = settings.reduceMotion, onClick = { vm.update { it.copy(reduceMotion = !it.reduceMotion) } }) }
     item { SectionHeader("Sound") }
     item { SettingRow("Interface sounds", description = "Ticks on focus, chimes on confirm and back, a swell when a game launches", checked = settings.uiSounds, onClick = { vm.update { it.copy(uiSounds = !it.uiSounds) } }) }

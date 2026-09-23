@@ -78,7 +78,7 @@ fun DashboardHome(
                         Spacer(Modifier.width(gap))
                     }
                     // Two stacked rows of square tiles filling the remaining width.
-                    val half = rest.chunked((rest.size + 1) / 2).let { if (it.size < 2) it + listOf(emptyList()) else it }
+                    val half = rest.chunked(maxOf(1, (rest.size + 1) / 2)).let { if (it.size < 2) it + List(2 - it.size) { emptyList() } else it }
                     Column(Modifier.weight(1f).fillMaxHeight().focusRestorer().focusGroup(), verticalArrangement = Arrangement.spacedBy(gap)) {
                         half.take(2).forEach { row ->
                             LazyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(gap)) {

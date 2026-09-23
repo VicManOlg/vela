@@ -42,7 +42,13 @@ import io.vela.core.ui.sound.LocalUiSounds
 import io.vela.core.ui.sound.UiSound
 import androidx.compose.ui.draw.drawWithContent
 import io.vela.core.ui.theme.LocalDynamicAccent
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import kotlin.math.max
+
+/** Settings > Controller > Vibration: a short tick on confirm. */
+val LocalHapticsEnabled = staticCompositionLocalOf { false }
 
 /**
  * The one focus treatment used everywhere: scale up, thin light ring, optional glow underneath.
@@ -80,6 +86,8 @@ fun Modifier.velaFocusable(
     val ringColor = colors.focusRing
     val latestFocused = rememberUpdatedState(onFocused)
     val sounds = LocalUiSounds.current
+    val haptics = LocalHapticFeedback.current
+    val hapticsEnabled = LocalHapticsEnabled.current
     val longPress = rememberUpdatedState(onLongPress)
     val downTime = remember { longArrayOf(0L) }
 
@@ -159,6 +167,7 @@ fun Modifier.velaFocusable(
         }
         .clickable(interactionSource = interactionSource, indication = null, enabled = enabled) {
             sounds?.play(UiSound.CONFIRM)
+            if (hapticsEnabled) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             onClick()
         }
         .focusable(enabled, interactionSource)

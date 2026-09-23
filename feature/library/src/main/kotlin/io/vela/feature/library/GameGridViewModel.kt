@@ -58,7 +58,7 @@ class GameGridViewModel @Inject constructor(
     private val platformId = route.platformId?.let(::PlatformId)
     private val collectionId = route.collectionId?.let(::CollectionId)
 
-    private val sort = MutableStateFlow(if (route.favorites || collectionId != null) GameSort.TITLE else GameSort.TITLE)
+    private val sort = MutableStateFlow(GameSort.TITLE)
     val focused = MutableStateFlow<GameSummary?>(null)
 
     val platform: StateFlow<PlatformEntry?> = (platformId?.let(library::observePlatform) ?: flowOf(null))

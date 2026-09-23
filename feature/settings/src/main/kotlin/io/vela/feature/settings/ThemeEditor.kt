@@ -31,13 +31,13 @@ private val properties: List<ThemeProperty> = listOf(
         palette.map { (name, hex) -> ThemeChoice(hex, name, hex) { s -> s.copy(colors = s.colors.copy(accent = hex)) } }),
     ThemeProperty("accent2", "Secondary accent", { colourName(it.colors.accentSecondary) },
         palette.map { (name, hex) -> ThemeChoice(hex, name, hex) { s -> s.copy(colors = s.colors.copy(accentSecondary = hex)) } }),
-    ThemeProperty("background", "Background", { it.background.mode.replaceFirstChar(Char::uppercase) }, listOf(
+    ThemeProperty("background", "Background", { when (it.background.mode) { "hero" -> "Hero"; "artwork" -> "Blurred art"; "platform" -> "System colour"; else -> "Plain" } }, listOf(
         ThemeChoice("hero", "Hero", "Sharp scene of the focused game with a slow drift") { s -> s.copy(background = s.background.copy(mode = "hero", blurRadius = 0f)) },
         ThemeChoice("artwork", "Blurred art", "Heavily blurred cover of the focused game") { s -> s.copy(background = s.background.copy(mode = "artwork", blurRadius = 40f)) },
         ThemeChoice("platform", "System colour", "Gradient in the focused system's colour") { s -> s.copy(background = s.background.copy(mode = "platform")) },
         ThemeChoice("static", "Plain", "Flat background colour") { s -> s.copy(background = s.background.copy(mode = "static")) },
     )),
-    ThemeProperty("icons", "Console icons", { it.platformIcons.set.replaceFirstChar(Char::uppercase) }, listOf(
+    ThemeProperty("icons", "Console icons", { when (it.platformIcons.set) { "systematic" -> "Systematic"; "flatui" -> "Flat"; "monochrome" -> "Monochrome"; else -> "None" } }, listOf(
         ThemeChoice("systematic", "Systematic", "Console illustrations") { s -> s.copy(platformIcons = s.platformIcons.copy(set = "systematic", tint = false)) },
         ThemeChoice("flatui", "Flat", "Flat colour icons") { s -> s.copy(platformIcons = s.platformIcons.copy(set = "flatui", tint = false)) },
         ThemeChoice("monochrome", "Monochrome", "White glyphs tinted with the text colour") { s -> s.copy(platformIcons = s.platformIcons.copy(set = "monochrome", tint = true)) },

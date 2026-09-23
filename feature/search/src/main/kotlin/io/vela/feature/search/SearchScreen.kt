@@ -1,5 +1,7 @@
 package io.vela.feature.search
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -105,13 +107,13 @@ class SearchViewModel @Inject constructor(
     private val platformFilter = MutableStateFlow<PlatformId?>(null)
     private val genres = MutableStateFlow<List<String>>(emptyList())
 
-    private val results = combine(query.debounce(180), platformFilter) { q, p -> q to p }
-        .mapLatest { (q, p) ->
-            if (q.isBlank()) emptyList() else games.search(q).filter { p == null || it.platformId == p }
-        }
+    // Unfiltered matches, kept so the system filter can cycle through every system that has results.
+    private val matches: StateFlow<List<GameSummary>> = query.debounce(180)
+        .mapLatest { q -> if (q.isBlank()) emptyList() else games.search(q) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val state: StateFlow<SearchUiState> = combine(query, platformFilter, results, library.observeAllPlatforms(), genres) { q, p, r, platforms, g ->
-        SearchUiState(q, p, r, platforms.associate { it.id to it.platform }, g)
+    val state: StateFlow<SearchUiState> = combine(query, platformFilter, matches, library.observeAllPlatforms(), genres) { q, p, r, platforms, g ->
+        SearchUiState(q, p, r.filter { p == null || it.platformId == p }, platforms.associate { it.id to it.platform }, g)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchUiState())
 
     val menuState: StateFlow<GameMenuState> = menu.state
@@ -120,7 +122,7 @@ class SearchViewModel @Inject constructor(
 
     fun setQuery(q: String) { query.value = q }
     fun cyclePlatformFilter() {
-        val ids = state.value.results.map { it.platformId }.distinct()
+        val ids = matches.value.map { it.platformId }.distinct()
         if (ids.isEmpty()) { platformFilter.value = null; return }
         val current = platformFilter.value
         platformFilter.value = if (current == null) ids.first() else ids.getOrNull(ids.indexOf(current) + 1)
@@ -215,7 +217,7 @@ fun SearchScreen(
         }
         Spacer(Modifier.height(8.dp))
         if (query.isBlank() && state.genres.isNotEmpty()) {
-            Row(Modifier.padding(horizontal = VelaTheme.dimens.screenPadding), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = VelaTheme.dimens.screenPadding), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 state.genres.take(8).forEach { genre -> VelaButton(genre, { viewModel.setQuery(genre) }) }
             }
         }

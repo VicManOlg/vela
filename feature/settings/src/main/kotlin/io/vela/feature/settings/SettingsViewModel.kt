@@ -109,6 +109,7 @@ class SettingsViewModel @Inject constructor(
     }
     fun toggleSource(source: LibrarySource) = viewModelScope.launch { library.setSourceEnabled(source, !source.enabled) }
     fun scanNow() = library.scanInBackground()
+    fun rescanSource(source: LibrarySource) = viewModelScope.launch { library.scanSource(source.id) }
     fun cancelScan() = library.cancelScan()
 
     /** Common ROM locations that exist right now, offered as one-tap choices. */
