@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.vela.android.application)
     alias(libs.plugins.vela.android.compose)
@@ -10,8 +12,27 @@ android {
 
     defaultConfig {
         applicationId = "io.vela.frontend"
-        versionCode = 1
-        versionName = "0.1.0"
+        // Bump both for every GitHub release: Obtainium updates only when versionCode grows.
+        versionCode = 2
+        versionName = "0.2.0"
+    }
+
+    // Release signing comes from the untracked secrets.properties (see README > Releases);
+    // without it, release builds fall back to the debug key so the project still compiles.
+    val secrets = Properties().apply {
+        val file = rootProject.file("secrets.properties")
+        if (file.exists()) file.inputStream().use(::load)
+    }
+    val releaseStore = secrets.getProperty("release.storeFile")?.let(rootProject::file)?.takeIf { it.exists() }
+    signingConfigs {
+        if (releaseStore != null) {
+            create("release") {
+                storeFile = releaseStore
+                storePassword = secrets.getProperty("release.storePassword")
+                keyAlias = secrets.getProperty("release.keyAlias")
+                keyPassword = secrets.getProperty("release.keyPassword")
+            }
+        }
     }
 
     buildTypes {
@@ -23,8 +44,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Debug signing until a release keystore is configured (see README).
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
         // Optimised build that installs over the debug app: same package, same signature, so the
         // library and settings on the device are kept. Not debuggable, so ART runs compiled code

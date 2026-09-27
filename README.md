@@ -231,6 +231,30 @@ tiles) and `platformIcons` (`set`: `systematic`, `flatui`,
 `docs/research/` holds the reference material gathered before implementation: emulator intents,
 scraping APIs and Android platform behaviour (controllers, focus, launcher role, storage).
 
+## Releases and Obtainium
+
+Release builds are signed with a keystore that is not in the repository. `secrets.properties`
+(untracked) names it:
+
+```
+release.storeFile=vela-release.keystore
+release.storePassword=...
+release.keyAlias=vela
+release.keyPassword=...
+```
+
+Keep a backup of the keystore: Android only updates an app whose new APK is signed with the
+same key, so losing it means every user has to uninstall and reinstall.
+
+To publish a version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, then
+
+```bash
+./gradlew :app:assembleRelease
+gh release create v0.2.0 app/build/outputs/apk/release/app-release.apk --title "Vela 0.2.0" --notes "..."
+```
+
+Obtainium users add the repository URL as a source and get every release as an update.
+
 ## License
 
-GPL-3.0 (to be confirmed by the project owner before publishing).
+GPL-3.0, see `LICENSE`.
