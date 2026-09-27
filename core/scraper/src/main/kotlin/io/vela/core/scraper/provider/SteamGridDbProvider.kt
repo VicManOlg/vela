@@ -49,10 +49,13 @@ class SteamGridDbProvider @Inject constructor(
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
-    override fun isAvailable(settings: ScrapingSettings): Boolean = settings.steamGridDbApiKey.isNotBlank()
+    override fun isAvailable(settings: ScrapingSettings): Boolean = keyFor(settings).isNotBlank()
+
+    /** The key from Settings, else the one compiled in from secrets.properties (personal builds). */
+    private fun keyFor(settings: ScrapingSettings): String = settings.steamGridDbApiKey.trim().ifBlank { io.vela.core.scraper.BuildConfig.STEAMGRIDDB_API_KEY.trim() }
 
     override suspend fun search(query: MetadataQuery, settings: ScrapingSettings): Outcome<List<MetadataMatch>> = withContext(Dispatchers.IO) {
-        val key = settings.steamGridDbApiKey.trim()
+        val key = keyFor(settings)
         try {
             val results = when (val r = call("$BASE/search/autocomplete/${encode(query.title)}", key)) {
                 is Outcome.Failure -> return@withContext r

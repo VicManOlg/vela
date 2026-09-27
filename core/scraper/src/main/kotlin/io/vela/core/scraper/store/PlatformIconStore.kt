@@ -63,7 +63,14 @@ class PlatformIconStore @Inject constructor(
                 val target = File(dir, "${platform.id.value}.png")
                 val key = "${spec.set}/${platform.id.value}"
                 if (target.exists() || key in missing) continue
-                when (downloadWithRetry(urlFor(spec.urlTemplate, spec.set, name), target)) {
+                // Not every set has every system: try the set's own name (and known aliases), then
+                // the monochrome glyph, so a tile never stays blank because one set lacks a file.
+                var result = Result.NOT_FOUND
+                for ((set, candidate) in iconCandidates(spec.set, name)) {
+                    result = downloadWithRetry(urlFor(spec.urlTemplate, set, candidate), target)
+                    if (result != Result.NOT_FOUND) break
+                }
+                when (result) {
                     Result.DOWNLOADED -> {
                         downloaded++
                         publish(dir)
@@ -128,6 +135,18 @@ class PlatformIconStore @Inject constructor(
         const val NONE = "none"
         private const val MAX_ATTEMPTS = 3
         private const val RETRY_DELAY_MS = 1500L
+
+        /** File names a set uses for systems whose RetroArch name differs from the libretro one. */
+        private val ALIASES: Map<String, Map<String, String>> = mapOf(
+            "systematic" to mapOf("Sony - PlayStation" to "Sony - PlayStation SCPH-100"),
+        )
+
+        /** (set, file name) pairs to try in order for one system. */
+        fun iconCandidates(set: String, name: String): List<Pair<String, String>> = buildList {
+            add(set to name)
+            ALIASES[set]?.get(name)?.let { add(set to it) }
+            if (set != "monochrome") add("monochrome" to name)
+        }
 
         /** Fills `{set}` and `{name}` in [template], URL-encoding both. */
         fun urlFor(template: String, set: String, name: String): String =

@@ -18,6 +18,8 @@ android {
     defaultConfig {
         buildConfigField("String", "SCREENSCRAPER_DEV_ID", "\"${secrets.getProperty("screenscraper.devid", "")}\"")
         buildConfigField("String", "SCREENSCRAPER_DEV_PASSWORD", "\"${secrets.getProperty("screenscraper.devpassword", "")}\"")
+        // Optional default SteamGridDB key for personal builds; the key typed in Settings always wins.
+        buildConfigField("String", "STEAMGRIDDB_API_KEY", "\"${secrets.getProperty("steamgriddb.apikey", "")}\"")
     }
 }
 

@@ -124,7 +124,7 @@ fun PlatformsScreen(
     val androidSpot = Spot(android.name, "${android.games} games   ${android.apps} apps", null, android.accent)
     fun spotOf(entry: PlatformEntry) = Spot(
         title = entry.displayName,
-        subtitle = listOfNotNull(entry.platform.manufacturer, entry.platform.releaseYear?.toString(), "${entry.gameCount} games").joinToString("   "),
+        subtitle = listOfNotNull(entry.platform.manufacturer, entry.platform.releaseYear?.toString(), if (entry.gameCount == 1) "1 game" else "${entry.gameCount} games").joinToString("   "),
         artwork = art[entry.id]?.background,
         accent = entry.platform.accentColor,
     )

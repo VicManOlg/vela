@@ -2,113 +2,430 @@
   {
     "id": "retroarch",
     "name": "RetroArch",
-    "packages": ["com.retroarch.aarch64", "com.retroarch", "com.retroarch.ra32"],
+    "packages": [
+      "com.retroarch.aarch64",
+      "com.retroarch",
+      "com.retroarch.ra32"
+    ],
     "activity": "com.retroarch.browser.retroactivity.RetroActivityFuture",
     "action": "android.intent.action.MAIN",
     "delivery": "EXTRAS_ONLY",
     "requiresFilePath": true,
     "extras": [
-      { "key": "ROM", "value": "{rom.path}" },
-      { "key": "LIBRETRO", "value": "{core.path}" },
-      { "key": "CONFIGFILE", "value": "/storage/emulated/0/Android/data/{package}/files/retroarch.cfg" },
-      { "key": "QUITFOCUS", "value": "", "allowEmpty": true }
+      {
+        "key": "ROM",
+        "value": "{rom.path}"
+      },
+      {
+        "key": "LIBRETRO",
+        "value": "{core.path}"
+      },
+      {
+        "key": "CONFIGFILE",
+        "value": "/storage/emulated/0/Android/data/{package}/files/retroarch.cfg"
+      },
+      {
+        "key": "QUITFOCUS",
+        "value": "",
+        "allowEmpty": true
+      }
     ],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TASK"],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TASK"
+    ],
     "corePathTemplate": "/data/data/{package}/cores/{core.file}",
     "cores": {
       "nes": [
-        { "id": "mesen", "name": "Mesen", "fileName": "mesen_libretro_android.so" },
-        { "id": "nestopia", "name": "Nestopia UE", "fileName": "nestopia_libretro_android.so" },
-        { "id": "fceumm", "name": "FCEUmm", "fileName": "fceumm_libretro_android.so" }
+        {
+          "id": "mesen",
+          "name": "Mesen",
+          "fileName": "mesen_libretro_android.so"
+        },
+        {
+          "id": "nestopia",
+          "name": "Nestopia UE",
+          "fileName": "nestopia_libretro_android.so"
+        },
+        {
+          "id": "fceumm",
+          "name": "FCEUmm",
+          "fileName": "fceumm_libretro_android.so"
+        }
       ],
       "snes": [
-        { "id": "snes9x", "name": "Snes9x", "fileName": "snes9x_libretro_android.so" },
-        { "id": "bsnes", "name": "bsnes", "fileName": "bsnes_libretro_android.so" },
-        { "id": "snes9x2010", "name": "Snes9x 2010", "fileName": "snes9x2010_libretro_android.so" }
+        {
+          "id": "snes9x",
+          "name": "Snes9x",
+          "fileName": "snes9x_libretro_android.so"
+        },
+        {
+          "id": "bsnes",
+          "name": "bsnes",
+          "fileName": "bsnes_libretro_android.so"
+        },
+        {
+          "id": "snes9x2010",
+          "name": "Snes9x 2010",
+          "fileName": "snes9x2010_libretro_android.so"
+        }
       ],
       "n64": [
-        { "id": "mupen64plus_next_gles3", "name": "Mupen64Plus-Next", "fileName": "mupen64plus_next_gles3_libretro_android.so" },
-        { "id": "parallel_n64", "name": "ParaLLEl N64", "fileName": "parallel_n64_libretro_android.so" }
+        {
+          "id": "mupen64plus_next_gles3",
+          "name": "Mupen64Plus-Next",
+          "fileName": "mupen64plus_next_gles3_libretro_android.so"
+        },
+        {
+          "id": "parallel_n64",
+          "name": "ParaLLEl N64",
+          "fileName": "parallel_n64_libretro_android.so"
+        }
       ],
       "gb": [
-        { "id": "gambatte", "name": "Gambatte", "fileName": "gambatte_libretro_android.so" },
-        { "id": "sameboy", "name": "SameBoy", "fileName": "sameboy_libretro_android.so" },
-        { "id": "mgba", "name": "mGBA", "fileName": "mgba_libretro_android.so" }
+        {
+          "id": "gambatte",
+          "name": "Gambatte",
+          "fileName": "gambatte_libretro_android.so"
+        },
+        {
+          "id": "sameboy",
+          "name": "SameBoy",
+          "fileName": "sameboy_libretro_android.so"
+        },
+        {
+          "id": "mgba",
+          "name": "mGBA",
+          "fileName": "mgba_libretro_android.so"
+        }
       ],
       "gbc": [
-        { "id": "gambatte", "name": "Gambatte", "fileName": "gambatte_libretro_android.so" },
-        { "id": "sameboy", "name": "SameBoy", "fileName": "sameboy_libretro_android.so" },
-        { "id": "mgba", "name": "mGBA", "fileName": "mgba_libretro_android.so" }
+        {
+          "id": "gambatte",
+          "name": "Gambatte",
+          "fileName": "gambatte_libretro_android.so"
+        },
+        {
+          "id": "sameboy",
+          "name": "SameBoy",
+          "fileName": "sameboy_libretro_android.so"
+        },
+        {
+          "id": "mgba",
+          "name": "mGBA",
+          "fileName": "mgba_libretro_android.so"
+        }
       ],
       "gba": [
-        { "id": "mgba", "name": "mGBA", "fileName": "mgba_libretro_android.so" },
-        { "id": "vbam", "name": "VBA-M", "fileName": "vbam_libretro_android.so" },
-        { "id": "gpsp", "name": "gpSP", "fileName": "gpsp_libretro_android.so" }
+        {
+          "id": "mgba",
+          "name": "mGBA",
+          "fileName": "mgba_libretro_android.so"
+        },
+        {
+          "id": "vbam",
+          "name": "VBA-M",
+          "fileName": "vbam_libretro_android.so"
+        },
+        {
+          "id": "gpsp",
+          "name": "gpSP",
+          "fileName": "gpsp_libretro_android.so"
+        }
       ],
       "nds": [
-        { "id": "melondsds", "name": "melonDS DS", "fileName": "melondsds_libretro_android.so" },
-        { "id": "melonds", "name": "melonDS", "fileName": "melonds_libretro_android.so" },
-        { "id": "desmume", "name": "DeSmuME", "fileName": "desmume_libretro_android.so" }
+        {
+          "id": "melondsds",
+          "name": "melonDS DS",
+          "fileName": "melondsds_libretro_android.so"
+        },
+        {
+          "id": "melonds",
+          "name": "melonDS",
+          "fileName": "melonds_libretro_android.so"
+        },
+        {
+          "id": "desmume",
+          "name": "DeSmuME",
+          "fileName": "desmume_libretro_android.so"
+        }
       ],
-      "virtualboy": [ { "id": "mednafen_vb", "name": "Beetle VB", "fileName": "mednafen_vb_libretro_android.so" } ],
+      "virtualboy": [
+        {
+          "id": "mednafen_vb",
+          "name": "Beetle VB",
+          "fileName": "mednafen_vb_libretro_android.so"
+        }
+      ],
       "psx": [
-        { "id": "swanstation", "name": "SwanStation", "fileName": "swanstation_libretro_android.so" },
-        { "id": "pcsx_rearmed", "name": "PCSX ReARMed", "fileName": "pcsx_rearmed_libretro_android.so" },
-        { "id": "mednafen_psx_hw", "name": "Beetle PSX HW", "fileName": "mednafen_psx_hw_libretro_android.so" }
+        {
+          "id": "swanstation",
+          "name": "SwanStation",
+          "fileName": "swanstation_libretro_android.so"
+        },
+        {
+          "id": "pcsx_rearmed",
+          "name": "PCSX ReARMed",
+          "fileName": "pcsx_rearmed_libretro_android.so"
+        },
+        {
+          "id": "mednafen_psx_hw",
+          "name": "Beetle PSX HW",
+          "fileName": "mednafen_psx_hw_libretro_android.so"
+        }
       ],
-      "psp": [ { "id": "ppsspp", "name": "PPSSPP", "fileName": "ppsspp_libretro_android.so" } ],
-      "dreamcast": [ { "id": "flycast", "name": "Flycast", "fileName": "flycast_libretro_android.so" } ],
+      "psp": [
+        {
+          "id": "ppsspp",
+          "name": "PPSSPP",
+          "fileName": "ppsspp_libretro_android.so"
+        }
+      ],
+      "dreamcast": [
+        {
+          "id": "flycast",
+          "name": "Flycast",
+          "fileName": "flycast_libretro_android.so"
+        }
+      ],
       "megadrive": [
-        { "id": "genesis_plus_gx", "name": "Genesis Plus GX", "fileName": "genesis_plus_gx_libretro_android.so" },
-        { "id": "picodrive", "name": "PicoDrive", "fileName": "picodrive_libretro_android.so" },
-        { "id": "blastem", "name": "BlastEm", "fileName": "blastem_libretro_android.so" }
+        {
+          "id": "genesis_plus_gx",
+          "name": "Genesis Plus GX",
+          "fileName": "genesis_plus_gx_libretro_android.so"
+        },
+        {
+          "id": "picodrive",
+          "name": "PicoDrive",
+          "fileName": "picodrive_libretro_android.so"
+        },
+        {
+          "id": "blastem",
+          "name": "BlastEm",
+          "fileName": "blastem_libretro_android.so"
+        }
       ],
       "mastersystem": [
-        { "id": "genesis_plus_gx", "name": "Genesis Plus GX", "fileName": "genesis_plus_gx_libretro_android.so" },
-        { "id": "gearsystem", "name": "Gearsystem", "fileName": "gearsystem_libretro_android.so" }
+        {
+          "id": "genesis_plus_gx",
+          "name": "Genesis Plus GX",
+          "fileName": "genesis_plus_gx_libretro_android.so"
+        },
+        {
+          "id": "gearsystem",
+          "name": "Gearsystem",
+          "fileName": "gearsystem_libretro_android.so"
+        }
       ],
       "gamegear": [
-        { "id": "genesis_plus_gx", "name": "Genesis Plus GX", "fileName": "genesis_plus_gx_libretro_android.so" },
-        { "id": "gearsystem", "name": "Gearsystem", "fileName": "gearsystem_libretro_android.so" }
+        {
+          "id": "genesis_plus_gx",
+          "name": "Genesis Plus GX",
+          "fileName": "genesis_plus_gx_libretro_android.so"
+        },
+        {
+          "id": "gearsystem",
+          "name": "Gearsystem",
+          "fileName": "gearsystem_libretro_android.so"
+        }
       ],
       "segacd": [
-        { "id": "genesis_plus_gx", "name": "Genesis Plus GX", "fileName": "genesis_plus_gx_libretro_android.so" },
-        { "id": "picodrive", "name": "PicoDrive", "fileName": "picodrive_libretro_android.so" }
+        {
+          "id": "genesis_plus_gx",
+          "name": "Genesis Plus GX",
+          "fileName": "genesis_plus_gx_libretro_android.so"
+        },
+        {
+          "id": "picodrive",
+          "name": "PicoDrive",
+          "fileName": "picodrive_libretro_android.so"
+        }
       ],
-      "sega32x": [ { "id": "picodrive", "name": "PicoDrive", "fileName": "picodrive_libretro_android.so" } ],
+      "sega32x": [
+        {
+          "id": "picodrive",
+          "name": "PicoDrive",
+          "fileName": "picodrive_libretro_android.so"
+        }
+      ],
       "saturn": [
-        { "id": "yabasanshiro", "name": "Yaba Sanshiro", "fileName": "yabasanshiro_libretro_android.so" },
-        { "id": "mednafen_saturn", "name": "Beetle Saturn", "fileName": "mednafen_saturn_libretro_android.so" }
+        {
+          "id": "yabasanshiro",
+          "name": "Yaba Sanshiro",
+          "fileName": "yabasanshiro_libretro_android.so"
+        },
+        {
+          "id": "mednafen_saturn",
+          "name": "Beetle Saturn",
+          "fileName": "mednafen_saturn_libretro_android.so"
+        }
       ],
       "arcade": [
-        { "id": "fbneo", "name": "FinalBurn Neo", "fileName": "fbneo_libretro_android.so" },
-        { "id": "mame2003_plus", "name": "MAME 2003-Plus", "fileName": "mame2003_plus_libretro_android.so" },
-        { "id": "mame2010", "name": "MAME 2010", "fileName": "mame2010_libretro_android.so" },
-        { "id": "mamearcade", "name": "MAME (current)", "fileName": "mamearcade_libretro_android.so" }
+        {
+          "id": "fbneo",
+          "name": "FinalBurn Neo",
+          "fileName": "fbneo_libretro_android.so"
+        },
+        {
+          "id": "mame2003_plus",
+          "name": "MAME 2003-Plus",
+          "fileName": "mame2003_plus_libretro_android.so"
+        },
+        {
+          "id": "mame2010",
+          "name": "MAME 2010",
+          "fileName": "mame2010_libretro_android.so"
+        },
+        {
+          "id": "mamearcade",
+          "name": "MAME (current)",
+          "fileName": "mamearcade_libretro_android.so"
+        }
       ],
       "neogeo": [
-        { "id": "fbneo", "name": "FinalBurn Neo", "fileName": "fbneo_libretro_android.so" },
-        { "id": "geolith", "name": "Geolith", "fileName": "geolith_libretro_android.so" }
+        {
+          "id": "fbneo",
+          "name": "FinalBurn Neo",
+          "fileName": "fbneo_libretro_android.so"
+        },
+        {
+          "id": "geolith",
+          "name": "Geolith",
+          "fileName": "geolith_libretro_android.so"
+        }
       ],
-      "neogeocd": [ { "id": "neocd", "name": "NeoCD", "fileName": "neocd_libretro_android.so" } ],
-      "ngpc": [ { "id": "mednafen_ngp", "name": "Beetle NeoPop", "fileName": "mednafen_ngp_libretro_android.so" } ],
+      "neogeocd": [
+        {
+          "id": "neocd",
+          "name": "NeoCD",
+          "fileName": "neocd_libretro_android.so"
+        }
+      ],
+      "ngpc": [
+        {
+          "id": "mednafen_ngp",
+          "name": "Beetle NeoPop",
+          "fileName": "mednafen_ngp_libretro_android.so"
+        }
+      ],
       "pcengine": [
-        { "id": "mednafen_pce", "name": "Beetle PCE", "fileName": "mednafen_pce_libretro_android.so" },
-        { "id": "mednafen_pce_fast", "name": "Beetle PCE Fast", "fileName": "mednafen_pce_fast_libretro_android.so" }
+        {
+          "id": "mednafen_pce",
+          "name": "Beetle PCE",
+          "fileName": "mednafen_pce_libretro_android.so"
+        },
+        {
+          "id": "mednafen_pce_fast",
+          "name": "Beetle PCE Fast",
+          "fileName": "mednafen_pce_fast_libretro_android.so"
+        }
       ],
-      "pcenginecd": [ { "id": "mednafen_pce", "name": "Beetle PCE", "fileName": "mednafen_pce_libretro_android.so" } ],
-      "atari2600": [ { "id": "stella", "name": "Stella", "fileName": "stella_libretro_android.so" } ],
-      "atari7800": [ { "id": "prosystem", "name": "ProSystem", "fileName": "prosystem_libretro_android.so" } ],
-      "lynx": [ { "id": "handy", "name": "Handy", "fileName": "handy_libretro_android.so" } ],
-      "jaguar": [ { "id": "virtualjaguar", "name": "Virtual Jaguar", "fileName": "virtualjaguar_libretro_android.so" } ],
-      "wonderswancolor": [ { "id": "mednafen_wswan", "name": "Beetle Cygne", "fileName": "mednafen_wswan_libretro_android.so" } ],
-      "msx": [ { "id": "bluemsx", "name": "blueMSX", "fileName": "bluemsx_libretro_android.so" }, { "id": "fmsx", "name": "fMSX", "fileName": "fmsx_libretro_android.so" } ],
-      "c64": [ { "id": "vice_x64sc", "name": "VICE x64sc", "fileName": "vice_x64sc_libretro_android.so" }, { "id": "vice_x64", "name": "VICE x64", "fileName": "vice_x64_libretro_android.so" } ],
-      "amiga": [ { "id": "puae", "name": "PUAE", "fileName": "puae_libretro_android.so" } ],
-      "dos": [ { "id": "dosbox_pure", "name": "DOSBox Pure", "fileName": "dosbox_pure_libretro_android.so" } ],
-      "scummvm": [ { "id": "scummvm", "name": "ScummVM", "fileName": "scummvm_libretro_android.so" } ],
-      "3do": [ { "id": "opera", "name": "Opera", "fileName": "opera_libretro_android.so" } ],
-      "colecovision": [ { "id": "bluemsx", "name": "blueMSX", "fileName": "bluemsx_libretro_android.so" }, { "id": "gearcoleco", "name": "Gearcoleco", "fileName": "gearcoleco_libretro_android.so" } ]
+      "pcenginecd": [
+        {
+          "id": "mednafen_pce",
+          "name": "Beetle PCE",
+          "fileName": "mednafen_pce_libretro_android.so"
+        }
+      ],
+      "atari2600": [
+        {
+          "id": "stella",
+          "name": "Stella",
+          "fileName": "stella_libretro_android.so"
+        }
+      ],
+      "atari7800": [
+        {
+          "id": "prosystem",
+          "name": "ProSystem",
+          "fileName": "prosystem_libretro_android.so"
+        }
+      ],
+      "lynx": [
+        {
+          "id": "handy",
+          "name": "Handy",
+          "fileName": "handy_libretro_android.so"
+        }
+      ],
+      "jaguar": [
+        {
+          "id": "virtualjaguar",
+          "name": "Virtual Jaguar",
+          "fileName": "virtualjaguar_libretro_android.so"
+        }
+      ],
+      "wonderswancolor": [
+        {
+          "id": "mednafen_wswan",
+          "name": "Beetle Cygne",
+          "fileName": "mednafen_wswan_libretro_android.so"
+        }
+      ],
+      "msx": [
+        {
+          "id": "bluemsx",
+          "name": "blueMSX",
+          "fileName": "bluemsx_libretro_android.so"
+        },
+        {
+          "id": "fmsx",
+          "name": "fMSX",
+          "fileName": "fmsx_libretro_android.so"
+        }
+      ],
+      "c64": [
+        {
+          "id": "vice_x64sc",
+          "name": "VICE x64sc",
+          "fileName": "vice_x64sc_libretro_android.so"
+        },
+        {
+          "id": "vice_x64",
+          "name": "VICE x64",
+          "fileName": "vice_x64_libretro_android.so"
+        }
+      ],
+      "amiga": [
+        {
+          "id": "puae",
+          "name": "PUAE",
+          "fileName": "puae_libretro_android.so"
+        }
+      ],
+      "dos": [
+        {
+          "id": "dosbox_pure",
+          "name": "DOSBox Pure",
+          "fileName": "dosbox_pure_libretro_android.so"
+        }
+      ],
+      "scummvm": [
+        {
+          "id": "scummvm",
+          "name": "ScummVM",
+          "fileName": "scummvm_libretro_android.so"
+        }
+      ],
+      "3do": [
+        {
+          "id": "opera",
+          "name": "Opera",
+          "fileName": "opera_libretro_android.so"
+        }
+      ],
+      "colecovision": [
+        {
+          "id": "bluemsx",
+          "name": "blueMSX",
+          "fileName": "bluemsx_libretro_android.so"
+        },
+        {
+          "id": "gearcoleco",
+          "name": "Gearcoleco",
+          "fileName": "gearcoleco_libretro_android.so"
+        }
+      ]
     },
     "website": "https://www.retroarch.com",
     "notes": "Cores must be downloaded inside RetroArch (Online Updater) first. Needs a real file path: enable All files access."
@@ -116,294 +433,665 @@
   {
     "id": "dolphin",
     "name": "Dolphin",
-    "packages": ["org.dolphinemu.dolphinemu"],
+    "packages": [
+      "org.dolphinemu.dolphinemu"
+    ],
     "activity": "org.dolphinemu.dolphinemu.ui.main.MainActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
-    "platforms": ["gc", "wii"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"],
+    "platforms": [
+      "gc",
+      "wii"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ],
     "website": "https://dolphin-emu.org"
   },
   {
     "id": "dolphin_mmjr",
     "name": "Dolphin MMJR",
-    "packages": ["org.mm.jr", "org.dolphinemu.mmjr"],
+    "packages": [
+      "org.mm.jr",
+      "org.dolphinemu.mmjr"
+    ],
     "activity": "org.dolphinemu.dolphinemu.ui.main.MainActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "EXTRAS_ONLY",
-    "extras": [ { "key": "AutoStartFile", "value": "{rom.path}" } ],
+    "extras": [
+      {
+        "key": "AutoStartFile",
+        "value": "{rom.path}"
+      }
+    ],
     "requiresFilePath": true,
-    "platforms": ["gc", "wii"],
+    "platforms": [
+      "gc",
+      "wii"
+    ],
     "website": "https://github.com/Bankaimaster999/Dolphin-MMJR"
   },
   {
     "id": "ppsspp",
     "name": "PPSSPP",
-    "packages": ["org.ppsspp.ppssppgold", "org.ppsspp.ppsspp"],
+    "packages": [
+      "org.ppsspp.ppssppgold",
+      "org.ppsspp.ppsspp"
+    ],
     "activity": "org.ppsspp.ppsspp.PpssppActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
-    "platforms": ["psp"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"],
+    "platforms": [
+      "psp"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ],
     "website": "https://www.ppsspp.org"
   },
   {
     "id": "nethersx2",
     "name": "NetherSX2 / AetherSX2",
-    "packages": ["xyz.aethersx2.android", "xyz.aethersx2.android.tturnip", "xyz.aethersx2.android.cturnip", "xyz.aethersx2.android.custom"],
+    "packages": [
+      "xyz.aethersx2.android",
+      "xyz.aethersx2.android.tturnip",
+      "xyz.aethersx2.android.cturnip",
+      "xyz.aethersx2.android.custom"
+    ],
     "activity": "xyz.aethersx2.android.EmulationActivity",
     "action": "android.intent.action.MAIN",
     "delivery": "EXTRAS_ONLY",
-    "extras": [ { "key": "bootPath", "value": "{rom.uri}" } ],
-    "platforms": ["ps2"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TASK", "FLAG_ACTIVITY_CLEAR_TOP"],
+    "extras": [
+      {
+        "key": "bootPath",
+        "value": "{rom.uri}"
+      }
+    ],
+    "platforms": [
+      "ps2"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP"
+    ],
     "notes": "bootPath is a string extra, so Vela grants read permission on the URI to the package explicitly before launching."
   },
   {
     "id": "duckstation",
     "name": "DuckStation",
-    "packages": ["com.github.stenzek.duckstation"],
+    "packages": [
+      "com.github.stenzek.duckstation"
+    ],
     "activity": "com.github.stenzek.duckstation.EmulationActivity",
     "action": "android.intent.action.MAIN",
     "delivery": "EXTRAS_ONLY",
     "extras": [
-      { "key": "bootPath", "value": "{rom.uri}" },
-      { "key": "resumeState", "value": "false", "type": "BOOLEAN" }
+      {
+        "key": "bootPath",
+        "value": "{rom.uri}"
+      },
+      {
+        "key": "resumeState",
+        "value": "false",
+        "type": "BOOLEAN"
+      }
     ],
-    "platforms": ["psx"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TASK", "FLAG_ACTIVITY_CLEAR_TOP"],
+    "platforms": [
+      "psx"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP"
+    ],
     "website": "https://www.duckstation.org"
   },
   {
     "id": "azahar",
     "name": "Azahar / Lime3DS",
-    "packages": ["org.azahar_emu.azahar", "io.github.lime3ds.android", "io.github.azaharplus.android", "org.citra.citra_emu", "org.citra.citra_emu.canary", "io.github.mandarine3ds.mandarine"],
+    "packages": [
+      "org.azahar_emu.azahar",
+      "io.github.lime3ds.android",
+      "io.github.azaharplus.android",
+      "org.citra.citra_emu",
+      "org.citra.citra_emu.canary",
+      "io.github.mandarine3ds.mandarine"
+    ],
     "activity": "org.citra.citra_emu.activities.EmulationActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
     "mimeType": "application/octet-stream",
-    "platforms": ["n3ds"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"],
+    "platforms": [
+      "n3ds"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ],
     "website": "https://azahar-emu.org"
   },
   {
     "id": "citra_mmj",
     "name": "Citra MMJ",
-    "packages": ["org.citra.emu"],
+    "packages": [
+      "org.citra.emu"
+    ],
     "activity": "org.citra.emu.ui.EmulationActivity",
     "action": "android.intent.action.MAIN",
     "delivery": "EXTRAS_ONLY",
-    "extras": [ { "key": "GamePath", "value": "{rom.path}" } ],
+    "extras": [
+      {
+        "key": "GamePath",
+        "value": "{rom.path}"
+      }
+    ],
     "requiresFilePath": true,
-    "platforms": ["n3ds"]
+    "platforms": [
+      "n3ds"
+    ]
   },
   {
     "id": "melonds",
     "name": "melonDS",
-    "packages": ["me.magnum.melonds", "me.magnum.melonds.nightly"],
+    "packages": [
+      "me.magnum.melonds",
+      "me.magnum.melonds.nightly"
+    ],
     "activity": "me.magnum.melonds.ui.emulator.EmulatorActivity",
     "action": "{package}.LAUNCH_ROM",
     "delivery": "CONTENT_URI_DATA",
-    "platforms": ["nds"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"],
+    "platforms": [
+      "nds"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ],
     "website": "https://github.com/rafaelvcaetano/melonDS-android"
   },
   {
     "id": "drastic",
     "name": "DraStic",
-    "packages": ["com.dsemu.drastic"],
+    "packages": [
+      "com.dsemu.drastic"
+    ],
     "activity": "com.dsemu.drastic.DraSticActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
-    "extras": [ { "key": "GAMEPATH", "value": "{rom.path}" } ],
-    "platforms": ["nds"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"]
+    "extras": [
+      {
+        "key": "GAMEPATH",
+        "value": "{rom.path}"
+      }
+    ],
+    "platforms": [
+      "nds"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ]
   },
   {
     "id": "redream",
     "name": "Redream",
-    "packages": ["io.recompiled.redream"],
+    "packages": [
+      "io.recompiled.redream"
+    ],
     "activity": "io.recompiled.redream.MainActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
-    "platforms": ["dreamcast"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"],
+    "platforms": [
+      "dreamcast"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ],
     "website": "https://redream.io"
   },
   {
     "id": "flycast",
     "name": "Flycast",
-    "packages": ["com.flycast.emulator"],
+    "packages": [
+      "com.flycast.emulator"
+    ],
     "activity": "com.flycast.emulator.MainActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
-    "platforms": ["dreamcast", "arcade"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"],
+    "platforms": [
+      "dreamcast",
+      "arcade"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ],
     "website": "https://github.com/flyinghead/flycast"
   },
   {
     "id": "mame4droid",
     "name": "MAME4droid 2024",
-    "packages": ["com.seleuco.mame4d2024", "com.seleuco.mame4droid"],
+    "packages": [
+      "com.seleuco.mame4d2024",
+      "com.seleuco.mame4droid"
+    ],
     "activity": "com.seleuco.mame4droid.MAME4droid",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
-    "platforms": ["arcade", "neogeo"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"],
+    "platforms": [
+      "arcade",
+      "neogeo"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ],
     "website": "https://github.com/seleuco/MAME4droid-2024"
   },
   {
     "id": "mupen64fz",
     "name": "Mupen64Plus FZ",
-    "packages": ["org.mupen64plusae.v3.fzurita.pro", "org.mupen64plusae.v3.fzurita", "org.mupen64plusae.v3.alpha"],
+    "packages": [
+      "org.mupen64plusae.v3.fzurita.pro",
+      "org.mupen64plusae.v3.fzurita",
+      "org.mupen64plusae.v3.alpha"
+    ],
     "activity": "paulscode.android.mupen64plusae.SplashActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
-    "platforms": ["n64"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"]
+    "platforms": [
+      "n64"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ]
   },
   {
     "id": "pizzaboy_gba",
     "name": "Pizza Boy GBA",
-    "packages": ["it.dbtecno.pizzaboygbapro", "it.dbtecno.pizzaboygba"],
+    "packages": [
+      "it.dbtecno.pizzaboygbapro",
+      "it.dbtecno.pizzaboygba"
+    ],
     "activity": "{package}.MainActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
-    "extras": [{ "key": "rom_uri", "value": "{rom.uri}" }],
-    "platforms": ["gba"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"]
+    "extras": [
+      {
+        "key": "rom_uri",
+        "value": "{rom.uri}"
+      }
+    ],
+    "platforms": [
+      "gba"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ]
   },
   {
     "id": "pizzaboy_gbc",
     "name": "Pizza Boy GBC",
-    "packages": ["it.dbtecno.pizzaboypro", "it.dbtecno.pizzaboy"],
+    "packages": [
+      "it.dbtecno.pizzaboypro",
+      "it.dbtecno.pizzaboy"
+    ],
     "activity": "{package}.MainActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
-    "extras": [{ "key": "rom_uri", "value": "{rom.uri}" }],
-    "platforms": ["gb", "gbc"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"]
+    "extras": [
+      {
+        "key": "rom_uri",
+        "value": "{rom.uri}"
+      }
+    ],
+    "platforms": [
+      "gb",
+      "gbc"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ]
   },
   {
     "id": "yabasanshiro",
     "name": "Yaba Sanshiro 2",
-    "packages": ["org.devmiyax.yabasanshioro2.pro", "org.devmiyax.yabasanshioro2"],
+    "packages": [
+      "org.devmiyax.yabasanshioro2.pro",
+      "org.devmiyax.yabasanshioro2"
+    ],
     "activity": "org.uoyabause.android.Yabause",
     "action": "android.intent.action.MAIN",
     "delivery": "EXTRAS_ONLY",
-    "extras": [ { "key": "org.uoyabause.android.FileNameUri", "value": "{rom.uri}" } ],
-    "platforms": ["saturn"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP"]
+    "extras": [
+      {
+        "key": "org.uoyabause.android.FileNameUri",
+        "value": "{rom.uri}"
+      }
+    ],
+    "platforms": [
+      "saturn"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP"
+    ]
   },
   {
     "id": "play",
     "name": "Play!",
-    "packages": ["com.virtualapplications.play"],
+    "packages": [
+      "com.virtualapplications.play"
+    ],
     "activity": "com.virtualapplications.play.MainActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
-    "platforms": ["ps2"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"],
+    "platforms": [
+      "ps2"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ],
     "website": "https://purei.org"
   },
   {
     "id": "vita3k",
     "name": "Vita3K",
-    "packages": ["org.vita3k.emulator", "org.vita3k.emulator.ikhoeyZX"],
+    "packages": [
+      "org.vita3k.emulator",
+      "org.vita3k.emulator.ikhoeyZX"
+    ],
     "activity": "org.vita3k.emulator.Emulator",
     "action": "android.intent.action.MAIN",
     "delivery": "NONE",
-    "extras": [ { "key": "AppStartParameters", "value": "-r,{rom.stem}", "type": "STRING_ARRAY" } ],
-    "platforms": ["psvita"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP"],
+    "extras": [
+      {
+        "key": "AppStartParameters",
+        "value": "-r,{rom.stem}",
+        "type": "STRING_ARRAY"
+      }
+    ],
+    "platforms": [
+      "psvita"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP"
+    ],
     "notes": "Vita games are launched by title id; name the .psvita placeholder file after the title id (e.g. PCSE00001.psvita)."
   },
   {
     "id": "eden",
     "name": "Eden",
-    "packages": ["dev.eden.eden_emulator", "dev.eden.eden_emulator.nightly", "dev.legacy.eden_emulator"],
+    "packages": [
+      "dev.eden.eden_emulator",
+      "dev.eden.eden_emulator.nightly",
+      "dev.legacy.eden_emulator"
+    ],
     "activity": "org.yuzu.yuzu_emu.activities.EmulationActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
     "mimeType": "application/octet-stream",
-    "platforms": ["switch"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"]
+    "platforms": [
+      "switch"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ]
   },
   {
     "id": "sudachi",
     "name": "Sudachi / Yuzu",
-    "packages": ["org.sudachi.sudachi_emu", "org.sudachi.sudachi_emu.ea", "org.yuzu.yuzu_emu", "org.yuzu.yuzu_emu.ea"],
+    "packages": [
+      "org.sudachi.sudachi_emu",
+      "org.sudachi.sudachi_emu.ea",
+      "org.yuzu.yuzu_emu",
+      "org.yuzu.yuzu_emu.ea"
+    ],
     "activity": "{package}.activities.EmulationActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
     "mimeType": "application/octet-stream",
-    "platforms": ["switch"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"]
+    "platforms": [
+      "switch"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ]
   },
   {
     "id": "citron",
     "name": "Citron",
-    "packages": ["org.citron.citron_emu"],
+    "packages": [
+      "org.citron.citron_emu"
+    ],
     "activity": "org.citron.citron_emu.activities.EmulationActivity",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
     "mimeType": "application/octet-stream",
-    "platforms": ["switch"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"]
+    "platforms": [
+      "switch"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ]
   },
   {
     "id": "epsxe",
     "name": "ePSXe",
-    "packages": ["com.epsxe.ePSXe"],
+    "packages": [
+      "com.epsxe.ePSXe"
+    ],
     "activity": "com.epsxe.ePSXe.ePSXe",
     "action": "android.intent.action.MAIN",
     "delivery": "EXTRAS_ONLY",
-    "extras": [ { "key": "com.epsxe.ePSXe.isoName", "value": "{rom.path}" } ],
+    "extras": [
+      {
+        "key": "com.epsxe.ePSXe.isoName",
+        "value": "{rom.path}"
+      }
+    ],
     "requiresFilePath": true,
-    "platforms": ["psx"]
+    "platforms": [
+      "psx"
+    ]
   },
   {
     "id": "fpse",
     "name": "FPse / FPseNG",
-    "packages": ["com.emulator.fpse64", "com.emulator.fpse"],
+    "packages": [
+      "com.emulator.fpse64",
+      "com.emulator.fpse"
+    ],
     "activity": "{package}.Main",
     "action": "android.intent.action.VIEW",
     "delivery": "CONTENT_URI_DATA",
-    "platforms": ["psx"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP", "FLAG_GRANT_READ_URI_PERMISSION"]
+    "platforms": [
+      "psx"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ]
   },
   {
     "id": "scummvm",
     "name": "ScummVM",
-    "packages": ["org.scummvm.scummvm"],
+    "packages": [
+      "org.scummvm.scummvm"
+    ],
     "activity": "org.scummvm.scummvm.SplashActivity",
     "action": "android.intent.action.MAIN",
     "delivery": "EXTRAS_ONLY",
-    "extras": [ { "key": "target", "value": "{rom.stem}" } ],
-    "platforms": ["scummvm"],
+    "extras": [
+      {
+        "key": "target",
+        "value": "{rom.stem}"
+      }
+    ],
+    "platforms": [
+      "scummvm"
+    ],
     "notes": "Name each .scummvm file after the ScummVM target id (e.g. monkey.scummvm)."
   },
   {
     "id": "winlator_cmod",
     "name": "Winlator Cmod",
-    "packages": ["com.winlator.cmod", "com.winlator", "com.cmodded.winlator"],
+    "packages": [
+      "com.winlator.cmod",
+      "com.winlator",
+      "com.cmodded.winlator"
+    ],
     "activity": "{package}.XServerDisplayActivity",
     "action": "android.intent.action.MAIN",
     "delivery": "EXTRAS_ONLY",
-    "extras": [ { "key": "shortcut_path", "value": "{rom.path}" } ],
+    "extras": [
+      {
+        "key": "shortcut_path",
+        "value": "{rom.path}"
+      }
+    ],
     "requiresFilePath": true,
-    "platforms": ["pc"],
-    "flags": ["FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP"],
+    "platforms": [
+      "pc"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP"
+    ],
     "notes": "Point the PC platform to Winlator's shortcut folder (.desktop files)."
   },
   {
     "id": "gamenative",
     "name": "GameNative",
-    "packages": ["app.gamenative"],
+    "packages": [
+      "app.gamenative"
+    ],
     "activity": "app.gamenative.MainActivity",
     "action": "app.gamenative.LAUNCH_GAME",
     "delivery": "EXTRAS_ONLY",
-    "extras": [ { "key": "game_source", "value": "steam" }, { "key": "app_id", "value": "{rom.stem}" } ],
-    "platforms": ["pc"]
+    "extras": [
+      {
+        "key": "game_source",
+        "value": "steam"
+      },
+      {
+        "key": "app_id",
+        "value": "{rom.stem}"
+      }
+    ],
+    "platforms": [
+      "pc"
+    ]
+  },
+  {
+    "id": "aps3e",
+    "name": "aPS3e (ISO)",
+    "packages": [
+      "aenu.aps3e.premium",
+      "aenu.aps3e"
+    ],
+    "activity": "aenu.aps3e.EmulatorActivity",
+    "action": "aenu.intent.action.APS3E",
+    "delivery": "EXTRAS_ONLY",
+    "extras": [
+      {
+        "key": "iso_uri",
+        "value": "{rom.uri}"
+      }
+    ],
+    "platforms": [
+      "ps3"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ],
+    "website": "https://github.com/aenu1/aps3e",
+    "notes": "Boots a PS3 ISO. Games installed inside aPS3e (folder or PKG) use 'aPS3e (installed)' instead."
+  },
+  {
+    "id": "aps3e_installed",
+    "name": "aPS3e (installed)",
+    "packages": [
+      "aenu.aps3e.premium",
+      "aenu.aps3e"
+    ],
+    "activity": "aenu.aps3e.EmulatorActivity",
+    "action": "aenu.intent.action.APS3E",
+    "delivery": "NONE",
+    "extras": [
+      {
+        "key": "game_dir",
+        "value": "/storage/emulated/0/Android/data/{package}/files/aps3e/config/dev_hdd0/game/{rom.stem}"
+      }
+    ],
+    "platforms": [
+      "ps3"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP"
+    ],
+    "website": "https://github.com/aenu1/aps3e",
+    "notes": "For games installed in aPS3e: create an empty file named after the game serial, e.g. BLUS30443.ps3, in your PS3 folder."
+  },
+  {
+    "id": "ax360e",
+    "name": "aX360e",
+    "packages": [
+      "aenu.ax360e",
+      "aenu.ax360e.free"
+    ],
+    "activity": "aenu.ax360e.EmulatorActivity",
+    "action": "aenu.intent.action.AX360E",
+    "delivery": "EXTRAS_ONLY",
+    "extras": [
+      {
+        "key": "game_uri",
+        "value": "{rom.uri}"
+      }
+    ],
+    "platforms": [
+      "xbox360"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ],
+    "website": "https://play.google.com/store/apps/details?id=aenu.ax360e",
+    "notes": "ISO, XEX and ZAR files. Xbox 360 emulation on Android is early; only some games run."
   }
 ]

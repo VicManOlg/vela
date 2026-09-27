@@ -135,6 +135,7 @@ Optional `secrets.properties` at the repository root enables ScreenScraper devel
 ```
 screenscraper.devid=...
 screenscraper.devpassword=...
+steamgriddb.apikey=...   # optional: default SteamGridDB key for your own builds
 ```
 
 Without it the ScreenScraper provider reports itself unavailable; libretro-thumbnails works with
