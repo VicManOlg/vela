@@ -16,10 +16,16 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** Answers "is this emulator installed?" with a small cache; invalidated on package changes. */
+/**
+ * Answers "is this emulator installed?" with a small cache; invalidated on package changes.
+ * Renamed builds ("Eden Optimized", custom Yuzu forks…) are found by the emulation activity
+ * they expose, so a player definition matches them without knowing their package name.
+ */
 @Singleton
 class InstalledPackages @Inject constructor(@ApplicationContext private val context: Context) {
     private val cache = ConcurrentHashMap<String, Boolean>()
+    /** Emulation activity class -> installed packages that declare it, computed on first use. */
+    private val byActivity = ConcurrentHashMap<String, List<String>>()
 
     fun isInstalled(packageName: String): Boolean = cache.getOrPut(packageName) {
         try {
@@ -30,10 +36,29 @@ class InstalledPackages @Inject constructor(@ApplicationContext private val cont
         }
     }
 
-    /** First installed package of a player, honouring the definition's preference order. */
-    fun installedPackage(player: PlayerDefinition): String? = player.packages.firstOrNull(::isInstalled)
+    /** First installed package of a player, honouring the definition's preference order, else a fork that ships its activity. */
+    fun installedPackage(player: PlayerDefinition): String? = player.packages.firstOrNull(::isInstalled) ?: forkOf(player)
 
-    fun invalidate() = cache.clear()
+    private fun forkOf(player: PlayerDefinition): String? {
+        val activity = player.activity ?: return null
+        // Only absolute class names identify an emulator; "{package}.MainActivity" fits anything.
+        if (activity.startsWith(".") || activity.contains("{")) return null
+        return byActivity.getOrPut(activity) { packagesDeclaring(activity) }.firstOrNull()
+    }
+
+    private fun packagesDeclaring(activity: String): List<String> = try {
+        context.packageManager.getInstalledPackages(PackageManager.GET_ACTIVITIES)
+            .filter { info -> info.packageName != context.packageName && info.activities?.any { it.name == activity } == true }
+            .map { it.packageName }
+            .sorted()
+    } catch (e: Exception) {
+        emptyList()
+    }
+
+    fun invalidate() {
+        cache.clear()
+        byActivity.clear()
+    }
 }
 
 /**
