@@ -18,6 +18,7 @@ import io.vela.core.model.CollectionId
 import io.vela.core.model.CompletionStatus
 import io.vela.core.model.GameMenuState
 import io.vela.core.model.GameSort
+import io.vela.core.model.Game
 import io.vela.core.model.GameSummary
 import io.vela.core.model.LibraryView
 import io.vela.core.model.LaunchOption
@@ -95,6 +96,11 @@ class GameGridViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GameGridHeader(route.title ?: "", "", 0xFF7FD7FF, GameSort.TITLE, 0))
 
     val menuState: StateFlow<GameMenuState> = menu.state
+
+    /** Full record of the focused game (description, developer, year...) for views with a facts panel. */
+    val focusedDetails: StateFlow<Game?> = focused
+        .flatMapLatest { g -> if (g == null) flowOf(null) else games.observeGame(g.id) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** Persisted globally so every list opens the way the user last chose. */
     val view: StateFlow<LibraryView> = settings.settings.map { it.gameListView }

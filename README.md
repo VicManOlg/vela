@@ -35,8 +35,8 @@ MVP: functional, tested on an emulator and designed for 16:9 handhelds.
 | Data-driven emulator launching (25+ players, RetroArch cores) with play-time tracking | Done |
 | Android games detection and pinned apps | Done |
 | Metadata: libretro-thumbnails (no account) and ScreenScraper (user account) providers | Done |
-| Theme system driven by JSON specs (13 bundled themes) plus per-user tweaks layered on top | Done |
-| Systems views: Stage, Showcase, Grid, Wheel, Mosaic, Columns; game views: Grid, Compact, List, Showcase, Hero, Wall, Details | Done |
+| Theme system driven by JSON specs (14 bundled themes) plus per-user tweaks layered on top | Done |
+| Systems views: Stage, Showcase, Grid, Wheel, Mosaic, Columns, Book; game views: Grid, Compact, List, Showcase, Hero, Wall, Details, Book | Done |
 | Game list views: grid, compact grid, list with preview, showcase wheel (Start or Settings > Appearance) | Done |
 | Home layouts: rails or spotlight (focused game fills the screen) | Done |
 | Library systems view: poster cards (console, your covers, scene backdrop) or compact tiles | Done |
@@ -216,6 +216,13 @@ age rating) and Wikipedia article leads (descriptions, CC BY-SA, can be switched
 free SteamGridDB API key the app also fetches logos, hero backgrounds, alternative covers and
 icons. ScreenScraper needs developer credentials in `secrets.properties`.
 
+## System art
+
+Drop an image per system into `Android/data/io.vela.frontend/files/system-art/` named after the
+platform id (`snes.png`, `n64.jpg`, `psx.webp`; `all`, `favorites` and `android` for the smart
+shelves). The Book and Columns systems views and the Library backdrop use it instead of the most
+recent game's scene. Nothing ships in the box: keep the artwork's own licence in mind.
+
 ## Adding a theme
 
 In the app: Settings > Appearance shows the themes as preview cards, and every row below them
@@ -223,8 +230,8 @@ In the app: Settings > Appearance shows the themes as preview cards, and every r
 theme; a muted value means "as the theme designed it", left/right on the pad adjusts sliders in
 place, and "Reset look to theme" undoes every tweak at once. Tweaks survive switching themes.
 Import theme file copies a JSON into `Android/data/io.vela.frontend/files/themes/`, which is
-also read on every visit to Appearance. Thirteen themes ship: Vela Night, Vela Day (light), Vela Ember, Vela Mono, six with their own
-structure (Vela Wave, Deck, Sakura, Paper, Arcade, Pixel), and three console-inspired
+also read on every visit to Appearance. Fourteen themes ship: Vela Night, Vela Day (light), Vela Ember, Vela Mono, seven with their own
+structure (Vela Wave, Deck, Sakura, Paper, Arcade, Pixel, Book), and three console-inspired
 ones: Vela Joy (light, flat, cyan focus), Vela Azure (deep blue, glass, large covers) and Vela
 Emerald (black and green, square tiles, system font).
 

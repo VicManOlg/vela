@@ -12,10 +12,10 @@ class ThemeLayoutsTest {
     private val themes = ThemeCatalog().themes
 
     @Test
-    fun `thirteen bundled themes with unique ids and names`() {
-        assertThat(themes).hasSize(13)
-        assertThat(themes.map { it.id }.toSet()).hasSize(13)
-        assertThat(themes.map { it.name }.toSet()).hasSize(13)
+    fun `fourteen bundled themes with unique ids and names`() {
+        assertThat(themes).hasSize(14)
+        assertThat(themes.map { it.id }.toSet()).hasSize(14)
+        assertThat(themes.map { it.name }.toSet()).hasSize(14)
     }
 
     @Test
@@ -37,8 +37,8 @@ class ThemeLayoutsTest {
     fun `the new themes exercise every new systems and games view`() {
         val libraryLayouts = themes.mapNotNull { it.layout.libraryLayout }.toSet()
         val libraryViews = themes.mapNotNull { it.layout.libraryView }.toSet()
-        assertThat(libraryLayouts).containsAtLeast("wheel", "mosaic", "columns")
-        assertThat(libraryViews).containsAtLeast("hero", "wall", "details")
+        assertThat(libraryLayouts).containsAtLeast("wheel", "mosaic", "columns", "book")
+        assertThat(libraryViews).containsAtLeast("hero", "wall", "details", "book")
     }
 
     @Test

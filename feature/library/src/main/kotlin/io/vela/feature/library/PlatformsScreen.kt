@@ -60,6 +60,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
 import javax.inject.Inject
 
 /** Android shown as one more system: detected games plus pinned apps. */
@@ -68,7 +74,23 @@ data class AndroidTile(val games: Int, val apps: Int, val accent: Long, val name
 }
 
 @HiltViewModel
-class PlatformsViewModel @Inject constructor(library: LibraryRepository, apps: AppsRepository, settings: SettingsRepository) : ViewModel() {
+class PlatformsViewModel @Inject constructor(
+    @ApplicationContext context: Context,
+    library: LibraryRepository,
+    apps: AppsRepository,
+    settings: SettingsRepository,
+) : ViewModel() {
+    /**
+     * Optional art the user supplies per system: `Android/data/<app>/files/system-art/<platform id>.png`
+     * (jpg/webp too; `all`, `favorites` and `android` name the smart shelves). Book, Columns and the
+     * backdrop use it instead of the most recent game's scene.
+     */
+    val systemArt: StateFlow<Map<String, String>> = flow {
+        val dir = File(context.getExternalFilesDir(null) ?: context.filesDir, "system-art")
+        val files = dir.listFiles { f -> f.isFile && f.extension.lowercase() in setOf("png", "jpg", "jpeg", "webp") }.orEmpty()
+        emit(files.associate { it.nameWithoutExtension.lowercase() to it.absolutePath })
+    }.flowOn(Dispatchers.IO).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
     val platforms: StateFlow<List<PlatformEntry>> = library.observePlatformsWithGames()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -103,10 +125,11 @@ fun PlatformsScreen(
     val platforms by viewModel.platforms.collectAsStateWithLifecycle()
     val android by viewModel.android.collectAsStateWithLifecycle()
     val art by viewModel.art.collectAsStateWithLifecycle()
+    val systemArt by viewModel.systemArt.collectAsStateWithLifecycle()
     val chosen by viewModel.layout.collectAsStateWithLifecycle()
     val layout = if (chosen == LibraryLayout.THEME) LibraryLayout.fromKey(VelaTheme.spec.layout.libraryLayout) else chosen
     // Stage and Wheel draw their own title on the stage; the other layouts share the header above the list.
-    val ownHeader = layout == LibraryLayout.STAGE || layout == LibraryLayout.WHEEL
+    val ownHeader = layout == LibraryLayout.STAGE || layout == LibraryLayout.WHEEL || layout == LibraryLayout.BOOK
     var spot by remember { mutableStateOf<Spot?>(null) }
     val colors = VelaTheme.colors
     val clock = rememberEntranceClock()
@@ -148,15 +171,15 @@ fun PlatformsScreen(
             return@Column
         }
         // One entry list (All, Favorites, systems, Android) feeds Stage, Wheel, Mosaic and Columns.
-        val entries = remember(platforms, android, art, allCovers) {
+        val entries = remember(platforms, android, art, allCovers, systemArt) {
             buildList {
-                add(StageEntry("all", "All games", "Every system   $total games", 0xFF7FD7FF, null, Icons.Rounded.Apps, allCovers, art.values.firstNotNullOfOrNull { it.background }, onOpenAll))
-                add(StageEntry("favorites", "Favorites", "Your picks", 0xFF3D7BFF, null, Icons.Rounded.Favorite, emptyList(), null, onOpenFavorites))
+                add(StageEntry("all", "All games", "Every system   $total games", 0xFF7FD7FF, null, Icons.Rounded.Apps, allCovers, systemArt["all"] ?: art.values.firstNotNullOfOrNull { it.background }, onOpenAll))
+                add(StageEntry("favorites", "Favorites", "Your picks", 0xFF3D7BFF, null, Icons.Rounded.Favorite, emptyList(), systemArt["favorites"], onOpenFavorites))
                 platforms.forEach { entry ->
                     val a = art[entry.id]
-                    add(StageEntry(entry.id.value, entry.displayName, spotOf(entry).subtitle, entry.platform.accentColor, entry.iconPath, null, a?.covers.orEmpty(), a?.background) { onOpenPlatform(entry.id) })
+                    add(StageEntry(entry.id.value, entry.displayName, spotOf(entry).subtitle, entry.platform.accentColor, entry.iconPath, null, a?.covers.orEmpty(), systemArt[entry.id.value.lowercase()] ?: a?.background) { onOpenPlatform(entry.id) })
                 }
-                add(StageEntry("android", android.name, "${android.games} games   ${android.apps} apps", android.accent, null, Icons.Rounded.Android, emptyList(), null, onOpenAndroid))
+                add(StageEntry("android", android.name, "${android.games} games   ${android.apps} apps", android.accent, null, Icons.Rounded.Android, emptyList(), systemArt["android"], onOpenAndroid))
             }
         }
         val firstSystem = if (platforms.isNotEmpty()) 2 else 0
@@ -165,6 +188,7 @@ fun PlatformsScreen(
             LibraryLayout.WHEEL -> WheelSystems(entries, initialIndex = firstSystem, clock = clock, onSpot = { spot = it }, modifier = Modifier.weight(1f))
             LibraryLayout.MOSAIC -> MosaicSystems(entries, clock, onSpot = { spot = it })
             LibraryLayout.COLUMNS -> ColumnsSystems(entries, clock, onSpot = { spot = it })
+            LibraryLayout.BOOK -> BookSystems(entries, initialIndex = firstSystem, clock = clock, onSpot = { spot = it }, modifier = Modifier.weight(1f))
             LibraryLayout.SHOWCASE -> ShowcaseRow(
                 platforms, android, art, allCovers, clock,
                 onOpenPlatform, onOpenAndroid, onOpenFavorites, onOpenAll,

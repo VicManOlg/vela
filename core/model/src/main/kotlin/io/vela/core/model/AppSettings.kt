@@ -57,6 +57,7 @@ enum class LibraryLayout(val label: String, val description: String) {
     WHEEL("Wheel", "Systems stacked on the left; the selected one's covers and scene on the right"),
     MOSAIC("Mosaic", "Square tiles built from your own covers, the console on top"),
     COLUMNS("Columns", "Tall panels side by side, each with its system's scene; the focused one opens up"),
+    BOOK("Book", "Art-book carousel: wide scene cards, the centre one in front, like the pages of a catalogue"),
     ;
 
     companion object {
@@ -95,6 +96,7 @@ enum class LibraryView(val label: String, val description: String) {
     HERO("Hero", "The focused game's scene fills the top; one row of covers below"),
     WALL("Wall", "Edge-to-edge mosaic of square covers, no gaps, no labels"),
     DETAILS("Details", "Dense table: title, system, last played, play time, stars"),
+    BOOK("Book", "Titles on the left; cover, description and fact chips on the right, like an art book"),
     ;
 
     companion object {

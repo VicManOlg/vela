@@ -1,0 +1,70 @@
+{
+  "id": "vela-book",
+  "name": "Vela Book",
+  "author": "Vela · inspired by an art book",
+  "colors": {
+    "background": "#FF141414",
+    "surface": "#FF1E1E1E",
+    "surfaceElevated": "#FF2A2A2A",
+    "accent": "#FFF5E9D0",
+    "accentSecondary": "#FF8C6D3F",
+    "onBackground": "#FFF7F3EC",
+    "onSurface": "#FFE9E3D8",
+    "muted": "#FF9A948A",
+    "focusRing": "#FFF5E9D0",
+    "danger": "#FFE0574F",
+    "success": "#FF7DBE8A",
+    "scrim": "#B3141414"
+  },
+  "typography": {
+    "displayFamily": "outfit",
+    "bodyFamily": "manrope",
+    "displaySize": 40,
+    "titleSize": 24,
+    "headlineSize": 18,
+    "letterSpacingDisplay": -0.01
+  },
+  "shapes": {
+    "cardRadius": 6,
+    "tileRadius": 10,
+    "chipRadius": 4,
+    "focusBorderWidth": 2
+  },
+  "layout": {
+    "cardWidth": 150,
+    "boxArtAspect": 0.72,
+    "railSpacing": 12,
+    "sectionSpacing": 28,
+    "gridColumns": 6,
+    "homeLayout": "spotlight",
+    "libraryLayout": "book",
+    "libraryView": "book",
+    "cardLabels": "never"
+  },
+  "motion": {
+    "focusScale": 1.05,
+    "focusDurationMs": 200,
+    "transitionDurationMs": 320,
+    "backgroundCrossfadeMs": 700,
+    "parallax": true
+  },
+  "background": {
+    "mode": "artwork",
+    "blurRadius": 40,
+    "dim": 0.78,
+    "saturation": 0.85
+  },
+  "effects": {
+    "glassPanels": true,
+    "panelAlpha": 0.7,
+    "cardShadow": true,
+    "focusGlow": false,
+    "videoPreviews": true,
+    "dynamicAccent": true
+  },
+  "platformIcons": {
+    "set": "monochrome",
+    "tint": true,
+    "alpha": 0.9
+  }
+}

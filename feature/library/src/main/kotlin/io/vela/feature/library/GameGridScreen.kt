@@ -112,7 +112,7 @@ fun GameGridScreen(
         GridHeader(
             header = header.copy(subtitle = listOfNotNull(header.subtitle.takeIf { it.isNotBlank() }, if (shownCount == 1) "1 game" else "$shownCount games").joinToString("   ")),
             // List names the focused game in its preview panel, Showcase under the wheel, Hero on the scene, Details in its rows.
-            focusedTitle = if (view == LibraryView.LIST || view == LibraryView.SHOWCASE || view == LibraryView.HERO || view == LibraryView.DETAILS) null else focused?.title,
+            focusedTitle = if (view == LibraryView.LIST || view == LibraryView.SHOWCASE || view == LibraryView.HERO || view == LibraryView.DETAILS || view == LibraryView.BOOK) null else focused?.title,
             view = view,
             onOpenDisplay = { displayMenu = true },
         )
@@ -136,6 +136,10 @@ fun GameGridScreen(
             LibraryView.HERO -> HeroContent(items, accent, callbacks, focused, platformLabel = if (viewModel.showsSeveralPlatforms) viewModel::platformLabel else { _ -> null })
             LibraryView.WALL -> WallContent(items, accent, callbacks)
             LibraryView.DETAILS -> DetailsContent(items, accent, callbacks, showPlatform = viewModel.showsSeveralPlatforms, platformLabel = viewModel::platformLabel)
+            LibraryView.BOOK -> {
+                val details by viewModel.focusedDetails.collectAsStateWithLifecycle()
+                BookContent(items, accent, callbacks, focused, details, showPlatform = viewModel.showsSeveralPlatforms, platformLabel = viewModel::platformLabel)
+            }
             LibraryView.THEME -> GridContent(items, accent, callbacks, compact = false)
         }
     }
