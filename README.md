@@ -163,6 +163,12 @@ If the platform runs through RetroArch, add its cores under `cores.<id>` in `pla
 
 ## Adding an emulator
 
+Before writing a recipe, look it up in `core/catalog/src/main/resources/catalog/emulators.json`:
+a generated catalogue of 958 launch recipes for 121 platforms, built by
+`scripts/build_emulator_catalog.py` from the Daijishō platform definitions and ES-DE's Android
+find rules (both MIT, see NOTICE). Package names, activities, actions and extras come from there,
+never from memory.
+
 Edit `core/catalog/src/main/resources/catalog/players.json`. A player is an intent template:
 
 ```json

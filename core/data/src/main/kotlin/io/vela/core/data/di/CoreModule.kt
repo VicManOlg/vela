@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.vela.core.catalog.EmulatorCatalog
 import io.vela.core.catalog.PlatformCatalog
 import io.vela.core.catalog.PlayerCatalog
 import io.vela.core.catalog.ThemeCatalog
@@ -31,4 +32,8 @@ object CoreModule {
 
     @Provides @Singleton
     fun provideThemeCatalog(): ThemeCatalog = ThemeCatalog()
+
+    /** Generated emulator catalogue (Daijishō + ES-DE, MIT); parsed lazily on first use. */
+    @Provides @Singleton
+    fun provideEmulatorCatalog(): EmulatorCatalog = EmulatorCatalog()
 }

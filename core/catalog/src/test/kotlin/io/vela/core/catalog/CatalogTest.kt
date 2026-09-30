@@ -49,6 +49,33 @@ class CatalogTest {
     }
 
     @Test
+    fun `emulator catalogue loads and every recipe names a package and an activity`() {
+        val emulators = EmulatorCatalog()
+        assertThat(emulators.platforms.size).isAtLeast(100)
+        val all = emulators.platforms.flatMap { it.emulators }
+        assertThat(all.size).isAtLeast(900)
+        all.forEach { e ->
+            assertWithMessage("emulator ${e.id}").that(e.packageName).isNotEmpty()
+            assertWithMessage("emulator ${e.id}").that(e.activity).isNotEmpty()
+            assertWithMessage("emulator ${e.id}").that(e.raw).isNotEmpty()
+        }
+        // The generator never drops arguments; a recipe it could not fully parse says so.
+        assertThat(all.filter { it.warnings.any { w -> w.startsWith("unknown token") || w.startsWith("unparsed") } }).isEmpty()
+    }
+
+    @Test
+    fun `emulator catalogue knows the systems Vela ships and ES-DE cross-checks them`() {
+        val emulators = EmulatorCatalog()
+        listOf("nes", "snes", "psx", "ps2", "switch", "nds", "gba").forEach { id ->
+            assertWithMessage("platform $id").that(emulators.platform(id)).isNotNull()
+        }
+        assertThat(emulators.knownActivities).isNotEmpty()
+        assertThat(emulators.emulatorsForPackage("org.ppsspp.ppsspp")).isNotEmpty()
+        val verified = emulators.platforms.flatMap { it.emulators }.count { it.esdeVerified == true }
+        assertThat(verified).isAtLeast(500)
+    }
+
+    @Test
     fun `themes load`() {
         val themes = ThemeCatalog()
         assertThat(themes.themes.map { it.id }).containsAtLeast("vela-night", "vela-ember", "vela-mono")

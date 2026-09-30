@@ -16,3 +16,5 @@
 secrets.properties
 .kotlin/
 /dist
+# downloads cached by scripts/build_emulator_catalog.py
+scripts/.cache/
