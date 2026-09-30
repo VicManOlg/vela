@@ -1,0 +1,72 @@
+{
+  "id": "vela-paper",
+  "name": "Vela Paper",
+  "author": "Vela · a printed catalogue",
+  "colors": {
+    "background": "#FFF6F1E7",
+    "surface": "#FFFFFCF5",
+    "surfaceElevated": "#FFEDE5D6",
+    "accent": "#FFB5473A",
+    "accentSecondary": "#FF2F5D50",
+    "onBackground": "#FF2B2622",
+    "onSurface": "#FF3A332D",
+    "muted": "#FF7E7369",
+    "focusRing": "#FF2B2622",
+    "danger": "#FFB5473A",
+    "success": "#FF2F7A4E",
+    "scrim": "#40F6F1E7"
+  },
+  "typography": {
+    "displayFamily": "serif",
+    "bodyFamily": "manrope",
+    "displaySize": 44,
+    "titleSize": 26,
+    "headlineSize": 19,
+    "letterSpacingDisplay": -0.01
+  },
+  "shapes": {
+    "cardRadius": 2,
+    "tileRadius": 4,
+    "chipRadius": 4,
+    "focusBorderWidth": 2
+  },
+  "layout": {
+    "cardWidth": 140,
+    "boxArtAspect": 0.66,
+    "railSpacing": 14,
+    "sectionSpacing": 30,
+    "screenPadding": 48,
+    "gridColumns": 7,
+    "homeLayout": "rails",
+    "libraryLayout": "columns",
+    "libraryView": "details",
+    "cardLabels": "always"
+  },
+  "motion": {
+    "focusScale": 1.03,
+    "focusDurationMs": 160,
+    "transitionDurationMs": 260,
+    "backgroundCrossfadeMs": 400,
+    "parallax": false
+  },
+  "background": {
+    "mode": "static",
+    "blurRadius": 0,
+    "dim": 0.0,
+    "saturation": 1.0,
+    "staticColor": "#FFF6F1E7"
+  },
+  "effects": {
+    "glassPanels": false,
+    "panelAlpha": 1.0,
+    "cardShadow": true,
+    "focusGlow": false,
+    "videoPreviews": false,
+    "dynamicAccent": false
+  },
+  "platformIcons": {
+    "set": "monochrome",
+    "tint": true,
+    "alpha": 0.85
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "id": "vela-pixel",
+  "name": "Vela Pixel",
+  "author": "Vela · eight bits",
+  "colors": {
+    "background": "#FF1A1C2C",
+    "surface": "#FF29366F",
+    "surfaceElevated": "#FF3B5DC9",
+    "accent": "#FFFFCD75",
+    "accentSecondary": "#FF41A6F6",
+    "onBackground": "#FFF4F4F4",
+    "onSurface": "#FFF4F4F4",
+    "muted": "#FF94B0C2",
+    "focusRing": "#FFFFCD75",
+    "danger": "#FFB13E53",
+    "success": "#FF38B764",
+    "scrim": "#001A1C2C"
+  },
+  "typography": {
+    "displayFamily": "mono",
+    "bodyFamily": "mono",
+    "displaySize": 34,
+    "titleSize": 20,
+    "headlineSize": 17,
+    "bodySize": 14,
+    "labelSize": 12,
+    "letterSpacingDisplay": 0.0,
+    "allCapsLabels": true
+  },
+  "shapes": {
+    "cardRadius": 0,
+    "tileRadius": 0,
+    "chipRadius": 0,
+    "focusBorderWidth": 4
+  },
+  "layout": {
+    "cardWidth": 140,
+    "boxArtAspect": 1.0,
+    "railSpacing": 8,
+    "sectionSpacing": 24,
+    "gridColumns": 8,
+    "homeLayout": "tiles",
+    "libraryLayout": "mosaic",
+    "libraryView": "wall",
+    "cardLabels": "always",
+    "showTabs": true
+  },
+  "motion": {
+    "focusScale": 1.0,
+    "focusDurationMs": 0,
+    "transitionDurationMs": 120,
+    "backgroundCrossfadeMs": 0,
+    "parallax": false
+  },
+  "background": {
+    "mode": "static",
+    "blurRadius": 0,
+    "dim": 0.0,
+    "saturation": 1.0,
+    "staticColor": "#FF1A1C2C"
+  },
+  "effects": {
+    "glassPanels": false,
+    "panelAlpha": 1.0,
+    "cardShadow": false,
+    "focusGlow": false,
+    "videoPreviews": false,
+    "dynamicAccent": false
+  },
+  "platformIcons": {
+    "set": "flatui",
+    "tint": false,
+    "alpha": 1.0
+  }
+}

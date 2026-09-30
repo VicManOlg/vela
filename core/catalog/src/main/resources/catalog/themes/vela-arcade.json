@@ -1,0 +1,70 @@
+{
+  "id": "vela-arcade",
+  "name": "Vela Arcade",
+  "author": "Vela · neon cabinet",
+  "colors": {
+    "background": "#FF0B0014",
+    "surface": "#FF160A26",
+    "surfaceElevated": "#FF241238",
+    "accent": "#FFFF2BD6",
+    "accentSecondary": "#FF00E5FF",
+    "onBackground": "#FFFDF4FF",
+    "onSurface": "#FFF0E4FA",
+    "muted": "#FFA48CC2",
+    "focusRing": "#FF00E5FF",
+    "danger": "#FFFF4D6D",
+    "success": "#FF39FF14",
+    "scrim": "#A60B0014"
+  },
+  "typography": {
+    "displayFamily": "mono",
+    "bodyFamily": "manrope",
+    "displaySize": 36,
+    "titleSize": 22,
+    "letterSpacingDisplay": 0.02,
+    "allCapsLabels": true
+  },
+  "shapes": {
+    "cardRadius": 2,
+    "tileRadius": 2,
+    "chipRadius": 2,
+    "focusBorderWidth": 3
+  },
+  "layout": {
+    "cardWidth": 140,
+    "boxArtAspect": 0.72,
+    "railSpacing": 10,
+    "sectionSpacing": 26,
+    "gridColumns": 8,
+    "homeLayout": "dashboard",
+    "libraryLayout": "mosaic",
+    "libraryView": "wall",
+    "cardLabels": "never"
+  },
+  "motion": {
+    "focusScale": 1.06,
+    "focusDurationMs": 120,
+    "transitionDurationMs": 220,
+    "backgroundCrossfadeMs": 400,
+    "parallax": true
+  },
+  "background": {
+    "mode": "artwork",
+    "blurRadius": 24,
+    "dim": 0.62,
+    "saturation": 1.5
+  },
+  "effects": {
+    "glassPanels": true,
+    "panelAlpha": 0.55,
+    "cardShadow": true,
+    "focusGlow": true,
+    "videoPreviews": true,
+    "dynamicAccent": false
+  },
+  "platformIcons": {
+    "set": "flatui",
+    "tint": false,
+    "alpha": 1.0
+  }
+}

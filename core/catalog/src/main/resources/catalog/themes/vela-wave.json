@@ -1,0 +1,67 @@
+{
+  "id": "vela-wave",
+  "name": "Vela Wave",
+  "author": "Vela · inspired by a cross-media bar",
+  "colors": {
+    "background": "#FF000814",
+    "surface": "#FF0A1426",
+    "surfaceElevated": "#FF142140",
+    "accent": "#FFE6F0FF",
+    "accentSecondary": "#FF3A6EA5",
+    "onBackground": "#FFFFFFFF",
+    "onSurface": "#FFE8EEF8",
+    "muted": "#FF8797B5",
+    "focusRing": "#FFFFFFFF",
+    "danger": "#FFFF5C6C",
+    "success": "#FF5CE0A8",
+    "scrim": "#B3000814"
+  },
+  "typography": {
+    "displayFamily": "outfit",
+    "bodyFamily": "manrope",
+    "displaySize": 40,
+    "titleSize": 22,
+    "letterSpacingDisplay": 0.0
+  },
+  "shapes": {
+    "cardRadius": 6,
+    "tileRadius": 8,
+    "chipRadius": 999,
+    "focusBorderWidth": 2
+  },
+  "layout": {
+    "cardWidth": 140,
+    "boxArtAspect": 0.72,
+    "railSpacing": 12,
+    "sectionSpacing": 28,
+    "gridColumns": 7,
+    "homeLayout": "strip",
+    "libraryLayout": "wheel",
+    "libraryView": "showcase"
+  },
+  "motion": {
+    "focusScale": 1.1,
+    "focusDurationMs": 200,
+    "transitionDurationMs": 320,
+    "backgroundCrossfadeMs": 900,
+    "parallax": true
+  },
+  "background": {
+    "mode": "artwork",
+    "blurRadius": 14,
+    "dim": 0.7,
+    "saturation": 0.9
+  },
+  "effects": {
+    "glassPanels": true,
+    "panelAlpha": 0.4,
+    "cardShadow": false,
+    "focusGlow": true,
+    "videoPreviews": true
+  },
+  "platformIcons": {
+    "set": "monochrome",
+    "tint": true,
+    "alpha": 0.95
+  }
+}

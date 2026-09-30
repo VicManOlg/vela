@@ -17,8 +17,13 @@ first, touch supported everywhere. Public repo: https://github.com/VicManOlg/vel
   `core/database/schemas`.
 - Settings are one JSON document in DataStore (`AppSettings`); add fields with defaults, never
   rename or remove serialized names. Enum lists that may gain values use lenient serializers.
-- Themes decide structure, not just colour: `ThemeLayout.homeLayout`, `libraryLayout`, `showTabs`,
-  `boxArtAspect`. User settings (`HomeLayout`, `LibraryLayout`, `TabBarMode`) default to THEME.
+- Themes decide structure, not just colour: `ThemeLayout.homeLayout`, `libraryLayout`, `libraryView`,
+  `showTabs`, `boxArtAspect`, `cardLabels`. User settings (`HomeLayout`, `LibraryLayout`,
+  `gameListView`, `TabBarMode`) default to THEME; `AppSettings.libraryView` is the pre-0.3.1 field
+  (every old install stored GRID there) and is no longer read. Systems views live in
+  `feature/library` (`SystemStage.kt`, `PlatformsScreen.kt`, `SystemViews.kt`), game views in
+  `GameGridScreen.kt` + `GameViews.kt`; a new enum value needs its `when` branch there and a
+  bundled theme that uses it (see `ThemeLayoutsTest`).
 - The user's look tweaks live in `AppSettings.appearance` (`AppearanceOverrides`, every field
   nullable = "theme's value") and are applied once, in `AppViewModel.theme`, through
   `ThemeSpec.applying`. Screens keep reading `VelaTheme`; never apply overrides elsewhere. A new

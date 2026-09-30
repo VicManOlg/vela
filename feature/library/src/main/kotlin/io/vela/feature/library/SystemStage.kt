@@ -229,7 +229,7 @@ internal fun SystemStage(
 
 /** The user's recent covers of the system on a slanted shelf, front one first. */
 @Composable
-private fun CoverShelf(covers: List<String>, accent: Color) {
+internal fun CoverShelf(covers: List<String>, accent: Color) {
     if (covers.isEmpty()) return
     val colors = VelaTheme.colors
     BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {

@@ -240,10 +240,10 @@ internal fun LazyListScope.appearanceSection(vm: SettingsViewModel, settings: Ap
         if (open) HomeSectionsEditor(settings, vm, onClose = { open = false })
     }
     item(key = "row33") {
-        EnumSetting("Systems view", LibraryLayout.entries, settings.libraryLayout, { it.label }, { it.description }, themeHint = base.layout.libraryLayout?.let { k -> LibraryLayout.entries.firstOrNull { it.name.equals(k, ignoreCase = true) }?.label } ?: LibraryLayout.STAGE.label) { v -> vm.update { it.copy(libraryLayout = v) } }
+        EnumSetting("Systems view", LibraryLayout.entries, settings.libraryLayout, { it.label }, { it.description }, themeHint = LibraryLayout.fromKey(base.layout.libraryLayout).label) { v -> vm.update { it.copy(libraryLayout = v) } }
     }
     item(key = "row34") {
-        EnumSetting("Library view", LibraryView.entries, settings.libraryView, { it.label }, { it.description }, description = "Also changeable with Start inside any game list") { v -> vm.update { it.copy(libraryView = v) } }
+        EnumSetting("Library view", LibraryView.entries, settings.gameListView, { it.label }, { it.description }, description = "Also changeable with Start inside any game list", themeHint = LibraryView.fromKey(base.layout.libraryView).label) { v -> vm.update { it.copy(gameListView = v) } }
     }
     item(key = "row35") {
         EnumSetting("Tab bar", TabBarMode.entries, settings.tabBar, { it.label }, { it.description }, themeHint = if (base.layout.showTabs) "Always" else "Hidden on Home") { v -> vm.update { it.copy(tabBar = v) } }

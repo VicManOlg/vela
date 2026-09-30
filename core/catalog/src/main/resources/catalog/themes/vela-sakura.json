@@ -1,0 +1,67 @@
+{
+  "id": "vela-sakura",
+  "name": "Vela Sakura",
+  "author": "Vela · spring blossom",
+  "colors": {
+    "background": "#FFFFF1F4",
+    "surface": "#FFFFFFFF",
+    "surfaceElevated": "#FFFFE1E8",
+    "accent": "#FFE0508A",
+    "accentSecondary": "#FF8FB8FF",
+    "onBackground": "#FF3A2430",
+    "onSurface": "#FF4A3440",
+    "muted": "#FF9C7A88",
+    "focusRing": "#FFE0508A",
+    "danger": "#FFD63A4A",
+    "success": "#FF3FB58A",
+    "scrim": "#59FFF1F4"
+  },
+  "typography": {
+    "displayFamily": "outfit",
+    "bodyFamily": "manrope",
+    "displaySize": 42,
+    "titleSize": 24,
+    "letterSpacingDisplay": -0.02
+  },
+  "shapes": {
+    "cardRadius": 22,
+    "tileRadius": 26,
+    "chipRadius": 999,
+    "focusBorderWidth": 3
+  },
+  "layout": {
+    "cardWidth": 150,
+    "boxArtAspect": 0.72,
+    "railSpacing": 14,
+    "sectionSpacing": 30,
+    "gridColumns": 6,
+    "homeLayout": "spotlight",
+    "libraryLayout": "showcase",
+    "libraryView": "hero"
+  },
+  "motion": {
+    "focusScale": 1.08,
+    "focusDurationMs": 220,
+    "transitionDurationMs": 360,
+    "backgroundCrossfadeMs": 800,
+    "parallax": true
+  },
+  "background": {
+    "mode": "artwork",
+    "blurRadius": 36,
+    "dim": 0.74,
+    "saturation": 1.1
+  },
+  "effects": {
+    "glassPanels": true,
+    "panelAlpha": 0.75,
+    "cardShadow": true,
+    "focusGlow": true,
+    "videoPreviews": true
+  },
+  "platformIcons": {
+    "set": "systematic",
+    "tint": false,
+    "alpha": 1.0
+  }
+}

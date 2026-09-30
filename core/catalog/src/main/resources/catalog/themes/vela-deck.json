@@ -1,0 +1,67 @@
+{
+  "id": "vela-deck",
+  "name": "Vela Deck",
+  "author": "Vela · inspired by a PC handheld",
+  "colors": {
+    "background": "#FF0E141B",
+    "surface": "#FF1B2838",
+    "surfaceElevated": "#FF243B52",
+    "accent": "#FF1A9FFF",
+    "accentSecondary": "#FF66C0F4",
+    "onBackground": "#FFF3F7FA",
+    "onSurface": "#FFDCE5EE",
+    "muted": "#FF8BA2B5",
+    "focusRing": "#FFFFFFFF",
+    "danger": "#FFFF5C6C",
+    "success": "#FF5CE0A8",
+    "scrim": "#990E141B"
+  },
+  "typography": {
+    "displayFamily": "outfit",
+    "bodyFamily": "manrope",
+    "displaySize": 40,
+    "titleSize": 23
+  },
+  "shapes": {
+    "cardRadius": 8,
+    "tileRadius": 10,
+    "chipRadius": 6,
+    "focusBorderWidth": 3
+  },
+  "layout": {
+    "cardWidth": 150,
+    "boxArtAspect": 0.72,
+    "railSpacing": 12,
+    "sectionSpacing": 28,
+    "gridColumns": 6,
+    "homeLayout": "spotlight",
+    "libraryLayout": "columns",
+    "libraryView": "hero",
+    "cardLabels": "always"
+  },
+  "motion": {
+    "focusScale": 1.06,
+    "focusDurationMs": 160,
+    "transitionDurationMs": 280,
+    "backgroundCrossfadeMs": 600,
+    "parallax": true
+  },
+  "background": {
+    "mode": "hero",
+    "blurRadius": 0,
+    "dim": 0.52,
+    "saturation": 1.05
+  },
+  "effects": {
+    "glassPanels": true,
+    "panelAlpha": 0.85,
+    "cardShadow": true,
+    "focusGlow": false,
+    "videoPreviews": true
+  },
+  "platformIcons": {
+    "set": "monochrome",
+    "tint": true,
+    "alpha": 0.9
+  }
+}

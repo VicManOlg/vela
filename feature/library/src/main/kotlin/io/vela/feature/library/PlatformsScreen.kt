@@ -104,13 +104,9 @@ fun PlatformsScreen(
     val android by viewModel.android.collectAsStateWithLifecycle()
     val art by viewModel.art.collectAsStateWithLifecycle()
     val chosen by viewModel.layout.collectAsStateWithLifecycle()
-    val layout = if (chosen == LibraryLayout.THEME) {
-        when (VelaTheme.spec.layout.libraryLayout?.lowercase()) {
-            "showcase" -> LibraryLayout.SHOWCASE
-            "grid" -> LibraryLayout.GRID
-            else -> LibraryLayout.STAGE
-        }
-    } else chosen
+    val layout = if (chosen == LibraryLayout.THEME) LibraryLayout.fromKey(VelaTheme.spec.layout.libraryLayout) else chosen
+    // Stage and Wheel draw their own title on the stage; the other layouts share the header above the list.
+    val ownHeader = layout == LibraryLayout.STAGE || layout == LibraryLayout.WHEEL
     var spot by remember { mutableStateOf<Spot?>(null) }
     val colors = VelaTheme.colors
     val clock = rememberEntranceClock()
@@ -130,7 +126,7 @@ fun PlatformsScreen(
     )
 
     Column(modifier.fillMaxSize()) {
-        if (layout != LibraryLayout.STAGE) Column(Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding).height(96.dp), verticalArrangement = Arrangement.Bottom) {
+        if (!ownHeader) Column(Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding).height(96.dp), verticalArrangement = Arrangement.Bottom) {
             Text(spot?.title ?: "Library", style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(8.dp))
             Text(
@@ -141,7 +137,7 @@ fun PlatformsScreen(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        if (layout != LibraryLayout.STAGE) Spacer(Modifier.height(8.dp))
+        if (!ownHeader) Spacer(Modifier.height(8.dp))
         if (platforms.isEmpty() && android.count == 0) {
             EmptyState(
                 title = "No systems yet",
@@ -151,21 +147,24 @@ fun PlatformsScreen(
             )
             return@Column
         }
-        when (layout) {
-            LibraryLayout.STAGE -> {
-                val entries = remember(platforms, android, art, allCovers) {
-                    buildList {
-                        add(StageEntry("all", "All games", "Every system   $total games", 0xFF7FD7FF, null, Icons.Rounded.Apps, allCovers, art.values.firstNotNullOfOrNull { it.background }, onOpenAll))
-                        add(StageEntry("favorites", "Favorites", "Your picks", 0xFF3D7BFF, null, Icons.Rounded.Favorite, emptyList(), null, onOpenFavorites))
-                        platforms.forEach { entry ->
-                            val a = art[entry.id]
-                            add(StageEntry(entry.id.value, entry.displayName, spotOf(entry).subtitle, entry.platform.accentColor, entry.iconPath, null, a?.covers.orEmpty(), a?.background) { onOpenPlatform(entry.id) })
-                        }
-                        add(StageEntry("android", android.name, "${android.games} games   ${android.apps} apps", android.accent, null, Icons.Rounded.Android, emptyList(), null, onOpenAndroid))
-                    }
+        // One entry list (All, Favorites, systems, Android) feeds Stage, Wheel, Mosaic and Columns.
+        val entries = remember(platforms, android, art, allCovers) {
+            buildList {
+                add(StageEntry("all", "All games", "Every system   $total games", 0xFF7FD7FF, null, Icons.Rounded.Apps, allCovers, art.values.firstNotNullOfOrNull { it.background }, onOpenAll))
+                add(StageEntry("favorites", "Favorites", "Your picks", 0xFF3D7BFF, null, Icons.Rounded.Favorite, emptyList(), null, onOpenFavorites))
+                platforms.forEach { entry ->
+                    val a = art[entry.id]
+                    add(StageEntry(entry.id.value, entry.displayName, spotOf(entry).subtitle, entry.platform.accentColor, entry.iconPath, null, a?.covers.orEmpty(), a?.background) { onOpenPlatform(entry.id) })
                 }
-                SystemStage(entries, initialIndex = if (platforms.isNotEmpty()) 2 else 0, onSpot = { spot = it }, modifier = Modifier.weight(1f))
+                add(StageEntry("android", android.name, "${android.games} games   ${android.apps} apps", android.accent, null, Icons.Rounded.Android, emptyList(), null, onOpenAndroid))
             }
+        }
+        val firstSystem = if (platforms.isNotEmpty()) 2 else 0
+        when (layout) {
+            LibraryLayout.STAGE -> SystemStage(entries, initialIndex = firstSystem, onSpot = { spot = it }, modifier = Modifier.weight(1f))
+            LibraryLayout.WHEEL -> WheelSystems(entries, initialIndex = firstSystem, clock = clock, onSpot = { spot = it }, modifier = Modifier.weight(1f))
+            LibraryLayout.MOSAIC -> MosaicSystems(entries, clock, onSpot = { spot = it })
+            LibraryLayout.COLUMNS -> ColumnsSystems(entries, clock, onSpot = { spot = it })
             LibraryLayout.SHOWCASE -> ShowcaseRow(
                 platforms, android, art, allCovers, clock,
                 onOpenPlatform, onOpenAndroid, onOpenFavorites, onOpenAll,

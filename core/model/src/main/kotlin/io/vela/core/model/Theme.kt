@@ -77,8 +77,10 @@ data class ThemeLayout(
     val showBattery: Boolean = true,
     /** Home arrangement the theme suggests: `rails`, `spotlight`, `tiles`, `strip`, `dashboard`. Users can override in Settings. */
     val homeLayout: String? = null,
-    /** Library systems view the theme suggests: `stage`, `showcase`, `grid`. */
+    /** Library systems view the theme suggests: `stage`, `showcase`, `grid`, `wheel`, `mosaic`, `columns`. */
     val libraryLayout: String? = null,
+    /** Game list view the theme suggests: `grid`, `compact`, `list`, `showcase`, `hero`, `wall`, `details`. */
+    val libraryView: String? = null,
     /** False hides the tab bar on Home (a slim status row replaces it); other tabs keep it. */
     val showTabs: Boolean = true,
     /** When game cards print their title over the art: `focused`, `always` or `never`. */

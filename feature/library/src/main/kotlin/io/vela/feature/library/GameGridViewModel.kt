@@ -97,10 +97,10 @@ class GameGridViewModel @Inject constructor(
     val menuState: StateFlow<GameMenuState> = menu.state
 
     /** Persisted globally so every list opens the way the user last chose. */
-    val view: StateFlow<LibraryView> = settings.settings.map { it.libraryView }
+    val view: StateFlow<LibraryView> = settings.settings.map { it.gameListView }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryView.GRID)
 
-    fun setView(v: LibraryView) = viewModelScope.launch { settings.update { it.copy(libraryView = v) } }
+    fun setView(v: LibraryView) = viewModelScope.launch { settings.update { it.copy(gameListView = v) } }
 
     /** Favourites, collections and "All games" mix systems, so rows name the platform. */
     val showsSeveralPlatforms: Boolean get() = platformId == null

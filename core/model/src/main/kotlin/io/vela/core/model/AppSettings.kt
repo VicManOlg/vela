@@ -54,6 +54,15 @@ enum class LibraryLayout(val label: String, val description: String) {
     STAGE("Stage", "One system at a time, with a dial of consoles"),
     SHOWCASE("Showcase", "Poster cards with the console and your covers"),
     GRID("Grid", "Compact colour tiles"),
+    WHEEL("Wheel", "Systems stacked on the left; the selected one's covers and scene on the right"),
+    MOSAIC("Mosaic", "Square tiles built from your own covers, the console on top"),
+    COLUMNS("Columns", "Tall panels side by side, each with its system's scene; the focused one opens up"),
+    ;
+
+    companion object {
+        /** Theme JSON key (`layout.libraryLayout`) to a concrete layout; unknown or missing means Stage. */
+        fun fromKey(key: String?): LibraryLayout = entries.firstOrNull { it != THEME && it.name.equals(key, ignoreCase = true) } ?: STAGE
+    }
 }
 
 /** Home screen arrangement. */
@@ -78,10 +87,20 @@ enum class TabBarMode(val label: String, val description: String) {
 /** How a game list (platform, collection, favourites, all) is laid out. */
 @Serializable
 enum class LibraryView(val label: String, val description: String) {
+    THEME("Theme default", "Whatever the active theme suggests"),
     GRID("Grid", "Box art cards"),
     COMPACT("Compact grid", "Smaller cards, more per row"),
     LIST("List", "Titles on the left, preview on the right"),
     SHOWCASE("Showcase", "One row of large art"),
+    HERO("Hero", "The focused game's scene fills the top; one row of covers below"),
+    WALL("Wall", "Edge-to-edge mosaic of square covers, no gaps, no labels"),
+    DETAILS("Details", "Dense table: title, system, last played, play time, stars"),
+    ;
+
+    companion object {
+        /** Theme JSON key (`layout.libraryView`) to a concrete view; unknown or missing means Grid. */
+        fun fromKey(key: String?): LibraryView = entries.firstOrNull { it != THEME && it.name.equals(key, ignoreCase = true) } ?: GRID
+    }
 }
 
 @Serializable
@@ -146,7 +165,10 @@ data class AppSettings(
     val showClock: Boolean = true,
     val showBattery: Boolean = true,
     val gridColumns: Int = 0,
+    /** Superseded by [gameListView]; kept so old documents still decode. Every old install stored GRID here, so it cannot mean "theme". */
     val libraryView: LibraryView = LibraryView.GRID,
+    /** Game list view; THEME follows `layout.libraryView` of the active theme. */
+    val gameListView: LibraryView = LibraryView.THEME,
     val homeLayout: HomeLayout = HomeLayout.THEME,
     val libraryLayout: LibraryLayout = LibraryLayout.THEME,
     val tabBar: TabBarMode = TabBarMode.THEME,

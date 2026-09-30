@@ -69,9 +69,10 @@ import io.vela.core.ui.sound.LocalUiSounds
 import io.vela.core.ui.sound.UiSound
 
 /**
- * Games of a platform, a collection, favourites or everything, in the view the user picked:
- * grid, compact grid, list with preview, or showcase wheel. Header follows the focused game; X
- * opens the game menu, Y cycles sort, Start opens the display menu (view + sort).
+ * Games of a platform, a collection, favourites or everything, in the view the user picked (or
+ * the theme's): grid, compact grid, list with preview, showcase wheel, hero, wall or details.
+ * Header follows the focused game; X opens the game menu, Y cycles sort, Start opens the display
+ * menu (view + sort).
  */
 @Composable
 fun GameGridScreen(
@@ -83,7 +84,8 @@ fun GameGridScreen(
     val items = viewModel.paged.collectAsLazyPagingItems()
     val header by viewModel.header.collectAsStateWithLifecycle()
     val focused by viewModel.focused.collectAsStateWithLifecycle()
-    val view by viewModel.view.collectAsStateWithLifecycle()
+    val chosenView by viewModel.view.collectAsStateWithLifecycle()
+    val view = if (chosenView == LibraryView.THEME) LibraryView.fromKey(VelaTheme.spec.layout.libraryView) else chosenView
     val menuState by viewModel.menuState.collectAsStateWithLifecycle()
     var sortMenu by remember { mutableStateOf(false) }
     var displayMenu by remember { mutableStateOf(false) }
@@ -109,8 +111,8 @@ fun GameGridScreen(
         val shownCount = maxOf(items.itemCount, header.count)
         GridHeader(
             header = header.copy(subtitle = listOfNotNull(header.subtitle.takeIf { it.isNotBlank() }, if (shownCount == 1) "1 game" else "$shownCount games").joinToString("   ")),
-            // List names the focused game in its preview panel, Showcase under the wheel.
-            focusedTitle = if (view == LibraryView.LIST || view == LibraryView.SHOWCASE) null else focused?.title,
+            // List names the focused game in its preview panel, Showcase under the wheel, Hero on the scene, Details in its rows.
+            focusedTitle = if (view == LibraryView.LIST || view == LibraryView.SHOWCASE || view == LibraryView.HERO || view == LibraryView.DETAILS) null else focused?.title,
             view = view,
             onOpenDisplay = { displayMenu = true },
         )
@@ -131,13 +133,17 @@ fun GameGridScreen(
             LibraryView.COMPACT -> GridContent(items, accent, callbacks, compact = true)
             LibraryView.LIST -> ListContent(items, accent, callbacks, focused, showPlatform = viewModel.showsSeveralPlatforms, platformLabel = viewModel::platformLabel)
             LibraryView.SHOWCASE -> ShowcaseContent(items, accent, callbacks, focused, platformLabel = if (viewModel.showsSeveralPlatforms) viewModel::platformLabel else { _ -> null })
+            LibraryView.HERO -> HeroContent(items, accent, callbacks, focused, platformLabel = if (viewModel.showsSeveralPlatforms) viewModel::platformLabel else { _ -> null })
+            LibraryView.WALL -> WallContent(items, accent, callbacks)
+            LibraryView.DETAILS -> DetailsContent(items, accent, callbacks, showPlatform = viewModel.showsSeveralPlatforms, platformLabel = viewModel::platformLabel)
+            LibraryView.THEME -> GridContent(items, accent, callbacks, compact = false)
         }
     }
 
     if (displayMenu) {
         VelaMenuDialog(
             title = "Display",
-            options = LibraryView.entries.map { MenuOption("view:${it.name}", it.label, description = it.description, selected = it == view) } +
+            options = LibraryView.entries.map { MenuOption("view:${it.name}", it.label, description = if (it == LibraryView.THEME) "Right now: ${view.label}" else it.description, selected = it == chosenView) } +
                 MenuOption("sort", "Sort by…", description = header.sort.label()),
             onSelect = { opt ->
                 displayMenu = false
@@ -170,7 +176,7 @@ fun GameGridScreen(
     )
 }
 
-private class GameCallbacks(
+internal class GameCallbacks(
     val launch: (GameSummary) -> Unit,
     val menu: (GameSummary) -> Unit,
     val focus: (GameSummary) -> Unit,
