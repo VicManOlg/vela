@@ -1,5 +1,6 @@
 package io.vela.feature.settings
 
+import io.vela.core.model.ControllerLayout
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.VisibilityOff
@@ -565,9 +566,20 @@ private fun HomeSectionsEditor(settings: AppSettings, vm: SettingsViewModel, onC
 
 private fun Scope.controllerSection(vm: SettingsViewModel, settings: AppSettings) {
     item {
+        var picking by remember { mutableStateOf(false) }
+        SettingRow("Button layout", description = settings.controllerLayout.description, value = settings.controllerLayout.label, onClick = { picking = true })
+        if (picking) {
+            VelaMenuDialog("Button layout", ControllerLayout.entries.map { MenuOption(it.name, it.label, description = it.description, selected = it == settings.controllerLayout) },
+                onSelect = { opt -> vm.update { it.copy(controllerLayout = ControllerLayout.valueOf(opt.id)) }; picking = false }, onDismiss = { picking = false })
+        }
+    }
+    item {
+        val layout = settings.controllerLayout
+        val confirm = if (settings.confirmButton == ConfirmButton.A) "A" else "B"
+        val back = if (settings.confirmButton == ConfirmButton.A) "B" else "A"
         SettingRow(
             "Confirm button",
-            description = if (settings.confirmButton == ConfirmButton.A) "A confirms, B goes back (Xbox layout)" else "B confirms, A goes back (Nintendo layout)",
+            description = "${layout.glyphOf(confirm)} (${layout.positionOf(confirm)}) confirms, ${layout.glyphOf(back)} (${layout.positionOf(back)}) goes back",
             value = settings.confirmButton.name,
             onClick = { vm.update { it.copy(confirmButton = if (it.confirmButton == ConfirmButton.A) ConfirmButton.B else ConfirmButton.A) } },
         )

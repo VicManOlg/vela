@@ -1,5 +1,6 @@
 package io.vela.ui
 
+import io.vela.core.ui.components.LocalControllerLayout
 import io.vela.core.ui.components.LocalHapticsEnabled
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -124,6 +125,7 @@ fun VelaApp(
             LocalUiSounds provides sounds,
             LocalDynamicAccent provides backdrop.dynamicAccent?.let(::Color),
             LocalHapticsEnabled provides prefs.hapticFeedback,
+            LocalControllerLayout provides prefs.controllerLayout,
         ) {
             val navController = rememberNavController()
             // Fixed for the life of the NavHost: flipping it when setup completes would rebuild the

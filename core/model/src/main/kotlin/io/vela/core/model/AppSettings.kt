@@ -22,6 +22,31 @@ enum class StorageMode {
 @Serializable
 enum class ConfirmButton { A, B }
 
+/**
+ * Where the face buttons sit on the device, and how they are drawn in the hint bar. The Odin 3
+ * ships Nintendo-style buttons (A on the right, B at the bottom); Xbox-style pads and PlayStation
+ * pads put the confirm button at the bottom.
+ */
+@Serializable
+enum class ControllerLayout(val label: String, val description: String) {
+    ODIN3("Odin 3 / Nintendo", "A right, B bottom, X top, Y left"),
+    XBOX("Xbox", "A bottom, B right, X left, Y top, coloured"),
+    PLAYSTATION("PlayStation", "Cross bottom, Circle right, Square left, Triangle top"),
+    ;
+
+    /** Physical position of the button that reports [label] (A, B, X or Y). */
+    fun positionOf(label: String): String = when (this) {
+        ODIN3 -> when (label) { "A" -> "right"; "B" -> "bottom"; "X" -> "top"; else -> "left" }
+        XBOX, PLAYSTATION -> when (label) { "A" -> "bottom"; "B" -> "right"; "X" -> "left"; else -> "top" }
+    }
+
+    /** What is printed on the button that reports [label]. */
+    fun glyphOf(label: String): String = when (this) {
+        PLAYSTATION -> when (label) { "A" -> "✕"; "B" -> "○"; "X" -> "□"; else -> "△" }
+        else -> label
+    }
+}
+
 /** How the Library shows systems. */
 @Serializable
 enum class LibraryLayout(val label: String, val description: String) {
@@ -108,6 +133,7 @@ data class AppSettings(
     val hiddenHomeRails: List<HomeRail> = emptyList(),
     // Controller
     val confirmButton: ConfirmButton = ConfirmButton.A,
+    val controllerLayout: ControllerLayout = ControllerLayout.ODIN3,
     val hapticFeedback: Boolean = true,
     val analogStickNavigation: Boolean = true,
     val stickDeadZone: Float = 0.5f,

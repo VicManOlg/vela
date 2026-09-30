@@ -1,5 +1,8 @@
 package io.vela.core.ui.components
 
+import io.vela.core.model.ControllerLayout
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.foundation.Canvas
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
@@ -39,6 +42,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.vela.core.ui.input.GamepadButton
 import io.vela.core.ui.theme.VelaTheme
@@ -265,28 +269,68 @@ fun ButtonHints(hints: List<ButtonHint>, modifier: Modifier = Modifier, swapped:
     }
 }
 
+/** The device's face-button layout; provided by the app from settings. */
+val LocalControllerLayout = staticCompositionLocalOf { ControllerLayout.ODIN3 }
+
+/**
+ * One button as the hint bar shows it. Face buttons carry a four-dot diamond that marks where the
+ * button physically sits on the current layout, then the label (letter or PlayStation symbol) in
+ * the layout's colour, so a hint reads the same way as looking at the pad.
+ */
 @Composable
 fun ButtonGlyph(button: GamepadButton, swapped: Boolean = false, size: Int = 22) {
     val colors = VelaTheme.colors
+    val layout = LocalControllerLayout.current
     val physical = when {
         swapped && button == GamepadButton.A -> "B"
         swapped && button == GamepadButton.B -> "A"
         else -> button.name
     }
     val round = button in setOf(GamepadButton.A, GamepadButton.B, GamepadButton.X, GamepadButton.Y)
-    Box(
-        Modifier
-            .then(if (round) Modifier.size(size.dp) else Modifier.height(size.dp).padding(horizontal = 0.dp))
-            .clip(if (round) CircleShape else RoundedCornerShape(6.dp))
-            .background(colors.onBackground.copy(alpha = 0.14f))
-            .padding(horizontal = if (round) 0.dp else 7.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            physical,
-            style = VelaTheme.typography.caption,
-            color = colors.onBackground,
-            fontWeight = FontWeight.Bold,
+    val tint = if (round) faceColor(layout, physical, colors.onBackground) else colors.onBackground
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (round) {
+            PositionDiamond(position = layout.positionOf(physical), active = tint, idle = colors.muted.copy(alpha = 0.45f), size = (size * 0.6f).dp)
+            Spacer(Modifier.width(5.dp))
+        }
+        Box(
+            Modifier
+                .then(if (round) Modifier.size(size.dp) else Modifier.height(size.dp).padding(horizontal = 0.dp))
+                .clip(if (round) CircleShape else RoundedCornerShape(6.dp))
+                .background(if (round) tint.copy(alpha = 0.22f) else colors.onBackground.copy(alpha = 0.14f))
+                .padding(horizontal = if (round) 0.dp else 7.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                if (round) layout.glyphOf(physical) else physical,
+                style = VelaTheme.typography.caption,
+                color = if (round) tint else colors.onBackground,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+    }
+}
+
+/** Xbox and PlayStation pads colour their buttons; the Odin 3's are neutral, so the text colour is used. */
+private fun faceColor(layout: ControllerLayout, label: String, neutral: Color): Color = when (layout) {
+    ControllerLayout.ODIN3 -> neutral
+    ControllerLayout.XBOX -> when (label) { "A" -> Color(0xFF5DC15D); "B" -> Color(0xFFE85A5A); "X" -> Color(0xFF4FA3F7); else -> Color(0xFFF2C94C) }
+    ControllerLayout.PLAYSTATION -> when (label) { "A" -> Color(0xFF8FB4F0); "B" -> Color(0xFFE85A5A); "X" -> Color(0xFFE8A0D0); else -> Color(0xFF7FD6A0) }
+}
+
+/** Four dots in a diamond; the one at [position] ("top", "right", "bottom", "left") is lit. */
+@Composable
+private fun PositionDiamond(position: String, active: Color, idle: Color, size: Dp) {
+    Canvas(Modifier.size(size)) {
+        val c = Offset(this.size.width / 2f, this.size.height / 2f)
+        val r = this.size.minDimension / 2f - 1.5f
+        val dots = mapOf(
+            "top" to Offset(c.x, c.y - r), "right" to Offset(c.x + r, c.y),
+            "bottom" to Offset(c.x, c.y + r), "left" to Offset(c.x - r, c.y),
         )
+        for ((name, at) in dots) {
+            val lit = name == position
+            drawCircle(if (lit) active else idle, radius = if (lit) 2.6f.dp.toPx() else 1.6f.dp.toPx(), center = at)
+        }
     }
 }
