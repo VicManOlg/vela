@@ -39,6 +39,7 @@ class ThemeLayoutsTest {
         val libraryViews = themes.mapNotNull { it.layout.libraryView }.toSet()
         assertThat(libraryLayouts).containsAtLeast("wheel", "mosaic", "columns", "book")
         assertThat(libraryViews).containsAtLeast("hero", "wall", "details", "book")
+        assertThat(themes.mapNotNull { it.layout.homeLayout }.toSet()).containsAtLeast("tiles", "strip", "dashboard", "spotlight", "carousel")
     }
 
     @Test

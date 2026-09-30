@@ -75,6 +75,7 @@ enum class HomeLayout(val label: String, val description: String) {
     TILES("Tiles", "One row of big square tiles with round buttons below; no tab bar"),
     STRIP("Strip", "Small tiles along the top, the focused game large underneath"),
     DASHBOARD("Dashboard", "Blocks: one big tile plus grids of squares"),
+    CAROUSEL("Carousel", "One big shelf of covers in the middle; the focused one stands centred, systems as chips below"),
 }
 
 /** Whether the section tabs are shown at the top of the shell. */

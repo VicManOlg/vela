@@ -36,7 +36,7 @@ MVP: functional, tested on an emulator and designed for 16:9 handhelds.
 | Android games detection and pinned apps | Done |
 | Metadata: libretro-thumbnails (no account) and ScreenScraper (user account) providers | Done |
 | Theme system driven by JSON specs (14 bundled themes) plus per-user tweaks layered on top | Done |
-| Systems views: Stage, Showcase, Grid, Wheel, Mosaic, Columns, Book; game views: Grid, Compact, List, Showcase, Hero, Wall, Details, Book | Done |
+| Home layouts: Rails, Spotlight, Tiles, Strip, Dashboard, Carousel; systems views: Stage, Showcase, Grid, Wheel, Mosaic, Columns, Book; game views: Grid, Compact, List, Showcase, Hero, Wall, Details, Book | Done |
 | Game list views: grid, compact grid, list with preview, showcase wheel (Start or Settings > Appearance) | Done |
 | Home layouts: rails or spotlight (focused game fills the screen) | Done |
 | Library systems view: poster cards (console, your covers, scene backdrop) or compact tiles | Done |

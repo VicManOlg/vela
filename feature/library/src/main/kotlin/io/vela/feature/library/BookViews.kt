@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
@@ -172,11 +173,16 @@ private fun BookSystemCard(entry: StageEntry, width: androidx.compose.ui.unit.Dp
             .clip(shape)
             .background(colors.surface),
     ) {
-        val scene = entry.background ?: entry.covers.firstOrNull()
-        if (scene != null) {
-            VelaImage(model = artworkModel(scene), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop, accent = accent, placeholder = {})
-        } else {
-            Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(accent.copy(alpha = 0.8f), colors.surfaceElevated))))
+        val scene = entry.background
+        when {
+            scene != null -> VelaImage(model = artworkModel(scene), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop, accent = accent, placeholder = {})
+            entry.covers.isNotEmpty() -> {
+                // No scene for this system yet: its own covers stand on a shelf over a blurred blow-up of the first one.
+                VelaImage(model = artworkModel(entry.covers.first()), contentDescription = null, modifier = Modifier.fillMaxSize().blur(22.dp), contentScale = ContentScale.Crop, accent = accent, placeholder = {})
+                Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = 0.35f)))
+                Box(Modifier.fillMaxSize().padding(top = 12.dp, bottom = 56.dp, end = 8.dp)) { CoverShelf(entry.covers, accent) }
+            }
+            else -> Box(Modifier.fillMaxSize().background(Brush.linearGradient(listOf(accent.copy(alpha = 0.8f), colors.surfaceElevated))))
         }
         Box(
             Modifier.fillMaxSize().drawBehind {

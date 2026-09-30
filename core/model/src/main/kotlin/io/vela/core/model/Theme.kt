@@ -75,7 +75,7 @@ data class ThemeLayout(
     val showButtonHints: Boolean = true,
     val showClock: Boolean = true,
     val showBattery: Boolean = true,
-    /** Home arrangement the theme suggests: `rails`, `spotlight`, `tiles`, `strip`, `dashboard`. Users can override in Settings. */
+    /** Home arrangement the theme suggests: `rails`, `spotlight`, `tiles`, `strip`, `dashboard`, `carousel`. Users can override in Settings. */
     val homeLayout: String? = null,
     /** Library systems view the theme suggests: `stage`, `showcase`, `grid`, `wheel`, `mosaic`, `columns`. */
     val libraryLayout: String? = null,

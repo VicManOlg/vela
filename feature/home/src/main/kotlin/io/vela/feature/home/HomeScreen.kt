@@ -112,6 +112,7 @@ fun HomeScreen(
             HomeLayout.TILES -> { TilesHome(state, spotlight, viewModel, navigation); return@Box }
             HomeLayout.STRIP -> { StripHome(state, spotlight, viewModel, navigation); return@Box }
             HomeLayout.DASHBOARD -> { DashboardHome(state, viewModel, navigation); return@Box }
+            HomeLayout.CAROUSEL -> { CarouselHome(state, spotlight, viewModel, navigation); return@Box }
             HomeLayout.RAILS, HomeLayout.THEME -> Unit
         }
 
@@ -304,6 +305,7 @@ internal fun homeLayoutFor(key: String?): HomeLayout = when (key?.lowercase()) {
     "tiles" -> HomeLayout.TILES
     "strip" -> HomeLayout.STRIP
     "dashboard" -> HomeLayout.DASHBOARD
+    "carousel" -> HomeLayout.CAROUSEL
     else -> HomeLayout.RAILS
 }
 

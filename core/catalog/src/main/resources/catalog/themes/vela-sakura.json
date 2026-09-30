@@ -35,7 +35,7 @@
     "railSpacing": 14,
     "sectionSpacing": 30,
     "gridColumns": 6,
-    "homeLayout": "spotlight",
+    "homeLayout": "carousel",
     "libraryLayout": "showcase",
     "libraryView": "hero"
   },
