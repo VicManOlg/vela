@@ -22,6 +22,12 @@ enum class RomDelivery {
     /** `intent.data = file://` URI (legacy emulators). */
     FILE_URI_DATA,
 
+    /**
+     * `intent.data = Uri.parse(path)`: the bare filesystem path with no scheme, exactly what
+     * `am start -d /storage/...` sends. Used by recipes ported from Daijishō that pass `{file.path}` as data.
+     */
+    PATH_DATA,
+
     /** ROM referenced only through extras (e.g. RetroArch `ROM` path extra). */
     EXTRAS_ONLY,
 }
@@ -60,7 +66,8 @@ data class PlayerDefinition(
     val packages: List<String>,
     /** Fully qualified activity, `.Relative` to the package, or null to use the launcher activity. */
     val activity: String? = null,
-    val action: String = "android.intent.action.VIEW",
+    /** Intent action; null leaves the intent without one (component-only launch, as `am start -n` does). */
+    val action: String? = "android.intent.action.VIEW",
     val categories: List<String> = emptyList(),
     val delivery: RomDelivery = RomDelivery.CONTENT_URI_DATA,
     val mimeType: String? = null,

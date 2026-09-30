@@ -42,6 +42,14 @@ Kotlin. Read `CLAUDE.md` for the module rules.
   `ACTIVITY_MISSING` (package present, activity gone) or `READY`, using
   `PackageManager.resolveActivity` on the explicit component. Use it in diagnostics before
   proposing a recipe; it does not launch anything.
+- `CatalogPlayers` (core/catalog) translates catalogue recipes into `PlayerDefinition`s with ids
+  `catalog.<daijishou id>`: `{file.uri}`→`{rom.uri}`, `{file.path}`→`{rom.path}`; `-d {file.path}`
+  becomes `RomDelivery.PATH_DATA` (bare path as data, like `am start -d`); recipes needing
+  `{tags.*}` or `{file.mime}` are left out. Packages already in `players.json` are skipped, so a
+  hand-checked recipe always wins. `PlayerResolver` appends these candidates **only when the
+  package is installed and the activity resolves**; they never show as "not installed".
+  A Vela platform maps to catalogue ids through `Platform.catalogIds` in `platforms.json`
+  (e.g. `megadrive` → `genesis`, `arcade` → `mame`, `fbneo`).
 
 ## Known problems and how to handle them
 

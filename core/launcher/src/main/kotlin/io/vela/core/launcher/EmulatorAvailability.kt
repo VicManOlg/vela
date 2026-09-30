@@ -39,7 +39,7 @@ class EmulatorAvailability @Inject constructor(
         val pkg = emulator.packageName ?: return Status.NOT_INSTALLED
         if (!isInstalled(pkg)) return Status.NOT_INSTALLED
         val activity = emulator.activity ?: return Status.READY
-        return if (resolves(pkg, activity, emulator.action)) Status.READY else Status.ACTIVITY_MISSING
+        return if (activityExists(pkg, activity, emulator.action)) Status.READY else Status.ACTIVITY_MISSING
     }
 
     /** Every recipe of a catalogue platform with its status; READY ones first, catalogue order otherwise. */
@@ -59,7 +59,7 @@ class EmulatorAvailability @Inject constructor(
     }
 
     /** An explicit intent resolves iff the activity exists in that package (exported or not is checked at start time). */
-    private fun resolves(packageName: String, activity: String, action: String?): Boolean {
+    fun activityExists(packageName: String, activity: String, action: String?): Boolean {
         val intent = Intent().apply {
             component = ComponentName(packageName, activity)
             if (action != null) this.action = action

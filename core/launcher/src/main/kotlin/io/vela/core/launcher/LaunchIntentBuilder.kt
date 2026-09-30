@@ -71,7 +71,7 @@ class LaunchIntentBuilder @Inject constructor(@ApplicationContext private val co
         val vars = ctx.variables()
 
         val intent = Intent()
-        intent.action = def.action.expand(vars)
+        def.action?.let { intent.action = it.expand(vars) }
         def.categories.forEach { intent.addCategory(it.expand(vars)) }
 
         val activity = def.activity?.expand(vars)
@@ -90,6 +90,10 @@ class LaunchIntentBuilder @Inject constructor(@ApplicationContext private val co
             }
             RomDelivery.FILE_URI_DATA -> ctx.romPath?.let { path ->
                 val uri = Uri.fromFile(File(path))
+                if (def.mimeType != null) intent.setDataAndType(uri, def.mimeType) else intent.data = uri
+            }
+            RomDelivery.PATH_DATA -> ctx.romPath?.let { path ->
+                val uri = Uri.parse(path)
                 if (def.mimeType != null) intent.setDataAndType(uri, def.mimeType) else intent.data = uri
             }
             RomDelivery.EXTRAS_ONLY, RomDelivery.NONE -> Unit

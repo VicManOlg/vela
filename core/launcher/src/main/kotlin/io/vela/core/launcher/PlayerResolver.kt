@@ -3,6 +3,7 @@ package io.vela.core.launcher
 import android.content.Context
 import android.content.pm.PackageManager
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.vela.core.catalog.CatalogPlayers
 import io.vela.core.catalog.PlatformCatalog
 import io.vela.core.catalog.PlayerCatalog
 import io.vela.core.model.CoreOption
@@ -63,14 +64,34 @@ class InstalledPackages @Inject constructor(@ApplicationContext private val cont
 
 /**
  * Picks the emulator (and libretro core) for a game. Precedence: per-game override, per-platform
- * setting, platform defaults in catalog order, then any installed player that supports the platform.
+ * setting, platform defaults in catalog order, any installed `players.json` player that supports
+ * the platform, then any *installed* emulator the generated catalogue knows for it
+ * ([CatalogPlayers]). Catalogue players only count when their package is installed and their
+ * activity resolves, so they never appear as "not installed" noise.
  */
 @Singleton
 class PlayerResolver @Inject constructor(
     private val players: PlayerCatalog,
     private val platforms: PlatformCatalog,
     private val installed: InstalledPackages,
+    private val catalog: CatalogPlayers,
+    private val availability: EmulatorAvailability,
 ) {
+    /** A player by id from either source. */
+    fun definition(id: PlayerId): PlayerDefinition? = players[id] ?: catalog[id]
+
+    /** Catalogue players for [platform] whose package is installed and whose activity exists. */
+    fun catalogCandidates(platform: Platform): List<PlayerDefinition> =
+        catalog.forPlatform(platform.id).filter { def ->
+            val pkg = def.packages.firstOrNull { installed.isInstalled(it) } ?: return@filter false
+            val activity = def.activity ?: return@filter true
+            availability.activityExists(pkg, activity, def.action)
+        }
+
+    /** Every installed catalogue player across platforms (Settings > Emulators). */
+    fun installedCatalogPlayers(): List<PlayerDefinition> =
+        platforms.platforms.flatMap { catalogCandidates(it) }.distinctBy { it.id }
+
     sealed interface Resolution {
         data class Ready(val player: ResolvedPlayer) : Resolution
 
@@ -84,8 +105,9 @@ class PlayerResolver @Inject constructor(
         val platform = platforms[game.platformId] ?: return Resolution.NoCandidate
         val explicit = game.playerOverride ?: settings?.playerId
         val candidates: List<PlayerDefinition> = buildList {
-            explicit?.let { id -> players[id]?.let(::add) }
+            explicit?.let { id -> definition(id)?.let(::add) }
             addAll(players.forPlatform(platform.id, platform.defaultPlayers))
+            addAll(catalogCandidates(platform))
         }.distinct()
 
         if (candidates.isEmpty()) return Resolution.NoCandidate
@@ -106,9 +128,10 @@ class PlayerResolver @Inject constructor(
 
     /** All players that could run this platform, with install state, for the Settings UI. */
     fun optionsFor(platform: Platform): List<Pair<PlayerDefinition, String?>> =
-        players.forPlatform(platform.id, platform.defaultPlayers).map { it to installed.installedPackage(it) }
+        players.forPlatform(platform.id, platform.defaultPlayers).map { it to installed.installedPackage(it) } +
+            catalogCandidates(platform).map { it to installed.installedPackage(it) }
 
-    fun coresFor(playerId: PlayerId, platform: Platform): List<CoreOption> = players[playerId]?.coresFor(platform.id).orEmpty()
+    fun coresFor(playerId: PlayerId, platform: Platform): List<CoreOption> = definition(playerId)?.coresFor(platform.id).orEmpty()
 
     private fun pickCore(player: PlayerDefinition, platform: Platform, game: Game, settings: PlatformSettings?): CoreOption? {
         val cores = player.coresFor(platform.id)

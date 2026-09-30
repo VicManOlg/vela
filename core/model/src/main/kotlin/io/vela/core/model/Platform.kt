@@ -46,6 +46,8 @@ data class Platform(
     val libretroName: String? = null,
     /** RetroArch assets icon name when it differs from [libretroName] (or there is none). */
     val iconName: String? = null,
+    /** Ids of this system in the generated emulator catalogue (Daijishō); empty means the same id. */
+    val catalogIds: List<String> = emptyList(),
     /** Accent colour (ARGB) used by the theme for platform tiles. */
     @Serializable(with = ArgbHexSerializer::class)
     val accentColor: Long = 0xFF3D7BFF,

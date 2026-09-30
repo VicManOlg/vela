@@ -63,6 +63,7 @@ class SettingsViewModel @Inject constructor(
     private val play: PlayGame,
     private val players: PlayerCatalog,
     private val installed: InstalledPackages,
+    private val resolver: io.vela.core.launcher.PlayerResolver,
     val themes: ThemeRepository,
 ) : ViewModel() {
 
@@ -136,10 +137,13 @@ class SettingsViewModel @Inject constructor(
         library.updatePlatformSettings(entry.settings.copy(playerId = playerId, coreId = coreId))
     }
 
+    /** Vela's own players (installed or not) plus installed emulators from the generated catalogue. */
     fun playerOptions(entry: PlatformEntry): List<PlayerStatus> =
-        players.forPlatform(entry.id, entry.platform.defaultPlayers).map { PlayerStatus(it, installed.installedPackage(it)) }
+        resolver.optionsFor(entry.platform).map { (def, pkg) -> PlayerStatus(def, pkg) }
 
-    fun allPlayers(): List<PlayerStatus> = players.players.map { PlayerStatus(it, installed.installedPackage(it)) }
+    fun allPlayers(): List<PlayerStatus> =
+        players.players.map { PlayerStatus(it, installed.installedPackage(it)) } +
+            resolver.installedCatalogPlayers().map { PlayerStatus(it, installed.installedPackage(it)) }
 
     fun refreshInstalled() = installed.invalidate()
 

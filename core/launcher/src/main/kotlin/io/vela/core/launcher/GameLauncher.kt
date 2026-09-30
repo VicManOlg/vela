@@ -139,7 +139,9 @@ class GameLauncher @Inject constructor(
             PlayerResolver.Resolution.NoCandidate -> return Outcome.failure(VelaError.NoPlayer(platformName))
         }
         val prepared = intentBuilder.build(game, resolved, platformSettings)
-        if (resolved.definition.requiresFilePath && prepared.intent.hasEmptyPathExtra(resolved)) {
+        val pathMissing = prepared.intent.hasEmptyPathExtra(resolved) ||
+            (resolved.definition.delivery == io.vela.core.model.RomDelivery.PATH_DATA && prepared.intent.data == null)
+        if (resolved.definition.requiresFilePath && pathMissing) {
             return Outcome.failure(
                 VelaError.LaunchFailed("${resolved.definition.name} needs a real file path. Enable \"All files access\" in Settings > Storage."),
             )

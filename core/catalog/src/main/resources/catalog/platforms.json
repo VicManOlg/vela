@@ -308,7 +308,10 @@
     "igdbId": 37,
     "libretroName": "Nintendo - Nintendo 3DS",
     "accentColor": "#FFD62828",
-    "sortOrder": 100
+    "sortOrder": 100,
+    "catalogIds": [
+      "3ds"
+    ]
   },
   {
     "id": "switch",
@@ -519,7 +522,10 @@
     "igdbId": 46,
     "libretroName": "Sony - PlayStation Vita",
     "accentColor": "#FF0072CE",
-    "sortOrder": 230
+    "sortOrder": 230,
+    "catalogIds": [
+      "vita"
+    ]
   },
   {
     "id": "xbox360",
@@ -612,7 +618,10 @@
     "igdbId": 29,
     "libretroName": "Sega - Mega Drive - Genesis",
     "accentColor": "#FF1D1D1D",
-    "sortOrder": 310
+    "sortOrder": 310,
+    "catalogIds": [
+      "genesis"
+    ]
   },
   {
     "id": "mastersystem",
@@ -641,7 +650,10 @@
     "igdbId": 64,
     "libretroName": "Sega - Master System - Mark III",
     "accentColor": "#FFD92B2B",
-    "sortOrder": 320
+    "sortOrder": 320,
+    "catalogIds": [
+      "master"
+    ]
   },
   {
     "id": "gamegear",
@@ -785,7 +797,11 @@
     "igdbId": 52,
     "libretroName": "MAME",
     "accentColor": "#FFFFC300",
-    "sortOrder": 400
+    "sortOrder": 400,
+    "catalogIds": [
+      "mame",
+      "fbneo"
+    ]
   },
   {
     "id": "neogeo",
@@ -891,7 +907,10 @@
     "igdbId": 86,
     "libretroName": "NEC - PC Engine - TurboGrafx 16",
     "accentColor": "#FFE85D04",
-    "sortOrder": 500
+    "sortOrder": 500,
+    "catalogIds": [
+      "tg16"
+    ]
   },
   {
     "id": "pcenginecd",
@@ -919,7 +938,10 @@
     "screenScraperId": 114,
     "libretroName": "NEC - PC Engine CD - TurboGrafx-CD",
     "accentColor": "#FFBF4904",
-    "sortOrder": 510
+    "sortOrder": 510,
+    "catalogIds": [
+      "tgcd"
+    ]
   },
   {
     "id": "atari2600",
@@ -1055,7 +1077,11 @@
     ],
     "libretroName": "Bandai - WonderSwan Color",
     "accentColor": "#FF4361EE",
-    "sortOrder": 700
+    "sortOrder": 700,
+    "catalogIds": [
+      "wsc",
+      "ws"
+    ]
   },
   {
     "id": "msx",
@@ -1252,7 +1278,10 @@
     ],
     "libretroName": "Coleco - ColecoVision",
     "accentColor": "#FF7B2CBF",
-    "sortOrder": 770
+    "sortOrder": 770,
+    "catalogIds": [
+      "coleco"
+    ]
   },
   {
     "id": "android",
@@ -1312,6 +1341,9 @@
     "screenScraperId": 138,
     "igdbId": 6,
     "accentColor": "#FF1B2838",
-    "sortOrder": 920
+    "sortOrder": 920,
+    "catalogIds": [
+      "windows"
+    ]
   }
 ]

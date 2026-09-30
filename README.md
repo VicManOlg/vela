@@ -167,7 +167,8 @@ Before writing a recipe, look it up in `core/catalog/src/main/resources/catalog/
 a generated catalogue of 958 launch recipes for 121 platforms, built by
 `scripts/build_emulator_catalog.py` from the Daijishō platform definitions and ES-DE's Android
 find rules (both MIT, see NOTICE). Package names, activities, actions and extras come from there,
-never from memory.
+never from memory. Recipes from that catalogue are also used at runtime, after `players.json`,
+for any emulator that is installed on the device but has no hand-written recipe.
 
 Edit `core/catalog/src/main/resources/catalog/players.json`. A player is an intent template:
 
