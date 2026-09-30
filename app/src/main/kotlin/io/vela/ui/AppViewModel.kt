@@ -7,6 +7,7 @@ import io.vela.core.data.usecase.GameActions
 import io.vela.core.data.usecase.UiMessage
 import io.vela.core.model.AppSettings
 import io.vela.core.model.ThemeSpec
+import io.vela.core.model.applying
 import io.vela.core.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -35,7 +36,11 @@ class AppViewModel @Inject constructor(
     val settings: StateFlow<AppSettings?> = settings.settings
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val theme: StateFlow<ThemeSpec> = combine(settings.settings, themes.catalog) { s, catalog -> catalog.byId(s.themeId) }
+    /** The chosen theme with the user's Appearance tweaks on top; `gridColumns` predates the overrides and still counts. */
+    val theme: StateFlow<ThemeSpec> = combine(settings.settings, themes.catalog) { s, catalog ->
+        val overrides = if (s.appearance.gridColumns == null && s.gridColumns > 0) s.appearance.copy(gridColumns = s.gridColumns) else s.appearance
+        catalog.byId(s.themeId).applying(overrides)
+    }
         .stateIn(viewModelScope, SharingStarted.Eagerly, themes.catalog.value.default)
 
     val messages: SharedFlow<UiMessage> = actions.messages

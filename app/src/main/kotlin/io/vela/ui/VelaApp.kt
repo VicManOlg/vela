@@ -123,7 +123,7 @@ fun VelaApp(
         CompositionLocalProvider(
             LocalGamepad provides gamepad,
             LocalUiSounds provides sounds,
-            LocalDynamicAccent provides backdrop.dynamicAccent?.let(::Color),
+            LocalDynamicAccent provides if (VelaTheme.effects.dynamicAccent) backdrop.dynamicAccent?.let(::Color) else null,
             LocalHapticsEnabled provides prefs.hapticFeedback,
             LocalControllerLayout provides prefs.controllerLayout,
         ) {
@@ -133,15 +133,19 @@ fun VelaApp(
             val startDestination: Any = remember { if (prefs.setupCompleted) ShellRoute() else SetupRoute }
             // The Home button (Vela as launcher) always lands on the shell.
             LaunchedEffect(navController) { homePresses.collect { navController.popBackStack<ShellRoute>(inclusive = false) } }
+            // Screen transitions follow the theme's motion (and collapse to nothing under Reduce motion).
+            val t = VelaTheme.motion.transitionDurationMs
+            val long = (t * 0.875f).toInt()
+            val short = (t * 0.56f).toInt()
             Box(Modifier.fillMaxSize().background(VelaTheme.colors.background)) {
                 DynamicBackground(artwork = backdrop.artwork, accent = Color(backdrop.accent))
                 NavHost(
                     navController = navController,
                     startDestination = startDestination,
-                    enterTransition = { fadeIn(tween(260)) + slideInHorizontally(tween(280)) { it / 14 } },
-                    exitTransition = { fadeOut(tween(180)) + scaleOut(tween(280), targetScale = 0.98f) },
-                    popEnterTransition = { fadeIn(tween(260)) + scaleIn(tween(280), initialScale = 0.98f) },
-                    popExitTransition = { fadeOut(tween(180)) + slideOutHorizontally(tween(280)) { it / 14 } },
+                    enterTransition = { fadeIn(tween(long)) + slideInHorizontally(tween(long)) { it / 14 } },
+                    exitTransition = { fadeOut(tween(short)) + scaleOut(tween(long), targetScale = 0.98f) },
+                    popEnterTransition = { fadeIn(tween(long)) + scaleIn(tween(long), initialScale = 0.98f) },
+                    popExitTransition = { fadeOut(tween(short)) + slideOutHorizontally(tween(long)) { it / 14 } },
                 ) {
                     composable<SetupRoute> {
                         SetupScreen(onDone = { navController.navigate(ShellRoute()) { popUpTo<SetupRoute> { inclusive = true } } })

@@ -35,7 +35,7 @@ MVP: functional, tested on an emulator and designed for 16:9 handhelds.
 | Data-driven emulator launching (25+ players, RetroArch cores) with play-time tracking | Done |
 | Android games detection and pinned apps | Done |
 | Metadata: libretro-thumbnails (no account) and ScreenScraper (user account) providers | Done |
-| Theme system driven by JSON specs (3 bundled themes) | Done |
+| Theme system driven by JSON specs (7 bundled themes) plus per-user tweaks layered on top | Done |
 | Game list views: grid, compact grid, list with preview, showcase wheel (Start or Settings > Appearance) | Done |
 | Home layouts: rails or spotlight (focused game fills the screen) | Done |
 | Library systems view: poster cards (console, your covers, scene backdrop) or compact tiles | Done |
@@ -217,10 +217,12 @@ icons. ScreenScraper needs developer credentials in `secrets.properties`.
 
 ## Adding a theme
 
-In the app: Settings > Appearance > Customize theme edits the theme in use (accent, background,
-console icons, card size, corners, panels) and saves it as "Custom"; Import theme file copies a
-JSON into `Android/data/io.vela.frontend/files/themes/`, which is also read on every visit to
-Appearance. Seven themes ship: Vela Night, Vela Day (light), Vela Ember, Vela Mono, and three console-inspired
+In the app: Settings > Appearance shows the themes as preview cards, and every row below them
+(colours, background scene, cards, text, effects, layout, interface) can be tuned on top of the
+theme; a muted value means "as the theme designed it", left/right on the pad adjusts sliders in
+place, and "Reset look to theme" undoes every tweak at once. Tweaks survive switching themes.
+Import theme file copies a JSON into `Android/data/io.vela.frontend/files/themes/`, which is
+also read on every visit to Appearance. Seven themes ship: Vela Night, Vela Day (light), Vela Ember, Vela Mono, and three console-inspired
 ones: Vela Joy (light, flat, cyan focus), Vela Azure (deep blue, glass, large covers) and Vela
 Emerald (black and green, square tiles, system font).
 

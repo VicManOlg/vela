@@ -281,7 +281,11 @@ fun SettingRow(
     enabled: Boolean = true,
     danger: Boolean = false,
     onFocused: (() -> Unit)? = null,
+    /** Draw [value] in the muted colour: the row is at its default ("Theme"), not a choice worth highlighting. */
+    subdued: Boolean = false,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    /** Drawn after the value (a colour chip, a small icon). */
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val colors = VelaTheme.colors
     val shape = RoundedCornerShape(12.dp)
@@ -317,7 +321,11 @@ fun SettingRow(
         }
         if (value != null) {
             Spacer(Modifier.width(16.dp))
-            Text(value, style = VelaTheme.typography.bodyStrong, color = colors.accent, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(0.35f), textAlign = androidx.compose.ui.text.style.TextAlign.End)
+            Text(value, style = VelaTheme.typography.bodyStrong, color = if (subdued) colors.muted else colors.accent, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(0.35f), textAlign = androidx.compose.ui.text.style.TextAlign.End)
+        }
+        if (trailing != null) {
+            Spacer(Modifier.width(12.dp))
+            trailing()
         }
         if (checked != null) {
             Spacer(Modifier.width(16.dp))

@@ -19,6 +19,7 @@ import io.vela.core.data.repository.ScrapeRepository
 import io.vela.core.data.usecase.PlayGame
 import io.vela.core.launcher.InstalledPackages
 import io.vela.core.model.AppSettings
+import io.vela.core.model.AppearanceOverrides
 import io.vela.core.model.LibrarySource
 import io.vela.core.model.LibrarySourceId
 import io.vela.core.model.MetadataProviderInfo
@@ -45,7 +46,7 @@ enum class SettingsSection(val title: String, val summary: String) {
     PLATFORMS("Systems", "Enable systems and pick emulators"),
     EMULATORS("Emulators", "Installed players and cores"),
     SCRAPING("Metadata", "Artwork and descriptions"),
-    APPEARANCE("Appearance", "Theme, motion, clock"),
+    APPEARANCE("Appearance", "Theme, colours, cards, motion"),
     CONTROLLER("Controller", "Buttons, sticks, repeat speed"),
     ANDROID("Android apps", "Games and app detection"),
     STORAGE("Storage", "File access and artwork cache"),
@@ -180,13 +181,9 @@ class SettingsViewModel @Inject constructor(
         themes.import(uri)
             .onSuccess { spec -> settingsRepository.update { it.copy(themeId = spec.id) } }
     }
-    /** Applies [transform] to the theme in use and saves the result as the custom theme. */
-    fun customizeTheme(transform: (ThemeSpec) -> ThemeSpec) = viewModelScope.launch {
-        val base = themes.byId(settings.value.themeId)
-        val edited = transform(base)
-        val name = if (base.id == ThemeRepository.CUSTOM_ID) base.name else "Custom · ${base.name}"
-        themes.saveCustom(edited.copy(name = name))
-    }
+    /** Changes the user's tweaks layered over the theme (Settings > Appearance). */
+    fun updateAppearance(transform: (AppearanceOverrides) -> AppearanceOverrides) = update { it.copy(appearance = transform(it.appearance)) }
+    fun resetAppearance() = update { it.copy(appearance = AppearanceOverrides(), gridColumns = 0) }
     fun resetCustomTheme() = viewModelScope.launch { themes.clearCustom() }
 
     val appVersion: String

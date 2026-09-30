@@ -96,8 +96,14 @@ fun GameCard(
                     .size(14.dp),
             )
         }
-        if (focused && game.boxArt != null) {
-            // Title strip only while focused, so the art breathes when browsing.
+        val labels = VelaTheme.dimens.cardLabels
+        val showTitle = game.boxArt != null && when (labels) {
+            "always" -> true
+            "never" -> false
+            else -> focused
+        }
+        if (showTitle) {
+            // Title strip: by default only while focused, so the art breathes when browsing.
             Box(
                 Modifier
                     .align(Alignment.BottomCenter)

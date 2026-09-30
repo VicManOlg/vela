@@ -81,6 +81,8 @@ data class ThemeLayout(
     val libraryLayout: String? = null,
     /** False hides the tab bar on Home (a slim status row replaces it); other tabs keep it. */
     val showTabs: Boolean = true,
+    /** When game cards print their title over the art: `focused`, `always` or `never`. */
+    val cardLabels: String = "focused",
 )
 
 @Serializable
@@ -127,4 +129,6 @@ data class ThemeEffects(
     val focusGlow: Boolean = true,
     val videoPreviews: Boolean = true,
     val videoPreviewDelayMs: Int = 1200,
+    /** Glows, rings and progress bars follow the focused game's artwork colour instead of the accent. */
+    val dynamicAccent: Boolean = true,
 )

@@ -19,6 +19,12 @@ first, touch supported everywhere. Public repo: https://github.com/VicManOlg/vel
   rename or remove serialized names. Enum lists that may gain values use lenient serializers.
 - Themes decide structure, not just colour: `ThemeLayout.homeLayout`, `libraryLayout`, `showTabs`,
   `boxArtAspect`. User settings (`HomeLayout`, `LibraryLayout`, `TabBarMode`) default to THEME.
+- The user's look tweaks live in `AppSettings.appearance` (`AppearanceOverrides`, every field
+  nullable = "theme's value") and are applied once, in `AppViewModel.theme`, through
+  `ThemeSpec.applying`. Screens keep reading `VelaTheme`; never apply overrides elsewhere. A new
+  tunable means: a field in `ThemeSpec` (so themes can set it), a nullable field in
+  `AppearanceOverrides`, one line in `applying`, one row in `AppearanceSection.kt`.
+  Settings rows need stable `item(key = …)`; an inserted row without one steals the focus.
 - Compose: animated values are read in `graphicsLayer` / `draw` lambdas, not in composition.
   `clickable` alone is not focusable on touch devices; use `velaFocusable` (sounds, ring, glow).
   Touch-only targets use `pointerInput` tap gestures. Dialogs consume gamepad buttons.

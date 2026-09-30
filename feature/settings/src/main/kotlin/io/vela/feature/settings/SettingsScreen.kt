@@ -411,109 +411,14 @@ private fun CredentialRow(title: String, value: String, secret: Boolean = false,
     }
 }
 
-// ---- Appearance -------------------------------------------------------------------------------
-
-private fun Scope.appearanceSection(vm: SettingsViewModel, settings: AppSettings) {
-    item {
-        var picking by remember { mutableStateOf(false) }
-        val allThemes by vm.themes.themes.collectAsStateWithLifecycle()
-        LaunchedEffect(Unit) { vm.reloadThemes() }
-        SettingRow("Theme", value = vm.themeById(settings.themeId).name, onClick = { picking = true })
-        if (picking) {
-            VelaMenuDialog("Theme", allThemes.map { MenuOption(it.id, it.name, description = it.author.takeIf { a -> a.isNotBlank() }?.let { a -> "by $a" }, selected = it.id == settings.themeId) },
-                onSelect = { opt -> vm.update { it.copy(themeId = opt.id) }; picking = false }, onDismiss = { picking = false })
-        }
-    }
-    item {
-        var editing by remember { mutableStateOf(false) }
-        val current = vm.themeById(settings.themeId)
-        SettingRow("Customize theme", description = "Accent, background, console icons, card size, corners, panels", value = if (settings.customThemeJson != null) "Custom" else null, onClick = { editing = true })
-        if (editing) ThemeEditorDialogs(current = current, onApply = { vm.customizeTheme(it) }, onClose = { editing = false })
-    }
-    item {
-        val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? -> uri?.let(vm::importTheme) }
-        SettingRow("Import theme file", description = "A JSON with the same schema as the bundled themes; it is copied into Android/data/io.vela.frontend/files/themes/", onClick = { picker.launch(arrayOf("application/json", "text/plain", "*/*")) })
-    }
-    if (settings.customThemeJson != null) {
-        item { SettingRow("Reset custom theme", description = "Removes your edits and returns to the theme it was based on", onClick = vm::resetCustomTheme) }
-    }
-    item {
-        var picking by remember { mutableStateOf(false) }
-        SettingRow("Home layout", description = settings.homeLayout.description, value = settings.homeLayout.label, onClick = { picking = true })
-        if (picking) {
-            VelaMenuDialog("Home layout", HomeLayout.entries.map { MenuOption(it.name, it.label, description = it.description, selected = it == settings.homeLayout) },
-                onSelect = { opt -> vm.update { it.copy(homeLayout = HomeLayout.valueOf(opt.id)) }; picking = false }, onDismiss = { picking = false })
-        }
-    }
-    item {
-        var open by remember { mutableStateOf(false) }
-        val shown = HomeRail.entries.count { it !in settings.hiddenHomeRails }
-        SettingRow("Home sections", description = "Which rows the Home shows, and in what order", value = "$shown of ${HomeRail.entries.size}", onClick = { open = true })
-        if (open) HomeSectionsEditor(settings, vm, onClose = { open = false })
-    }
-    item {
-        var picking by remember { mutableStateOf(false) }
-        SettingRow("Tab bar", description = settings.tabBar.description, value = settings.tabBar.label, onClick = { picking = true })
-        if (picking) {
-            VelaMenuDialog("Tab bar", TabBarMode.entries.map { MenuOption(it.name, it.label, description = it.description, selected = it == settings.tabBar) },
-                onSelect = { opt -> vm.update { it.copy(tabBar = TabBarMode.valueOf(opt.id)) }; picking = false }, onDismiss = { picking = false })
-        }
-    }
-    item {
-        var picking by remember { mutableStateOf(false) }
-        SettingRow("Systems view", description = settings.libraryLayout.description, value = settings.libraryLayout.label, onClick = { picking = true })
-        if (picking) {
-            VelaMenuDialog("Systems view", LibraryLayout.entries.map { MenuOption(it.name, it.label, description = it.description, selected = it == settings.libraryLayout) },
-                onSelect = { opt -> vm.update { it.copy(libraryLayout = LibraryLayout.valueOf(opt.id)) }; picking = false }, onDismiss = { picking = false })
-        }
-    }
-    item {
-        var picking by remember { mutableStateOf(false) }
-        SettingRow("Library view", description = "Also changeable with Start inside any game list", value = settings.libraryView.label, onClick = { picking = true })
-        if (picking) {
-            VelaMenuDialog("Library view", LibraryView.entries.map { MenuOption(it.name, it.label, description = it.description, selected = it == settings.libraryView) },
-                onSelect = { opt -> vm.update { it.copy(libraryView = LibraryView.valueOf(opt.id)) }; picking = false }, onDismiss = { picking = false })
-        }
-    }
-    item {
-        var picking by remember { mutableStateOf(false) }
-        SettingRow("Grid columns", value = if (settings.gridColumns == 0) "Theme default" else settings.gridColumns.toString(), onClick = { picking = true })
-        if (picking) {
-            VelaMenuDialog("Grid columns", (listOf(0) + (4..9)).map { MenuOption(it.toString(), if (it == 0) "Theme default" else it.toString(), selected = it == settings.gridColumns) },
-                onSelect = { opt -> vm.update { it.copy(gridColumns = opt.id.toInt()) }; picking = false }, onDismiss = { picking = false })
-        }
-    }
-    item {
-        var picking by remember { mutableStateOf(false) }
-        SettingRow("Interface size", value = "${(settings.uiScale * 100).toInt()}%", onClick = { picking = true })
-        if (picking) {
-            VelaMenuDialog("Interface size", listOf(0.85f, 0.92f, 1f, 1.1f, 1.2f).map { MenuOption(it.toString(), "${(it * 100).toInt()}%", selected = it == settings.uiScale) },
-                onSelect = { opt -> vm.update { it.copy(uiScale = opt.id.toFloat()) }; picking = false }, onDismiss = { picking = false })
-        }
-    }
-    // Video previews are not implemented yet; the switch comes back with the feature.
-    item { SettingRow("Reduce motion", description = "Turns off scaling, parallax and crossfades", checked = settings.reduceMotion, onClick = { vm.update { it.copy(reduceMotion = !it.reduceMotion) } }) }
-    item { SectionHeader("Sound") }
-    item { SettingRow("Interface sounds", description = "Ticks on focus, chimes on confirm and back, a swell when a game launches", checked = settings.uiSounds, onClick = { vm.update { it.copy(uiSounds = !it.uiSounds) } }) }
-    item {
-        var picking by remember { mutableStateOf(false) }
-        SettingRow("Sound volume", value = "${(settings.uiSoundVolume * 100).toInt()}%", enabled = settings.uiSounds, onClick = { picking = true })
-        if (picking) {
-            VelaMenuDialog("Sound volume", listOf(0.25f, 0.5f, 0.75f, 1f).map { MenuOption(it.toString(), "${(it * 100).toInt()}%", selected = it == settings.uiSoundVolume) },
-                onSelect = { opt -> vm.update { it.copy(uiSoundVolume = opt.id.toFloat()) }; picking = false }, onDismiss = { picking = false })
-        }
-    }
-    item { SectionHeader("Status bar") }
-    item { SettingRow("Show clock", checked = settings.showClock, onClick = { vm.update { it.copy(showClock = !it.showClock) } }) }
-    item { SettingRow("Show battery", checked = settings.showBattery, onClick = { vm.update { it.copy(showBattery = !it.showBattery) } }) }
-}
+// ---- Appearance: see AppearanceSection.kt ------------------------------------------------------
 
 /**
  * Two-level editor for the Home sections: pick a section, then move it up or down or hide it.
  * Every choice is saved at once; the list reopens so several changes take a few presses.
  */
 @Composable
-private fun HomeSectionsEditor(settings: AppSettings, vm: SettingsViewModel, onClose: () -> Unit) {
+internal fun HomeSectionsEditor(settings: AppSettings, vm: SettingsViewModel, onClose: () -> Unit) {
     val ordered = settings.homeRails + HomeRail.entries.filter { it !in settings.homeRails }
     var editing by remember { mutableStateOf<HomeRail?>(null) }
     val target = editing

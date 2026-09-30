@@ -154,6 +154,8 @@ data class AppSettings(
     val uiScale: Float = 1f,
     val uiSounds: Boolean = true,
     val uiSoundVolume: Float = 0.5f,
+    /** The user's tweaks on top of the active theme; see [ThemeSpec.applying]. */
+    val appearance: AppearanceOverrides = AppearanceOverrides(),
     // Android apps
     val showSystemApps: Boolean = false,
     val autoDetectGames: Boolean = true,

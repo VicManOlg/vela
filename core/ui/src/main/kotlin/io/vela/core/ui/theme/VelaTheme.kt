@@ -73,6 +73,8 @@ data class VelaDimens(
     val showButtonHints: Boolean,
     val showClock: Boolean,
     val showBattery: Boolean,
+    /** `focused`, `always` or `never`: when game cards print their title. */
+    val cardLabels: String,
 )
 
 @Immutable
@@ -102,6 +104,7 @@ data class VelaEffects(
     val focusGlow: Boolean,
     val videoPreviews: Boolean,
     val videoPreviewDelayMs: Int,
+    val dynamicAccent: Boolean,
 )
 
 @Immutable
@@ -215,6 +218,7 @@ fun resolveTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = f
         // The theme proposes, the user's Settings switch disposes.
         showClock = l.showClock && showClock,
         showBattery = l.showBattery && showBattery,
+        cardLabels = l.cardLabels,
     )
     val m = spec.motion
     val reduce = reduceMotion || m.reduceMotion
@@ -235,7 +239,7 @@ fun resolveTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = f
         staticColor = b.staticColor?.let { Color.fromArgbHex(it) },
     )
     val e = spec.effects
-    val effects = VelaEffects(e.glassPanels, e.panelAlpha, e.cardShadow, e.focusGlow, e.videoPreviews, e.videoPreviewDelayMs)
+    val effects = VelaEffects(e.glassPanels, e.panelAlpha, e.cardShadow, e.focusGlow, e.videoPreviews, e.videoPreviewDelayMs, e.dynamicAccent)
     val pi = spec.platformIcons
     val platformIcons = VelaPlatformIcons(pi.set, pi.tint, pi.alpha.coerceIn(0f, 1f))
     return VelaThemeValues(spec, colors, typography, shapes, dimens, motion, background, effects, platformIcons)
