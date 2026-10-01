@@ -1,5 +1,10 @@
 package io.vela.feature.settings
 
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.foundation.lazy.rememberLazyListState
 import io.vela.core.ui.components.rememberedItems
 import io.vela.core.ui.components.rememberFocusMemory
 import io.vela.core.model.ControllerLayout
@@ -81,11 +86,24 @@ fun SettingsScreen(
 
     LaunchedEffect(Unit) { onBackgroundAccent(0xFF3D7BFF) }
 
+    val sectionList = rememberLazyListState()
+    val sectionFocus = remember { SettingsSection.entries.associateWith { FocusRequester() } }
+    val scope = rememberCoroutineScope()
+    // L2/R2 change the page and take the focus to its row, or the ring stays on the old page.
+    fun showSection(next: SettingsSection) {
+        viewModel.selectSection(next)
+        scope.launch {
+            sectionList.scrollToItem(next.ordinal)
+            withFrameNanos { }
+            runCatching { sectionFocus.getValue(next).requestFocus() }
+        }
+    }
+
     GamepadHandler { button ->
         val sections = SettingsSection.entries
         when (button) {
-            GamepadButton.L2 -> { viewModel.selectSection(sections[(sections.indexOf(section) - 1 + sections.size) % sections.size]); true }
-            GamepadButton.R2 -> { viewModel.selectSection(sections[(sections.indexOf(section) + 1) % sections.size]); true }
+            GamepadButton.L2 -> { showSection(sections[(sections.indexOf(section) - 1 + sections.size) % sections.size]); true }
+            GamepadButton.R2 -> { showSection(sections[(sections.indexOf(section) + 1) % sections.size]); true }
             else -> false
         }
     }
@@ -100,9 +118,10 @@ fun SettingsScreen(
             Spacer(Modifier.height(12.dp))
             val memory = rememberFocusMemory()
             val autoFocus = rememberAutoFocus(memory = memory)
-            LazyColumn(Modifier.focusRequester(autoFocus).focusRestorer().focusGroup(), verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = 80.dp)) {
+            LazyColumn(Modifier.focusRequester(autoFocus).focusRestorer().focusGroup(), state = sectionList, verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = 80.dp)) {
                 rememberedItems(memory, SettingsSection.entries, key = { it.name }) { s ->
                     SettingRow(
+                        modifier = Modifier.focusRequester(sectionFocus.getValue(s)),
                         title = s.title,
                         description = s.summary,
                         value = if (s == section) "•" else null,
