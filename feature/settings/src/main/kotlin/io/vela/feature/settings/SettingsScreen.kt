@@ -32,6 +32,7 @@ import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -270,7 +271,8 @@ private fun PlatformsList(vm: SettingsViewModel) {
         platforms.filter { it.gameCount == 0 && it.platform.kind == PlatformKind.EMULATED }.forEach { entry -> PlatformRow(entry, vm) { editing = it } }
     }
     editing?.let { entry ->
-        val options = remember(entry.id) { vm.playerOptions(entry) }
+        val loaded by produceState<List<PlayerStatus>?>(null, entry.id) { value = vm.playerOptions(entry) }
+        val options = loaded ?: return@let
         VelaMenuDialog(
             title = entry.displayName,
             subtitle = "Emulator for ${entry.gameCount} games   ${entry.platform.extensions.joinToString(" ") { ".$it" }}",
@@ -313,10 +315,7 @@ private fun PlatformsList(vm: SettingsViewModel) {
 
 @Composable
 private fun PlatformRow(entry: PlatformEntry, vm: SettingsViewModel, onEdit: (PlatformEntry) -> Unit) {
-    // Player lookup asks the PackageManager; do it once per row, not on every recomposition.
-    val playerName = remember(entry.id, entry.settings.playerId) {
-        entry.settings.playerId?.let { id -> vm.playerOptions(entry).firstOrNull { it.definition.id == id }?.definition?.name } ?: "Automatic"
-    }
+    val playerName = entry.settings.playerId?.let(vm::playerName) ?: "Automatic"
     SettingRow(
         title = entry.displayName,
         description = listOfNotNull(if (entry.gameCount > 0) "${entry.gameCount} games" else null, playerName, entry.settings.coreId).joinToString("   "),
@@ -330,7 +329,8 @@ private fun PlatformRow(entry: PlatformEntry, vm: SettingsViewModel, onEdit: (Pl
 private fun Scope.emulatorsSection(vm: SettingsViewModel) {
     item {
         // Re-check installed packages every time this page opens; the user may just have installed one.
-        val all = remember { vm.refreshInstalled(); vm.allPlayers() }
+        LaunchedEffect(Unit) { vm.refreshPlayers() }
+        val all = vm.players.collectAsStateWithLifecycle().value.orEmpty()
         var showing by remember { mutableStateOf<PlayerStatus?>(null) }
         Column {
             SectionHeader("Installed")

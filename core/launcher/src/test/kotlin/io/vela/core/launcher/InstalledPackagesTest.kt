@@ -63,4 +63,13 @@ class InstalledPackagesTest {
         install("com.example.whatever", "com.example.whatever.MainActivity")
         assertThat(InstalledPackages(context).installedPackage(pizza)).isNull()
     }
+
+    @Test
+    fun `a fork installed later is found after invalidate`() {
+        val packages = InstalledPackages(context)
+        assertThat(packages.installedPackage(eden)).isNull()
+        install("com.example.edenfork", "org.yuzu.yuzu_emu.activities.EmulationActivity")
+        packages.invalidate()
+        assertThat(packages.installedPackage(eden)).isEqualTo("com.example.edenfork")
+    }
 }

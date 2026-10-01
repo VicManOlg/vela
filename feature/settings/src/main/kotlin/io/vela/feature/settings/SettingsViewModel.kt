@@ -12,12 +12,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.vela.core.catalog.PlayerCatalog
 import io.vela.core.data.repository.LibraryRepository
 import io.vela.core.data.repository.PlatformEntry
 import io.vela.core.data.repository.ScrapeRepository
 import io.vela.core.data.usecase.PlayGame
-import io.vela.core.launcher.InstalledPackages
 import io.vela.core.model.AppSettings
 import io.vela.core.model.AppearanceOverrides
 import io.vela.core.model.LibrarySource
@@ -35,6 +33,7 @@ import io.vela.core.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
@@ -62,9 +61,6 @@ class SettingsViewModel @Inject constructor(
     private val library: LibraryRepository,
     private val scrape: ScrapeRepository,
     private val play: PlayGame,
-    private val players: PlayerCatalog,
-    private val installed: InstalledPackages,
-    private val resolver: io.vela.core.launcher.PlayerResolver,
     val themes: ThemeRepository,
 ) : ViewModel() {
 
@@ -138,15 +134,18 @@ class SettingsViewModel @Inject constructor(
         library.updatePlatformSettings(entry.settings.copy(playerId = playerId, coreId = coreId))
     }
 
-    /** Vela's own players (installed or not) plus installed emulators from the generated catalogue. */
-    fun playerOptions(entry: PlatformEntry): List<PlayerStatus> =
-        resolver.optionsFor(entry.platform).map { (def, pkg) -> PlayerStatus(def, pkg) }
+    suspend fun playerOptions(entry: PlatformEntry): List<PlayerStatus> =
+        play.optionsFor(entry.platform).map { PlayerStatus(it.definition, it.installedPackage) }
 
-    fun allPlayers(): List<PlayerStatus> =
-        players.players.map { PlayerStatus(it, installed.installedPackage(it)) } +
-            resolver.installedCatalogPlayers().map { PlayerStatus(it, installed.installedPackage(it)) }
+    fun playerName(id: PlayerId): String? = play.playerName(id)
 
-    fun refreshInstalled() = installed.invalidate()
+    private val _players = MutableStateFlow<List<PlayerStatus>?>(null)
+    /** Settings > Emulators; null until the first lookup finishes. */
+    val players: StateFlow<List<PlayerStatus>?> = _players.asStateFlow()
+
+    fun refreshPlayers() = viewModelScope.launch {
+        _players.value = play.allPlayers().map { PlayerStatus(it.definition, it.installedPackage) }
+    }
 
     // ---- Scraping -----------------------------------------------------------------------------
 
