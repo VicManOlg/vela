@@ -56,7 +56,10 @@ class AppViewModel @Inject constructor(
     val messages: Flow<UiMessage> = actions.messages
 
     val launching: StateFlow<LaunchingGame?> = actions.launching
-    fun clearLaunching() = actions.clearLaunching()
+    private val handoff = LaunchHandoff(viewModelScope, actions.launching, actions::clearLaunching)
+
+    fun onUiPaused() = handoff.onPaused()
+    fun onUiResumed() = handoff.onResumed()
 
     val backdrop = MutableStateFlow(Backdrop())
 

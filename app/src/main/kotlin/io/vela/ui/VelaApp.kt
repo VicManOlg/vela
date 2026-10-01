@@ -82,6 +82,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import io.vela.core.ui.image.VelaImage
 import io.vela.core.ui.image.artworkModel
@@ -335,28 +336,11 @@ private fun Shell(navController: NavHostController, appViewModel: AppViewModel, 
 private fun LaunchOverlay(viewModel: AppViewModel) {
     val launching by viewModel.launching.collectAsStateWithLifecycle()
     val sounds = LocalUiSounds.current
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
     val colors = VelaTheme.colors
 
-    LaunchedEffect(launching) {
-        val current = launching ?: return@LaunchedEffect
-        sounds?.play(UiSound.LAUNCH)
-        var wentAway = false
-        lifecycle.currentStateFlow.collect { state ->
-            if (state < Lifecycle.State.RESUMED) {
-                wentAway = true
-            } else if (wentAway && viewModel.launching.value === current) {
-                delay(350)
-                viewModel.clearLaunching()
-            }
-        }
-    }
-    LaunchedEffect(launching) {
-        if (launching != null) {
-            delay(15_000)
-            viewModel.clearLaunching()
-        }
-    }
+    LaunchedEffect(launching) { if (launching != null) sounds?.play(UiSound.LAUNCH) }
+    LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { viewModel.onUiPaused() }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onUiResumed() }
 
     AnimatedVisibility(visible = launching != null, enter = fadeIn(tween(220)), exit = fadeOut(tween(450))) {
         val game = launching?.game
