@@ -16,4 +16,5 @@ dependencies {
     implementation(project(":core:apps"))
     implementation(libs.androidx.paging.runtime)
     implementation(libs.kotlinx.serialization.json)
+    testImplementation(libs.robolectric)
 }

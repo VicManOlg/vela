@@ -21,6 +21,7 @@ import io.vela.core.settings.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import io.vela.core.scraper.store.PlatformIconStore
 import kotlinx.coroutines.withContext
@@ -57,7 +58,7 @@ class LibraryRepository @Inject constructor(
 
     /** Emulated platforms that have at least one game, enabled, in catalog order. */
     fun observePlatformsWithGames(): Flow<List<PlatformEntry>> =
-        observeAllPlatforms().map { list -> list.filter { it.gameCount > 0 && it.settings.enabled && it.platform.kind == PlatformKind.EMULATED } }
+        observeAllPlatforms().map { list -> list.filter { it.gameCount > 0 && it.settings.enabled && it.platform.kind == PlatformKind.EMULATED } }.distinctUntilChanged()
 
     /** Every catalog platform with its settings and count (Settings > Platforms). */
     fun observeAllPlatforms(): Flow<List<PlatformEntry>> =
@@ -72,15 +73,15 @@ class LibraryRepository @Inject constructor(
                     iconPath = icons[p.id],
                 )
             }
-        }
+        }.distinctUntilChanged()
 
     fun observePlatformArt(): Flow<Map<PlatformId, PlatformArt>> = gameDao.observePlatformArt().map { rows ->
         rows.groupBy { it.platformId }.mapKeys { PlatformId(it.key) }.mapValues { (_, list) ->
             PlatformArt(covers = list.mapNotNull { it.boxArt }.take(3), background = list.firstNotNullOfOrNull { it.background })
         }
-    }
+    }.distinctUntilChanged()
 
-    fun observePlatform(id: PlatformId): Flow<PlatformEntry?> = observeAllPlatforms().map { list -> list.firstOrNull { it.id == id } }
+    fun observePlatform(id: PlatformId): Flow<PlatformEntry?> = observeAllPlatforms().map { list -> list.firstOrNull { it.id == id } }.distinctUntilChanged()
 
     fun platform(id: PlatformId): Platform? = catalog[id]
 

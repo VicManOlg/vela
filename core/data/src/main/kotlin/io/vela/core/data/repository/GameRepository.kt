@@ -19,6 +19,7 @@ import io.vela.core.model.PlatformId
 import io.vela.core.model.PlayerId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -42,8 +43,10 @@ class GameRepository @Inject constructor(
     private val metadataDao: MetadataDao,
     private val dispatchers: DispatcherProvider,
 ) {
+    // Room re-emits on every write to a table a query reads (a scrape writes artwork every few
+    // hundred ms), so observed flows drop unchanged results before anything downstream recomposes.
     fun observeGame(id: GameId): Flow<Game?> =
-        gameDao.observeById(id.value).flatMapLatest { entity ->
+        gameDao.observeById(id.value).distinctUntilChanged().flatMapLatest { entity ->
             if (entity == null) {
                 kotlinx.coroutines.flow.flowOf(null)
             } else {
@@ -51,14 +54,14 @@ class GameRepository @Inject constructor(
                     entity.toDomain(meta, art)
                 }
             }
-        }
+        }.distinctUntilChanged()
 
     suspend fun game(id: GameId): Game? = withContext(dispatchers.io) {
         val entity = gameDao.byId(id.value) ?: return@withContext null
         entity.toDomain(metadataDao.metadata(id.value), metadataDao.artwork(id.value))
     }
 
-    fun observeSummary(id: GameId): Flow<GameSummary?> = gameDao.observeSummary(id.value).map { it?.toDomain() }
+    fun observeSummary(id: GameId): Flow<GameSummary?> = gameDao.observeSummary(id.value).map { it?.toDomain() }.distinctUntilChanged()
 
     /** Paged grid; the same SQL powers [observeGames] for small result sets. */
     fun pagedGames(query: GameQuery): Flow<PagingData<GameSummary>> = Pager(
@@ -67,18 +70,18 @@ class GameRepository @Inject constructor(
     ).flow.map { data -> data.map { it.toDomain() } }
 
     fun observeGames(query: GameQuery, limit: Int = 5000): Flow<List<GameSummary>> =
-        gameDao.observeSummaries(buildQuery(query, limit)).map { list -> list.map { it.toDomain() } }
+        gameDao.observeSummaries(buildQuery(query, limit)).map { list -> list.map { it.toDomain() } }.distinctUntilChanged()
 
-    fun observeRecentlyPlayed(limit: Int = 20): Flow<List<GameSummary>> = gameDao.observeRecentlyPlayed(limit).map { it.map { v -> v.toDomain() } }
-    fun observeFavorites(limit: Int = 30): Flow<List<GameSummary>> = gameDao.observeFavorites(limit).map { it.map { v -> v.toDomain() } }
-    fun observePlaying(limit: Int = 12): Flow<List<GameSummary>> = gameDao.observePlaying(limit).map { it.map { v -> v.toDomain() } }
-    fun observeTopRated(limit: Int = 20): Flow<List<GameSummary>> = gameDao.observeTopRated(limit).map { it.map { v -> v.toDomain() } }
-    fun observeRecentlyAdded(limit: Int = 20): Flow<List<GameSummary>> = gameDao.observeRecentlyAdded(limit).map { it.map { v -> v.toDomain() } }
-    fun observeRecommendations(limit: Int = 20): Flow<List<GameSummary>> = gameDao.observeRecommendations(limit).map { it.map { v -> v.toDomain() } }
+    fun observeRecentlyPlayed(limit: Int = 20): Flow<List<GameSummary>> = gameDao.observeRecentlyPlayed(limit).map { it.map { v -> v.toDomain() } }.distinctUntilChanged()
+    fun observeFavorites(limit: Int = 30): Flow<List<GameSummary>> = gameDao.observeFavorites(limit).map { it.map { v -> v.toDomain() } }.distinctUntilChanged()
+    fun observePlaying(limit: Int = 12): Flow<List<GameSummary>> = gameDao.observePlaying(limit).map { it.map { v -> v.toDomain() } }.distinctUntilChanged()
+    fun observeTopRated(limit: Int = 20): Flow<List<GameSummary>> = gameDao.observeTopRated(limit).map { it.map { v -> v.toDomain() } }.distinctUntilChanged()
+    fun observeRecentlyAdded(limit: Int = 20): Flow<List<GameSummary>> = gameDao.observeRecentlyAdded(limit).map { it.map { v -> v.toDomain() } }.distinctUntilChanged()
+    fun observeRecommendations(limit: Int = 20): Flow<List<GameSummary>> = gameDao.observeRecommendations(limit).map { it.map { v -> v.toDomain() } }.distinctUntilChanged()
     fun observeTotalCount(): Flow<Int> = gameDao.observeTotalCount()
 
     fun observeByPlatformPreview(platformId: PlatformId, limit: Int = 12): Flow<List<GameSummary>> =
-        gameDao.observeByPlatformPreview(platformId.value, limit).map { it.map { v -> v.toDomain() } }
+        gameDao.observeByPlatformPreview(platformId.value, limit).map { it.map { v -> v.toDomain() } }.distinctUntilChanged()
 
     /** Other games of the same series, oldest first (needs franchise metadata on both sides). */
     suspend fun sameFranchise(game: Game, limit: Int = 20): List<GameSummary> = withContext(dispatchers.io) {
@@ -136,7 +139,8 @@ class GameRepository @Inject constructor(
             // One row per duplicateKey: the one the user played, else the lowest id (stable).
             // The winner must be visible too, or a hidden disc 2 would hide disc 1 with it.
             val visible = if (q.showHidden) "" else "AND s2.hidden = 0"
-            where += """id IN (SELECT id FROM game_summaries s2 WHERE s2.duplicateKey = game_summaries.duplicateKey
+            // The subquery reads the games table, not the six-join view: every column it needs is there.
+            where += """id IN (SELECT id FROM games s2 WHERE s2.duplicateKey = game_summaries.duplicateKey
                 AND s2.present = 1 $visible ORDER BY s2.playCount DESC, s2.id ASC LIMIT 1)"""
         }
         // "NULLS LAST" needs SQLite 3.30 (Android 12); "(col IS NULL), col DESC" works everywhere.

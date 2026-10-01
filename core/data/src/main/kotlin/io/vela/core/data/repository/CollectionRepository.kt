@@ -11,6 +11,7 @@ import io.vela.core.model.GameCollection
 import io.vela.core.model.GameId
 import io.vela.core.model.GameSummary
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -21,9 +22,9 @@ class CollectionRepository @Inject constructor(
     private val dao: CollectionDao,
     private val dispatchers: DispatcherProvider,
 ) {
-    fun observeCollections(): Flow<List<GameCollection>> = dao.observeCollections().map { it.map { c -> c.toDomain() } }
+    fun observeCollections(): Flow<List<GameCollection>> = dao.observeCollections().map { it.map { c -> c.toDomain() } }.distinctUntilChanged()
 
-    fun observeGames(id: CollectionId): Flow<List<GameSummary>> = dao.observeGames(id.value).map { it.map { g -> g.toDomain() } }
+    fun observeGames(id: CollectionId): Flow<List<GameSummary>> = dao.observeGames(id.value).map { it.map { g -> g.toDomain() } }.distinctUntilChanged()
 
     fun observeCollectionsOfGame(gameId: GameId): Flow<Set<CollectionId>> =
         dao.observeCollectionsOfGame(gameId.value).map { ids -> ids.map(::CollectionId).toSet() }

@@ -9,6 +9,7 @@ import io.vela.core.model.InstalledApp
 import io.vela.core.model.PlatformId
 import io.vela.core.settings.SettingsRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,10 +26,10 @@ class AppsRepository @Inject constructor(
 ) {
     /** Games detected/added by the user, for the Android rail and section. */
     fun observeAndroidGames(limit: Int = 500): Flow<List<GameSummary>> =
-        gameDao.observeByPlatformPreview(PlatformId.ANDROID.value, limit).map { it.map { v -> v.toDomain() } }
+        gameDao.observeByPlatformPreview(PlatformId.ANDROID.value, limit).map { it.map { v -> v.toDomain() } }.distinctUntilChanged()
 
     fun observeApps(limit: Int = 200): Flow<List<GameSummary>> =
-        gameDao.observeByPlatformPreview(PlatformId.ANDROID_APPS.value, limit).map { it.map { v -> v.toDomain() } }
+        gameDao.observeByPlatformPreview(PlatformId.ANDROID_APPS.value, limit).map { it.map { v -> v.toDomain() } }.distinctUntilChanged()
 
     /** Every launchable app with its current section, for the picker in Settings > Android Apps. */
     suspend fun installedApps(): List<AppEntry> {
