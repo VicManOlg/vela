@@ -2,6 +2,7 @@ package io.vela.core.settings
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
@@ -41,7 +42,16 @@ class SettingsRepository @Inject constructor(
 
     suspend fun current(): AppSettings = settings.first()
 
+    /** A write the disk refuses is logged and dropped: callers fire these from UI scopes. */
     suspend fun update(transform: (AppSettings) -> AppSettings) {
+        try {
+            write(transform)
+        } catch (e: IOException) {
+            Timber.e(e, "Settings could not be saved")
+        }
+    }
+
+    private suspend fun write(transform: (AppSettings) -> AppSettings) {
         dataStore.edit { prefs ->
             val raw = prefs[KEY]
             val decoded = raw?.let(::decodeOrNull)
@@ -67,7 +77,19 @@ class SettingsRepository @Inject constructor(
     }
 }
 
-private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "vela_settings")
+/**
+ * A corrupt protobuf file would otherwise fail every read and every write for the life of the
+ * install. Starting over from defaults loses the settings, but the app stays usable.
+ */
+internal val settingsCorruptionHandler = ReplaceFileCorruptionHandler { e ->
+    Timber.e(e, "Settings file corrupt, starting from defaults")
+    emptyPreferences()
+}
+
+private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "vela_settings",
+    corruptionHandler = settingsCorruptionHandler,
+)
 
 @Module
 @InstallIn(SingletonComponent::class)
