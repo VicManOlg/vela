@@ -41,6 +41,11 @@ first, touch supported everywhere. Public repo: https://github.com/VicManOlg/vel
   (`focusRestorer` alone does not survive the tab leaving composition).
 - ViewModel tests use fakes of repository interfaces (`CollectionRepository` is the model) and
   `MainDispatcherRule`; pass its dispatcher to `runTest` and create the ViewModel lazily.
+- Visual direction "Farol de puerto" lives in `vela-night.json` (navy, lantern-amber focus as the
+  only warm colour, Archivo + Atkinson Hyperlegible Next). Text never shrinks below the floors in
+  `resolveTheme` (body 16, labels 14, captions 13 sp); metadata lines go through `metaLine()`.
+  Theme tokens: `focusGlow`, `focusRingGap` (ring outside artwork), `buttonRadius`, `tagRadius`,
+  `panelRadius`; leaving them out keeps a theme's old look.
 - Keyboard letter shortcuts (X/Y/Q/E) exist only in debuggable builds.
 
 ## Build, test, install
