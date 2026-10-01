@@ -1,5 +1,6 @@
 package io.vela.ui
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,17 +24,27 @@ import io.vela.core.ui.image.ArtworkPalette
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
+internal enum class ShellTab(val label: String) { HOME("Home"), LIBRARY("Library"), COLLECTIONS("Collections"), SEARCH("Search"), SETTINGS("Settings") }
+
 /** What the current screen wants painted behind everything. */
 data class Backdrop(val artwork: String? = null, val accent: Long = 0xFF3D7BFF, /** Vivid colour taken from [artwork], when it has one. */ val dynamicAccent: Long? = null)
 
 @HiltViewModel
 class AppViewModel @Inject constructor(
+    private val savedState: SavedStateHandle,
     settings: SettingsRepository,
     private val themes: ThemeRepository,
     private val actions: GameActions,
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings?> = settings.state
+
+    /** The Shell's tab. Here, not in the Shell, so the Home button can reset it while a detail screen is on top. */
+    internal val tab: StateFlow<ShellTab> = savedState.getStateFlow(TAB_KEY, ShellTab.HOME)
+
+    internal fun selectTab(tab: ShellTab) {
+        savedState[TAB_KEY] = tab
+    }
 
     /** The chosen theme with the user's Appearance tweaks on top; `gridColumns` predates the overrides and still counts. */
     val theme: StateFlow<ThemeSpec> = combine(settings.settings, themes.catalog) { s, catalog ->
@@ -62,5 +73,9 @@ class AppViewModel @Inject constructor(
             val latest = backdrop.value
             if (latest.artwork == artwork) backdrop.value = latest.copy(dynamicAccent = colour)
         }
+    }
+
+    private companion object {
+        const val TAB_KEY = "shellTab"
     }
 }

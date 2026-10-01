@@ -36,7 +36,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import io.vela.core.data.usecase.UiMessage
 import io.vela.core.model.CollectionId
 import io.vela.core.model.ConfirmButton
@@ -102,10 +101,9 @@ import io.vela.core.ui.components.Clock
 import io.vela.core.ui.components.VelaMark
 
 @Serializable private data object SetupRoute
-@Serializable private data class ShellRoute(val tab: String = ShellTab.HOME.name)
+@Serializable private data object ShellRoute
 @Serializable private data object AndroidRoute
 
-private enum class ShellTab(val label: String) { HOME("Home"), LIBRARY("Library"), COLLECTIONS("Collections"), SEARCH("Search"), SETTINGS("Settings") }
 
 /** Root composable: theme, backdrop, navigation, hints, launch overlay and transient messages. */
 @Composable
@@ -131,9 +129,15 @@ fun VelaApp(
             val navController = rememberNavController()
             // Fixed for the life of the NavHost: flipping it when setup completes would rebuild the
             // graph underneath the setup screen's own navigation.
-            val startDestination: Any = remember { if (prefs.setupCompleted) ShellRoute() else SetupRoute }
-            // The Home button (Vela as launcher) always lands on the shell.
-            LaunchedEffect(navController) { homePresses.collect { navController.popBackStack<ShellRoute>(inclusive = false) } }
+            val startDestination: Any = remember { if (prefs.setupCompleted) ShellRoute else SetupRoute }
+            // The Home button (Vela as launcher) always lands on the shell's Home tab. One collector
+            // for both: the Shell is not composed while a detail screen is on top.
+            LaunchedEffect(navController) {
+                homePresses.collect {
+                    navController.popBackStack<ShellRoute>(inclusive = false)
+                    viewModel.selectTab(ShellTab.HOME)
+                }
+            }
             // Screen transitions follow the theme's motion (and collapse to nothing under Reduce motion).
             val t = VelaTheme.motion.transitionDurationMs
             val long = (t * 0.875f).toInt()
@@ -149,11 +153,10 @@ fun VelaApp(
                     popExitTransition = { fadeOut(tween(short)) + slideOutHorizontally(tween(long)) { it / 14 } },
                 ) {
                     composable<SetupRoute> {
-                        SetupScreen(onDone = { navController.navigate(ShellRoute()) { popUpTo<SetupRoute> { inclusive = true } } })
+                        SetupScreen(onDone = { navController.navigate(ShellRoute) { popUpTo<SetupRoute> { inclusive = true } } })
                     }
-                    composable<ShellRoute> { entry ->
-                        val route: ShellRoute = entry.toRoute()
-                        Shell(navController, route, viewModel, homePresses, swapped = prefs.confirmButton == ConfirmButton.B, tabBar = prefs.tabBar)
+                    composable<ShellRoute> {
+                        Shell(navController, viewModel, swapped = prefs.confirmButton == ConfirmButton.B, tabBar = prefs.tabBar)
                     }
                     composable<GameGridRoute> {
                         Column(Modifier.fillMaxSize()) {
@@ -195,8 +198,8 @@ fun VelaApp(
 }
 
 @Composable
-private fun Shell(navController: NavHostController, route: ShellRoute, appViewModel: AppViewModel, homePresses: Flow<Unit>, swapped: Boolean, tabBar: TabBarMode) {
-    var tab by rememberSaveable { mutableStateOf(runCatching { ShellTab.valueOf(route.tab) }.getOrDefault(ShellTab.HOME)) }
+private fun Shell(navController: NavHostController, appViewModel: AppViewModel, swapped: Boolean, tabBar: TabBarMode) {
+    val tab by appViewModel.tab.collectAsStateWithLifecycle()
     val tabs = remember { ShellTab.entries.map { TopTab(it.name, it.label) } }
     val tabState = rememberSaveableStateHolder()
     val sounds = LocalUiSounds.current
@@ -207,15 +210,14 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
             sounds?.play(UiSound.TAB)
         }
     }
-    LaunchedEffect(Unit) { homePresses.collect { tab = ShellTab.HOME } }
     // Back from any other tab lands on Home; from Home it leaves the app as usual.
-    BackHandler(enabled = tab != ShellTab.HOME) { tab = ShellTab.HOME }
+    BackHandler(enabled = tab != ShellTab.HOME) { appViewModel.selectTab(ShellTab.HOME) }
 
     GamepadHandler { button ->
         when (button) {
-            GamepadButton.L1 -> { tab = ShellTab.entries[(tab.ordinal - 1 + ShellTab.entries.size) % ShellTab.entries.size]; true }
-            GamepadButton.R1 -> { tab = ShellTab.entries[(tab.ordinal + 1) % ShellTab.entries.size]; true }
-            GamepadButton.SELECT -> { tab = ShellTab.SEARCH; true }
+            GamepadButton.L1 -> { appViewModel.selectTab(ShellTab.entries[(tab.ordinal - 1 + ShellTab.entries.size) % ShellTab.entries.size]); true }
+            GamepadButton.R1 -> { appViewModel.selectTab(ShellTab.entries[(tab.ordinal + 1) % ShellTab.entries.size]); true }
+            GamepadButton.SELECT -> { appViewModel.selectTab(ShellTab.SEARCH); true }
             else -> false
         }
     }
@@ -232,7 +234,7 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
             TabBarMode.HIDDEN -> false
         }
         if (showTabs) {
-            TopBar(tabs = tabs, selectedId = tab.name, onSelect = { id -> tab = ShellTab.valueOf(id) })
+            TopBar(tabs = tabs, selectedId = tab.name, onSelect = { id -> appViewModel.selectTab(ShellTab.valueOf(id)) })
         } else {
             // Themes with a clean Home: just the mark and the status, tabs come back on other screens.
             Row(
@@ -267,10 +269,10 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
                         openPlatform = openPlatform,
                         openCollection = openCollection,
                         openAndroid = openAndroid,
-                        openLibrary = { tab = ShellTab.LIBRARY },
-                        openCollections = { tab = ShellTab.COLLECTIONS },
-                        openSearch = { tab = ShellTab.SEARCH },
-                        openSettings = { tab = ShellTab.SETTINGS },
+                        openLibrary = { appViewModel.selectTab(ShellTab.LIBRARY) },
+                        openCollections = { appViewModel.selectTab(ShellTab.COLLECTIONS) },
+                        openSearch = { appViewModel.selectTab(ShellTab.SEARCH) },
+                        openSettings = { appViewModel.selectTab(ShellTab.SETTINGS) },
                     ),
                     onSpotlightChanged = { s -> appViewModel.setBackdrop(s?.artwork, s?.accent ?: 0xFF3D7BFF) },
                 )
@@ -279,7 +281,7 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
                     onOpenAndroid = openAndroid,
                     onOpenFavorites = { navController.navigate(GameGridRoute(favorites = true, title = "Favorites")) },
                     onOpenAll = { navController.navigate(GameGridRoute(title = "All games")) },
-                    onOpenSettings = { tab = ShellTab.SETTINGS },
+                    onOpenSettings = { appViewModel.selectTab(ShellTab.SETTINGS) },
                     onBackgroundArtwork = appViewModel::setBackdrop,
                 )
                 ShellTab.COLLECTIONS -> CollectionsScreen(onOpenCollection = openCollection)
