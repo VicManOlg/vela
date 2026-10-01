@@ -9,9 +9,9 @@ import io.vela.core.model.CollectionId
 import io.vela.core.model.CompletionStatus
 import io.vela.core.model.GameId
 import io.vela.core.model.PlayerId
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,8 +39,10 @@ class GameActions @Inject constructor(
     private val scrape: ScrapeRepository,
     private val play: PlayGame,
 ) {
-    private val _messages = MutableSharedFlow<UiMessage>(extraBufferCapacity = 8)
-    val messages: SharedFlow<UiMessage> = _messages.asSharedFlow()
+    // A channel, not a SharedFlow: a message sent while nobody collects (the root UI not composed
+    // yet, the Activity being recreated) waits for the next collector instead of being dropped.
+    private val _messages = Channel<UiMessage>(Channel.BUFFERED)
+    val messages: Flow<UiMessage> = _messages.receiveAsFlow()
 
     private val _launching = MutableStateFlow<LaunchingGame?>(null)
     val launching: StateFlow<LaunchingGame?> = _launching
@@ -70,7 +72,7 @@ class GameActions @Inject constructor(
     suspend fun toggleFavorite(id: GameId) {
         val game = games.game(id) ?: return
         games.setFavorite(id, !game.favorite)
-        _messages.emit(UiMessage(if (game.favorite) "Removed from favorites" else "Added to favorites"))
+        _messages.send(UiMessage(if (game.favorite) "Removed from favorites" else "Added to favorites"))
     }
 
     suspend fun setCompletion(id: GameId, status: CompletionStatus) {
@@ -84,7 +86,7 @@ class GameActions @Inject constructor(
 
     suspend fun hide(id: GameId) {
         games.setHidden(id, true)
-        _messages.emit(UiMessage("Hidden. Show hidden games from Settings > Library."))
+        _messages.send(UiMessage("Hidden. Show hidden games from Settings > Library."))
     }
 
     suspend fun unhide(id: GameId) = games.setHidden(id, false)
@@ -96,21 +98,21 @@ class GameActions @Inject constructor(
     suspend fun createCollectionWith(name: String, gameId: GameId): CollectionId {
         val id = collections.create(name)
         collections.addGame(id, gameId)
-        _messages.emit(UiMessage("Created \"$name\""))
+        _messages.send(UiMessage("Created \"$name\""))
         return id
     }
 
     suspend fun refreshMetadata(id: GameId) {
-        _messages.emit(UiMessage("Looking up metadata…"))
+        _messages.send(UiMessage("Looking up metadata…"))
         when (val r = scrape.scrapeGame(id, overwrite = true)) {
-            is Outcome.Success -> _messages.emit(UiMessage(if (r.value) "Metadata updated" else "Nothing found for this game"))
-            is Outcome.Failure -> _messages.emit(UiMessage(r.error.message, isError = true))
+            is Outcome.Success -> _messages.send(UiMessage(if (r.value) "Metadata updated" else "Nothing found for this game"))
+            is Outcome.Failure -> _messages.send(UiMessage(r.error.message, isError = true))
         }
     }
 
     suspend fun clearPlayerOverride(id: GameId) = games.setPlayerOverride(id, null, null)
 
     private suspend fun Outcome<LaunchedGame>.onFailureMessage() {
-        if (this is Outcome.Failure) _messages.emit(UiMessage(error.message, isError = true))
+        if (this is Outcome.Failure) _messages.send(UiMessage(error.message, isError = true))
     }
 }

@@ -81,6 +81,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import io.vela.core.ui.image.VelaImage
 import io.vela.core.ui.image.artworkModel
@@ -392,12 +393,16 @@ private fun LaunchOverlay(viewModel: AppViewModel) {
 private fun MessageToast(viewModel: AppViewModel) {
     var current by remember { mutableStateOf<UiMessage?>(null) }
     val scope = rememberCoroutineScope()
-    LaunchedEffect(Unit) {
-        viewModel.messages.collect { message ->
-            current = message
-            scope.launch {
-                delay(3200)
-                if (current == message) current = null
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.messages.collect { message ->
+                current = message
+                scope.launch {
+                    delay(3200)
+                    // Identity, not equality: the same text twice in a row is two messages.
+                    if (current === message) current = null
+                }
             }
         }
     }

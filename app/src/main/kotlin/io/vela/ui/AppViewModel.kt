@@ -11,7 +11,7 @@ import io.vela.core.model.ThemeSpec
 import io.vela.core.model.applying
 import io.vela.core.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -53,7 +53,7 @@ class AppViewModel @Inject constructor(
     }
         .stateIn(viewModelScope, SharingStarted.Eagerly, themes.catalog.value.default)
 
-    val messages: SharedFlow<UiMessage> = actions.messages
+    val messages: Flow<UiMessage> = actions.messages
 
     val launching: StateFlow<LaunchingGame?> = actions.launching
     fun clearLaunching() = actions.clearLaunching()
