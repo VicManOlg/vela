@@ -68,8 +68,7 @@ class PlaySessionTracker @Inject constructor(
             var guard = 0
             while (open != null && guard++ < 50) {
                 val duration = (now - open.startedAt).coerceIn(0, capMs)
-                sessionDao.end(open.id, open.startedAt + duration)
-                gameDao.addPlayTime(open.gameId, duration)
+                sessionDao.close(open.id, open.gameId, open.startedAt, duration)
                 Timber.i("Recovered session for game %d: %d s", open.gameId, duration / 1000)
                 open = sessionDao.openSession()
             }
@@ -104,8 +103,7 @@ class PlaySessionTracker @Inject constructor(
         val now = System.currentTimeMillis()
         val capMs = settings.current().playTimeCapMinutes * 60_000L
         val duration = (now - session.startedAt).coerceIn(0, capMs)
-        sessionDao.end(session.sessionId, session.startedAt + duration)
-        gameDao.addPlayTime(session.gameId.value, duration)
+        sessionDao.close(session.sessionId, session.gameId.value, session.startedAt, duration)
         Timber.i("Session for game %s ended after %d s", session.gameId, duration / 1000)
     }
 }

@@ -134,4 +134,21 @@ class LibraryScannerTest {
         assertThat(visible.map { it.title }).containsExactly("Metal Gear Solid")
         assertThat(visible.single().discNumber).isEqualTo(1)
     }
+
+    @Test
+    fun `removing a source drops its games, their artwork rows and files`() = runTest {
+        file("gba/A.gba")
+        val source = addSource()
+        scanner.scanAll()
+        val gameId = db.gameDao().observeRecentlyAdded(10).first().single().id
+        val art = tmp.newFile("a.png")
+        db.metadataDao().upsertArtwork(io.vela.core.database.entity.ArtworkEntity(gameId = gameId, type = "BOX_FRONT", localPath = art.absolutePath, updatedAt = 1))
+
+        scanner.removeSource(source)
+
+        assertThat(db.gameDao().observeTotalCount().first()).isEqualTo(0)
+        assertThat(db.libraryDao().sources()).isEmpty()
+        assertThat(db.metadataDao().artworkCount()).isEqualTo(0)
+        assertThat(art.exists()).isFalse()
+    }
 }

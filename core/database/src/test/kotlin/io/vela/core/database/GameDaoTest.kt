@@ -87,4 +87,15 @@ class GameDaoTest {
         assertThat(db.gameDao().byId(gone)!!.present).isFalse()
         assertThat(db.gameDao().observeTotalCount().first()).isEqualTo(1)
     }
+
+    @Test
+    fun `closing a session ends it and credits the play time`() = runTest {
+        val id = db.gameDao().insertIgnore(game("A"))
+        val session = db.playSessionDao().insert(io.vela.core.database.entity.PlaySessionEntity(gameId = id, startedAt = 1_000))
+
+        db.playSessionDao().close(session, id, startedAt = 1_000, durationMs = 60_000)
+
+        assertThat(db.playSessionDao().openSession()).isNull()
+        assertThat(db.gameDao().byId(id)!!.totalPlayTimeMs).isEqualTo(60_000)
+    }
 }

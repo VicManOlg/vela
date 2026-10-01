@@ -82,9 +82,6 @@ interface GameDao {
     )
     suspend fun recordLaunch(id: Long, startedAt: Long)
 
-    @Query("UPDATE games SET totalPlayTimeMs = totalPlayTimeMs + :durationMs WHERE id = :id")
-    suspend fun addPlayTime(id: Long, durationMs: Long)
-
     @Query("DELETE FROM games WHERE id = :id")
     suspend fun delete(id: Long)
 

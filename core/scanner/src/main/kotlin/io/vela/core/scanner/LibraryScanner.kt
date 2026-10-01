@@ -199,10 +199,27 @@ class LibraryScanner @Inject constructor(
         return ids.count { it != -1L }
     }
 
-    /** Drops metadata, artwork rows, collection links and sessions whose game no longer exists, plus their files. */
+    /**
+     * Forgets a folder and its games. Under the scan lock, so a scan in progress cannot insert
+     * games for a source that is being removed (they would never be cleaned up).
+     */
+    suspend fun removeSource(sourceId: Long) = mutex.withLock {
+        withContext(dispatchers.io) {
+            db.withTransaction {
+                db.gameDao().deleteBySource(sourceId)
+                db.libraryDao().deleteSource(sourceId)
+            }
+            pruneOrphans()
+        }
+    }
+
+    /**
+     * Drops metadata, artwork rows, collection links and sessions whose game no longer exists,
+     * then their files: rows first, so a failure never leaves artwork pointing at deleted files.
+     */
     private suspend fun pruneOrphans() {
-        db.metadataDao().orphanArtworkPaths().forEach { java.io.File(it).delete() }
-        db.gameDao().pruneOrphans()
+        val files = db.withTransaction { db.metadataDao().orphanArtworkPaths().also { db.gameDao().pruneOrphans() } }
+        files.forEach { java.io.File(it).delete() }
     }
 
     private data class Accepted(val file: ScannedFile, val platform: Platform, val disc: Int?, val hidden: Boolean)
