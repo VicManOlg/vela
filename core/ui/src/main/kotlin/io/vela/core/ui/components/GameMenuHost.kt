@@ -4,33 +4,41 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import io.vela.core.model.GameMenuEvent
+import kotlinx.coroutines.flow.Flow
 import io.vela.core.model.CollectionId
-import io.vela.core.model.CompletionStatus
+import io.vela.core.model.GameMenuActions
 import io.vela.core.model.GameMenuState
-import io.vela.core.model.LaunchOption
 
-/** Callbacks the host needs from the owning ViewModel. */
-class GameMenuCallbacks(
-    val onAction: (String) -> Unit,
-    val onDismiss: () -> Unit,
-    val onToggleCollection: (CollectionId) -> Unit,
-    val onStartNewCollection: () -> Unit,
-    val onCreateCollection: (String) -> Unit,
-    val onLaunchWith: (LaunchOption, remember: Boolean) -> Unit,
-    val onSetCompletion: (CompletionStatus) -> Unit,
-    val onConfirmHide: () -> Unit,
-)
+/**
+ * Delivers the menu's one-shot results (open a game's details, a game was hidden) while the
+ * screen is started; they queue in between.
+ */
+@Composable
+fun GameMenuEvents(events: Flow<GameMenuEvent>, onEvent: (GameMenuEvent) -> Unit) {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val latest by rememberUpdatedState(onEvent)
+    LaunchedEffect(events, lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { events.collect { latest(it) } }
+    }
+}
 
 /** Renders whichever dialog the shared game menu state asks for. */
 @Composable
-fun GameMenuHost(state: GameMenuState, callbacks: GameMenuCallbacks) {
+fun GameMenuHost(state: GameMenuState, actions: GameMenuActions) {
     when (state) {
         GameMenuState.Hidden -> Unit
         is GameMenuState.Context -> GameContextMenu(
             game = state.game,
             completion = state.completion,
-            onAction = { callbacks.onAction(it.name) },
-            onDismiss = callbacks.onDismiss,
+            onAction = actions::onAction,
+            onDismiss = actions::onDismiss,
         )
         is GameMenuState.Collections -> VelaMenuDialog(
             title = "Collections",
@@ -45,17 +53,17 @@ fun GameMenuHost(state: GameMenuState, callbacks: GameMenuCallbacks) {
                 )
             } + MenuOption("new", "New collection…", icon = Icons.Rounded.Add),
             onSelect = { opt ->
-                if (opt.id == "new") callbacks.onStartNewCollection() else callbacks.onToggleCollection(CollectionId(opt.id.toLong()))
+                if (opt.id == "new") actions.onStartNewCollection() else actions.onToggleCollection(CollectionId(opt.id.toLong()))
             },
-            onDismiss = callbacks.onDismiss,
+            onDismiss = actions::onDismiss,
         )
         is GameMenuState.NewCollection -> TextInputDialog(
             title = "New collection",
             initial = "",
             placeholder = "Zelda, Resident Evil, Pokémon…",
             confirmLabel = "Create",
-            onConfirm = callbacks.onCreateCollection,
-            onDismiss = callbacks.onDismiss,
+            onConfirm = actions::onCreateCollection,
+            onDismiss = actions::onDismiss,
         )
         is GameMenuState.LaunchWith -> VelaMenuDialog(
             title = "Launch with",
@@ -69,25 +77,25 @@ fun GameMenuHost(state: GameMenuState, callbacks: GameMenuCallbacks) {
                     enabled = o.installed,
                 )
             },
-            onSelect = { opt -> state.options.firstOrNull { it.id == opt.id }?.let { callbacks.onLaunchWith(it, false) } },
-            onDismiss = callbacks.onDismiss,
+            onSelect = { opt -> state.options.firstOrNull { it.id == opt.id }?.let { actions.onLaunchWith(it, false) } },
+            onDismiss = actions::onDismiss,
         )
         is GameMenuState.Completion -> CompletionMenu(
             current = state.current,
-            onSelect = callbacks.onSetCompletion,
-            onDismiss = callbacks.onDismiss,
+            onSelect = actions::onSetCompletion,
+            onDismiss = actions::onDismiss,
         )
         is GameMenuState.Rate -> RatingMenu(
             current = state.current,
-            onSelect = { callbacks.onAction("RATE:${it ?: 0}") },
-            onDismiss = callbacks.onDismiss,
+            onSelect = actions::onRate,
+            onDismiss = actions::onDismiss,
         )
         is GameMenuState.ConfirmHide -> ConfirmDialog(
             title = "Hide ${state.game.title}?",
             message = "It disappears from every list. You can show hidden games again from Settings > Library.",
             confirmLabel = "Hide",
-            onConfirm = callbacks.onConfirmHide,
-            onDismiss = callbacks.onDismiss,
+            onConfirm = actions::onConfirmHide,
+            onDismiss = actions::onDismiss,
             danger = true,
         )
     }

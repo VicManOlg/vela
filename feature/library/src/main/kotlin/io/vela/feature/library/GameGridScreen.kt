@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import io.vela.core.model.GameMenuEvent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -50,7 +51,7 @@ import io.vela.core.model.GameSummary
 import io.vela.core.model.LibraryView
 import io.vela.core.ui.components.EmptyState
 import io.vela.core.ui.components.GameCard
-import io.vela.core.ui.components.GameMenuCallbacks
+import io.vela.core.ui.components.GameMenuEvents
 import io.vela.core.ui.components.GameMenuHost
 import io.vela.core.ui.components.GamePreviewPanel
 import io.vela.core.ui.components.GameRow
@@ -165,19 +166,10 @@ fun GameGridScreen(
         )
     }
 
-    GameMenuHost(
-        state = menuState,
-        callbacks = GameMenuCallbacks(
-            onAction = { action -> viewModel.onMenuAction(action) { onOpenGame(it.id) } },
-            onDismiss = viewModel::dismissMenu,
-            onToggleCollection = { viewModel.toggleCollection(it) },
-            onStartNewCollection = viewModel::startNewCollection,
-            onCreateCollection = { viewModel.createCollection(it) },
-            onLaunchWith = { option, remember -> viewModel.launchWith(option, remember) },
-            onSetCompletion = { viewModel.setCompletion(it) },
-            onConfirmHide = viewModel::confirmHide,
-        ),
-    )
+    GameMenuEvents(viewModel.menuEvents) { event ->
+        if (event is GameMenuEvent.OpenDetails) onOpenGame(event.game.id)
+    }
+    GameMenuHost(state = menuState, actions = viewModel.menu)
 }
 
 internal class GameCallbacks(

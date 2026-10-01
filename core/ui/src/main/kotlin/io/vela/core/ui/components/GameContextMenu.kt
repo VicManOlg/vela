@@ -16,13 +16,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import io.vela.core.model.CompletionStatus
 import io.vela.core.model.GameKind
+import io.vela.core.model.GameMenuAction
 import io.vela.core.model.GameSummary
 import io.vela.core.model.Platform
 
 fun Platform.color(): Color = Color(accentColor)
 
 /** Actions of the shared game context menu (X button / long press). */
-enum class GameMenuAction { PLAY, DETAILS, FAVORITE, COLLECTIONS, LAUNCH_WITH, COMPLETION, RATE, REFRESH_METADATA, HIDE }
 
 /**
  * The same menu on every screen: play, details, favourite, collections, launch with, status,

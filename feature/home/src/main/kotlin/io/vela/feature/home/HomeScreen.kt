@@ -1,5 +1,6 @@
 package io.vela.feature.home
 
+import io.vela.core.model.GameMenuEvent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -22,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,7 +37,7 @@ import io.vela.core.model.PlatformId
 import io.vela.core.ui.components.CollectionTile
 import io.vela.core.ui.components.EmptyState
 import io.vela.core.ui.components.GameCard
-import io.vela.core.ui.components.GameMenuCallbacks
+import io.vela.core.ui.components.GameMenuEvents
 import io.vela.core.ui.components.GameMenuHost
 import io.vela.core.ui.components.HeroCard
 import io.vela.core.ui.components.PlatformTile
@@ -217,19 +217,10 @@ fun HomeScreen(
         }
     }
 
-    GameMenuHost(
-        state = menuState,
-        callbacks = GameMenuCallbacks(
-            onAction = { action -> viewModel.onMenuAction(action) { navigation.openGame(it.id) } },
-            onDismiss = viewModel::dismissMenu,
-            onToggleCollection = { viewModel.toggleCollection(it) },
-            onStartNewCollection = viewModel::startNewCollection,
-            onCreateCollection = { viewModel.createCollection(it) },
-            onLaunchWith = { option, remember -> viewModel.launchWith(option, remember) },
-            onSetCompletion = { viewModel.setCompletion(it) },
-            onConfirmHide = viewModel::confirmHide,
-        ),
-    )
+    GameMenuEvents(viewModel.menuEvents) { event ->
+        if (event is GameMenuEvent.OpenDetails) navigation.openGame(event.game.id)
+    }
+    GameMenuHost(state = menuState, actions = viewModel.menu)
 }
 
 private fun androidx.compose.foundation.lazy.LazyListScope.gameRail(

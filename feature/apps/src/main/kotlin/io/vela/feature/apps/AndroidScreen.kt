@@ -1,5 +1,8 @@
 package io.vela.feature.apps
 
+import kotlinx.coroutines.flow.Flow
+import io.vela.core.model.GameMenuEvent
+import io.vela.core.model.GameMenuActions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,19 +33,16 @@ import io.vela.core.data.repository.AppEntry
 import io.vela.core.data.repository.AppsRepository
 import io.vela.core.data.usecase.GameActions
 import io.vela.core.data.usecase.GameMenuController
-import io.vela.core.model.CollectionId
-import io.vela.core.model.CompletionStatus
 import io.vela.core.model.GameId
 import io.vela.core.model.GameMenuState
 import io.vela.core.model.GameSummary
-import io.vela.core.model.LaunchOption
 import io.vela.core.model.PlatformId
 import io.vela.core.ui.components.EmptyState
 import io.vela.core.ui.components.rememberAutoFocus
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.focusGroup
 import io.vela.core.ui.components.GameCard
-import io.vela.core.ui.components.GameMenuCallbacks
+import io.vela.core.ui.components.GameMenuEvents
 import io.vela.core.ui.components.GameMenuHost
 import io.vela.core.ui.components.MenuOption
 import io.vela.core.ui.components.Rail
@@ -71,7 +71,7 @@ data class AndroidUiState(
 class AndroidViewModel @Inject constructor(
     private val repo: AppsRepository,
     private val actions: GameActions,
-    val menu: GameMenuController,
+    private val menuController: GameMenuController,
 ) : ViewModel() {
 
     private val picker = MutableStateFlow<List<AppEntry>?>(null)
@@ -82,7 +82,9 @@ class AndroidViewModel @Inject constructor(
         AndroidUiState(g, a, p, m, s)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AndroidUiState())
 
-    val menuState: StateFlow<GameMenuState> = menu.state
+    val menu: GameMenuActions = menuController.attach(viewModelScope)
+    val menuState: StateFlow<GameMenuState> = menuController.state
+    val menuEvents: Flow<GameMenuEvent> = menuController.events
 
     init {
         viewModelScope.launch {
@@ -112,20 +114,7 @@ class AndroidViewModel @Inject constructor(
     }
 
     fun launch(game: GameSummary) = viewModelScope.launch { actions.launch(game.id) }
-    fun openMenu(game: GameSummary) = viewModelScope.launch { menu.open(game) }
-    fun onMenuAction(action: String, onOpenDetails: (GameSummary) -> Unit) = viewModelScope.launch {
-        when (val r = menu.onAction(action)) {
-            is GameMenuController.MenuResult.OpenDetails -> onOpenDetails(r.game)
-            else -> Unit
-        }
-    }
-    fun toggleCollection(id: CollectionId) = viewModelScope.launch { menu.toggleCollection(id) }
-    fun startNewCollection() = menu.startNewCollection()
-    fun createCollection(name: String) = viewModelScope.launch { menu.createCollection(name) }
-    fun launchWith(option: LaunchOption, remember: Boolean) = viewModelScope.launch { menu.launchWith(option, remember) }
-    fun setCompletion(status: CompletionStatus) = viewModelScope.launch { menu.setCompletion(status) }
-    fun confirmHide() = viewModelScope.launch { menu.confirmHide() }
-    fun dismissMenu() = menu.dismiss()
+    fun openMenu(game: GameSummary) = menuController.open(game)
 }
 
 /** Android tab: detected games and pinned apps, with a picker to add or remove anything installed. */
@@ -223,17 +212,8 @@ fun AndroidScreen(
         )
     }
 
-    GameMenuHost(
-        state = menuState,
-        callbacks = GameMenuCallbacks(
-            onAction = { action -> viewModel.onMenuAction(action) { onOpenGame(it.id) } },
-            onDismiss = viewModel::dismissMenu,
-            onToggleCollection = { viewModel.toggleCollection(it) },
-            onStartNewCollection = viewModel::startNewCollection,
-            onCreateCollection = { viewModel.createCollection(it) },
-            onLaunchWith = { option, remember -> viewModel.launchWith(option, remember) },
-            onSetCompletion = { viewModel.setCompletion(it) },
-            onConfirmHide = viewModel::confirmHide,
-        ),
-    )
+    GameMenuEvents(viewModel.menuEvents) { event ->
+        if (event is GameMenuEvent.OpenDetails) onOpenGame(event.game.id)
+    }
+    GameMenuHost(state = menuState, actions = viewModel.menu)
 }

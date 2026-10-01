@@ -1,5 +1,8 @@
 package io.vela.feature.search
 
+import kotlinx.coroutines.flow.Flow
+import io.vela.core.model.GameMenuEvent
+import io.vela.core.model.GameMenuActions
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.background
@@ -56,16 +59,13 @@ import io.vela.core.data.repository.GameRepository
 import io.vela.core.data.repository.LibraryRepository
 import io.vela.core.data.usecase.GameActions
 import io.vela.core.data.usecase.GameMenuController
-import io.vela.core.model.CollectionId
-import io.vela.core.model.CompletionStatus
 import io.vela.core.model.GameId
 import io.vela.core.model.GameMenuState
 import io.vela.core.model.GameSummary
-import io.vela.core.model.LaunchOption
 import io.vela.core.model.Platform
 import io.vela.core.model.PlatformId
 import io.vela.core.ui.components.GameCard
-import io.vela.core.ui.components.GameMenuCallbacks
+import io.vela.core.ui.components.GameMenuEvents
 import io.vela.core.ui.components.GameMenuHost
 import io.vela.core.ui.components.Pill
 import io.vela.core.ui.components.VelaButton
@@ -100,7 +100,7 @@ class SearchViewModel @Inject constructor(
     private val games: GameRepository,
     library: LibraryRepository,
     private val actions: GameActions,
-    val menu: GameMenuController,
+    private val menuController: GameMenuController,
 ) : ViewModel() {
 
     val query = MutableStateFlow("")
@@ -116,7 +116,9 @@ class SearchViewModel @Inject constructor(
         SearchUiState(q, p, r.filter { p == null || it.platformId == p }, platforms.associate { it.id to it.platform }, g)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchUiState())
 
-    val menuState: StateFlow<GameMenuState> = menu.state
+    val menu: GameMenuActions = menuController.attach(viewModelScope)
+    val menuState: StateFlow<GameMenuState> = menuController.state
+    val menuEvents: Flow<GameMenuEvent> = menuController.events
 
     init { viewModelScope.launch { genres.value = games.genres() } }
 
@@ -129,20 +131,7 @@ class SearchViewModel @Inject constructor(
     }
 
     fun launch(game: GameSummary) = viewModelScope.launch { actions.launch(game.id) }
-    fun openMenu(game: GameSummary) = viewModelScope.launch { menu.open(game) }
-    fun onMenuAction(action: String, onOpenDetails: (GameSummary) -> Unit) = viewModelScope.launch {
-        when (val r = menu.onAction(action)) {
-            is GameMenuController.MenuResult.OpenDetails -> onOpenDetails(r.game)
-            else -> Unit
-        }
-    }
-    fun toggleCollection(id: CollectionId) = viewModelScope.launch { menu.toggleCollection(id) }
-    fun startNewCollection() = menu.startNewCollection()
-    fun createCollection(name: String) = viewModelScope.launch { menu.createCollection(name) }
-    fun launchWith(option: LaunchOption, remember: Boolean) = viewModelScope.launch { menu.launchWith(option, remember) }
-    fun setCompletion(status: CompletionStatus) = viewModelScope.launch { menu.setCompletion(status) }
-    fun confirmHide() = viewModelScope.launch { menu.confirmHide() }
-    fun dismissMenu() = menu.dismiss()
+    fun openMenu(game: GameSummary) = menuController.open(game)
 }
 
 /** Global search: title (FTS) and genre, live as you type, filterable by system with Y. */
@@ -255,17 +244,8 @@ fun SearchScreen(
         }
     }
 
-    GameMenuHost(
-        state = menuState,
-        callbacks = GameMenuCallbacks(
-            onAction = { action -> viewModel.onMenuAction(action) { onOpenGame(it.id) } },
-            onDismiss = viewModel::dismissMenu,
-            onToggleCollection = { viewModel.toggleCollection(it) },
-            onStartNewCollection = viewModel::startNewCollection,
-            onCreateCollection = { viewModel.createCollection(it) },
-            onLaunchWith = { option, remember -> viewModel.launchWith(option, remember) },
-            onSetCompletion = { viewModel.setCompletion(it) },
-            onConfirmHide = viewModel::confirmHide,
-        ),
-    )
+    GameMenuEvents(viewModel.menuEvents) { event ->
+        if (event is GameMenuEvent.OpenDetails) onOpenGame(event.game.id)
+    }
+    GameMenuHost(state = menuState, actions = viewModel.menu)
 }

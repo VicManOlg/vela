@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import io.vela.core.model.GameMenuEvent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,7 +41,7 @@ import io.vela.core.model.ArtworkType
 import io.vela.core.model.GameId
 import io.vela.core.model.GameKind
 import io.vela.core.ui.components.GameCard
-import io.vela.core.ui.components.GameMenuCallbacks
+import io.vela.core.ui.components.GameMenuEvents
 import io.vela.core.ui.components.GameMenuHost
 import io.vela.core.ui.components.GlassPanel
 import io.vela.core.ui.components.Pill
@@ -298,19 +299,13 @@ fun GameDetailScreen(
         }
     }
 
-    GameMenuHost(
-        state = menuState,
-        callbacks = GameMenuCallbacks(
-            onAction = { viewModel.onMenuAction(it) },
-            onDismiss = viewModel::dismissMenu,
-            onToggleCollection = { viewModel.toggleCollection(it) },
-            onStartNewCollection = viewModel::startNewCollection,
-            onCreateCollection = { viewModel.createCollection(it) },
-            onLaunchWith = { option, remember -> viewModel.launchWith(option, remember) },
-            onSetCompletion = { viewModel.setCompletion(it) },
-            onConfirmHide = { viewModel.confirmHide(onBack) },
-        ),
-    )
+    GameMenuEvents(viewModel.menuEvents) { event ->
+        when (event) {
+            is GameMenuEvent.OpenDetails -> onOpenGame(event.game.id)
+            is GameMenuEvent.Hidden -> onBack()
+        }
+    }
+    GameMenuHost(state = menuState, actions = viewModel.menu)
 }
 
 private val monthNames = listOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")

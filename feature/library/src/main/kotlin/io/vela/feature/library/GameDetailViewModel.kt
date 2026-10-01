@@ -1,5 +1,9 @@
 package io.vela.feature.library
 
+import kotlinx.coroutines.flow.Flow
+import io.vela.core.model.GameMenuAction
+import io.vela.core.model.GameMenuEvent
+import io.vela.core.model.GameMenuActions
 import io.vela.core.model.PlayerResolution
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -11,14 +15,12 @@ import io.vela.core.data.repository.LibraryRepository
 import io.vela.core.data.usecase.GameActions
 import io.vela.core.data.usecase.GameMenuController
 import io.vela.core.data.usecase.PlayGame
-import io.vela.core.model.CollectionId
 import io.vela.core.model.CompletionStatus
 import io.vela.core.model.Game
 import io.vela.core.model.GameId
 import io.vela.core.model.GameKind
 import io.vela.core.model.GameMenuState
 import io.vela.core.model.GameSummary
-import io.vela.core.model.LaunchOption
 import io.vela.core.model.Platform
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -47,7 +49,7 @@ class GameDetailViewModel @Inject constructor(
     private val library: LibraryRepository,
     private val play: PlayGame,
     private val actions: GameActions,
-    val menu: GameMenuController,
+    private val menuController: GameMenuController,
 ) : ViewModel() {
 
     private val route: GameDetailRoute = savedStateHandle.toRoute()
@@ -75,26 +77,21 @@ class GameDetailViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GameDetailUiState())
 
-    val menuState: StateFlow<GameMenuState> = menu.state
+    val menu: GameMenuActions = menuController.attach(viewModelScope)
+    val menuState: StateFlow<GameMenuState> = menuController.state
+    val menuEvents: Flow<GameMenuEvent> = menuController.events
 
     fun launch() = viewModelScope.launch { actions.launch(gameId) }
     fun toggleFavorite() = viewModelScope.launch { actions.toggleFavorite(gameId) }
     fun refreshMetadata() = viewModelScope.launch { actions.refreshMetadata(gameId) }
-    fun setCompletion(status: CompletionStatus) = viewModelScope.launch { actions.setCompletion(gameId, status); menu.dismiss() }
+    fun setCompletion(status: CompletionStatus) = viewModelScope.launch { actions.setCompletion(gameId, status); menuController.dismiss() }
     fun setUserRating(rating: Int?) = viewModelScope.launch { actions.setUserRating(gameId, rating) }
 
-    fun openMenu() = viewModelScope.launch { state.value.game?.let { menu.open(it.toSummary()) } }
-    fun openLaunchWith() = viewModelScope.launch { state.value.game?.let { menu.open(it.toSummary()); menu.onAction("LAUNCH_WITH") } }
-    fun openCollections() = viewModelScope.launch { state.value.game?.let { menu.open(it.toSummary()); menu.onAction("COLLECTIONS") } }
-    fun openCompletion() = viewModelScope.launch { state.value.game?.let { menu.open(it.toSummary()); menu.onAction("COMPLETION") } }
+    fun openMenu() { state.value.game?.let { menuController.open(it.toSummary()) } }
+    fun openLaunchWith() { state.value.game?.let { menuController.openAt(it.toSummary(), GameMenuAction.LAUNCH_WITH) } }
+    fun openCollections() { state.value.game?.let { menuController.openAt(it.toSummary(), GameMenuAction.COLLECTIONS) } }
+    fun openCompletion() { state.value.game?.let { menuController.openAt(it.toSummary(), GameMenuAction.COMPLETION) } }
 
-    fun onMenuAction(action: String) = viewModelScope.launch { menu.onAction(action) }
-    fun toggleCollection(id: CollectionId) = viewModelScope.launch { menu.toggleCollection(id) }
-    fun startNewCollection() = menu.startNewCollection()
-    fun createCollection(name: String) = viewModelScope.launch { menu.createCollection(name) }
-    fun launchWith(option: LaunchOption, remember: Boolean) = viewModelScope.launch { menu.launchWith(option, remember) }
-    fun confirmHide(onHidden: () -> Unit) = viewModelScope.launch { menu.confirmHide(); onHidden() }
-    fun dismissMenu() = menu.dismiss()
 
     private fun Game.toSummary() = GameSummary(
         id = id, platformId = platformId, kind = kind, title = displayTitle,

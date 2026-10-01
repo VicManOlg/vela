@@ -1,5 +1,7 @@
 package io.vela.feature.library
 
+import io.vela.core.model.GameMenuEvent
+import io.vela.core.model.GameMenuActions
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,13 +17,11 @@ import io.vela.core.data.repository.PlatformEntry
 import io.vela.core.data.usecase.GameActions
 import io.vela.core.data.usecase.GameMenuController
 import io.vela.core.model.CollectionId
-import io.vela.core.model.CompletionStatus
 import io.vela.core.model.GameMenuState
 import io.vela.core.model.GameSort
 import io.vela.core.model.Game
 import io.vela.core.model.GameSummary
 import io.vela.core.model.LibraryView
-import io.vela.core.model.LaunchOption
 import io.vela.core.model.PlatformId
 import io.vela.core.data.repository.AppSettingsRepository
 import kotlinx.coroutines.flow.Flow
@@ -52,7 +52,7 @@ class GameGridViewModel @Inject constructor(
     private val collections: CollectionRepository,
     private val settings: AppSettingsRepository,
     private val actions: GameActions,
-    val menu: GameMenuController,
+    private val menuController: GameMenuController,
 ) : ViewModel() {
 
     val route: GameGridRoute = savedStateHandle.toRoute()
@@ -95,7 +95,9 @@ class GameGridViewModel @Inject constructor(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GameGridHeader(route.title ?: "", "", 0xFF7FD7FF, GameSort.TITLE, 0))
 
-    val menuState: StateFlow<GameMenuState> = menu.state
+    val menu: GameMenuActions = menuController.attach(viewModelScope)
+    val menuState: StateFlow<GameMenuState> = menuController.state
+    val menuEvents: Flow<GameMenuEvent> = menuController.events
 
     /** Full record of the focused game (description, developer, year...) for views with a facts panel. */
     val focusedDetails: StateFlow<Game?> = focused
@@ -120,24 +122,9 @@ class GameGridViewModel @Inject constructor(
     }
 
     fun launch(game: GameSummary) = viewModelScope.launch { actions.launch(game.id) }
-    fun openMenu(game: GameSummary) = viewModelScope.launch { menu.open(game) }
+    fun openMenu(game: GameSummary) = menuController.open(game)
     fun openMenuForFocused() { focused.value?.let { openMenu(it) } }
 
-    fun onMenuAction(action: String, onOpenDetails: (GameSummary) -> Unit) {
-        viewModelScope.launch {
-            when (val r = menu.onAction(action)) {
-                is GameMenuController.MenuResult.OpenDetails -> onOpenDetails(r.game)
-                else -> Unit
-            }
-        }
-    }
-    fun toggleCollection(id: CollectionId) = viewModelScope.launch { menu.toggleCollection(id) }
-    fun startNewCollection() = menu.startNewCollection()
-    fun createCollection(name: String) = viewModelScope.launch { menu.createCollection(name) }
-    fun launchWith(option: LaunchOption, remember: Boolean) = viewModelScope.launch { menu.launchWith(option, remember) }
-    fun setCompletion(status: CompletionStatus) = viewModelScope.launch { menu.setCompletion(status) }
-    fun confirmHide() = viewModelScope.launch { menu.confirmHide() }
-    fun dismissMenu() = menu.dismiss()
 }
 
 fun GameSort.label(): String = when (this) {
