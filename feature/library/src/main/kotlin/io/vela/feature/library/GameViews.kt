@@ -1,5 +1,7 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.components.rememberedItems
+import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -94,7 +96,8 @@ internal fun HeroContent(
 ) {
     val colors = VelaTheme.colors
     val rowState = rememberLazyListState()
-    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0), memory = memory)
     val clock = rememberEntranceClock()
     var focusedIndex by remember { mutableIntStateOf(-1) }
     LaunchedEffect(focusedIndex) { if (focusedIndex >= 0) rowState.animateScrollToItem(focusedIndex) }
@@ -145,8 +148,8 @@ internal fun HeroContent(
             contentPadding = PaddingValues(start = VelaTheme.dimens.screenPadding, end = VelaTheme.dimens.screenPadding, top = bleed + 4.dp, bottom = bleed + 8.dp),
             horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
         ) {
-            items(count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
-                val game = items[index] ?: return@items
+            rememberedItems(memory, count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
+                val game = items[index] ?: return@rememberedItems
                 GameCard(
                     game = game,
                     accent = accent,
@@ -169,7 +172,8 @@ internal fun HeroContent(
  */
 @Composable
 internal fun WallContent(items: LazyPagingItems<GameSummary>, accent: Color, callbacks: GameCallbacks) {
-    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0), memory = memory)
     val clock = rememberEntranceClock()
     val columns = (VelaTheme.dimens.gridColumns + 1).coerceIn(5, 12)
     LazyVerticalGrid(
@@ -177,8 +181,8 @@ internal fun WallContent(items: LazyPagingItems<GameSummary>, accent: Color, cal
         modifier = Modifier.fillMaxSize().focusRequester(autoFocus).focusRestorer().focusGroup(),
         contentPadding = PaddingValues(start = VelaTheme.dimens.screenPadding, end = VelaTheme.dimens.screenPadding, top = focusBleed(), bottom = 90.dp),
     ) {
-        items(count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
-            val game = items[index] ?: return@items
+        rememberedItems(memory, count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
+            val game = items[index] ?: return@rememberedItems
             WallTile(game, accent, callbacks, Modifier.staggeredEntrance(index, clock))
         }
     }
@@ -223,7 +227,8 @@ internal fun DetailsContent(
     platformLabel: (GameSummary) -> String?,
 ) {
     val colors = VelaTheme.colors
-    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0), memory = memory)
     val clock = rememberEntranceClock()
     Column(Modifier.fillMaxSize().padding(horizontal = VelaTheme.dimens.screenPadding)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -239,8 +244,8 @@ internal fun DetailsContent(
             modifier = Modifier.fillMaxSize().focusRequester(autoFocus).focusRestorer().focusGroup(),
             contentPadding = PaddingValues(top = 4.dp, bottom = 80.dp),
         ) {
-            items(count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
-                val game = items[index] ?: return@items
+            rememberedItems(memory, count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
+                val game = items[index] ?: return@rememberedItems
                 DetailRow(game, accent, callbacks, showPlatform, platformLabel(game), index % 2 == 1, Modifier.staggeredEntrance(index, clock))
             }
         }

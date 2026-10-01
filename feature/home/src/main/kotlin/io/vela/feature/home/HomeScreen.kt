@@ -1,5 +1,8 @@
 package io.vela.feature.home
 
+import io.vela.core.ui.components.FocusMemory
+import io.vela.core.ui.components.rememberedItems
+import io.vela.core.ui.components.rememberFocusMemory
 import io.vela.core.model.GameMenuEvent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -73,6 +76,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
+    val memory = rememberFocusMemory()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val spotlight by viewModel.spotlight.collectAsStateWithLifecycle()
     val menuState by viewModel.menuState.collectAsStateWithLifecycle()
@@ -130,8 +134,8 @@ fun HomeScreen(
                 when (rail) {
                     HomeRail.CONTINUE_PLAYING -> if (state.continuePlaying.isNotEmpty()) {
                         item(key = rail.name) {
-                            Rail("Continue playing", autoFocus = first) {
-                                items(state.continuePlaying, key = { it.id.value }) { game ->
+                            Rail("Continue playing", autoFocus = first, memory = memory) {
+                                rememberedItems(memory, state.continuePlaying, key = { it.id.value }) { game ->
                                     val accent = state.platformOf(game)?.platform?.color() ?: VelaTheme.colors.accentSecondary
                                     HeroCard(
                                         game = game,
@@ -145,16 +149,16 @@ fun HomeScreen(
                             }
                         }
                     }
-                    HomeRail.RECENT -> gameRail(rail.name, "Recent", state.recent, state, viewModel, navigation, autoFocus = first)
-                    HomeRail.FAVORITES -> gameRail(rail.name, "Favorites", state.favorites, state, viewModel, navigation, autoFocus = first)
-                    HomeRail.RECOMMENDED -> gameRail(rail.name, "Because you play", state.recommended, state, viewModel, navigation, subtitle = "Unplayed games from the systems you use most", autoFocus = first)
-                    HomeRail.RECENTLY_ADDED -> gameRail(rail.name, "Recently added", state.recentlyAdded, state, viewModel, navigation, autoFocus = first)
-                    HomeRail.TOP_RATED -> gameRail(rail.name, "Your top rated", state.topRated, state, viewModel, navigation, subtitle = "Games you gave the most stars", autoFocus = first)
-                    HomeRail.ANDROID -> gameRail(rail.name, "Android games", state.android, state, viewModel, navigation, accentOverride = Color(0xFF3DDC84), autoFocus = first)
+                    HomeRail.RECENT -> gameRail(rail.name, "Recent", state.recent, state, viewModel, navigation, autoFocus = first, memory = memory)
+                    HomeRail.FAVORITES -> gameRail(rail.name, "Favorites", state.favorites, state, viewModel, navigation, autoFocus = first, memory = memory)
+                    HomeRail.RECOMMENDED -> gameRail(rail.name, "Because you play", state.recommended, state, viewModel, navigation, subtitle = "Unplayed games from the systems you use most", autoFocus = first, memory = memory)
+                    HomeRail.RECENTLY_ADDED -> gameRail(rail.name, "Recently added", state.recentlyAdded, state, viewModel, navigation, autoFocus = first, memory = memory)
+                    HomeRail.TOP_RATED -> gameRail(rail.name, "Your top rated", state.topRated, state, viewModel, navigation, subtitle = "Games you gave the most stars", autoFocus = first, memory = memory)
+                    HomeRail.ANDROID -> gameRail(rail.name, "Android games", state.android, state, viewModel, navigation, accentOverride = Color(0xFF3DDC84), autoFocus = first, memory = memory)
                     HomeRail.APPS -> if (state.quickApps.isNotEmpty()) {
                         item(key = rail.name) {
-                            Rail("Quick apps", subtitle = "Pinned apps, one press away from the games", autoFocus = first, trailing = { VelaButton("Edit", navigation.openAndroid) }) {
-                                items(state.quickApps, key = { it.id.value }) { app ->
+                            Rail("Quick apps", subtitle = "Pinned apps, one press away from the games", autoFocus = first, memory = memory, trailing = { VelaButton("Edit", navigation.openAndroid) }) {
+                                rememberedItems(memory, state.quickApps, key = { it.id.value }) { app ->
                                     GameCard(
                                         game = app,
                                         accent = Color(0xFF8AB4F8),
@@ -169,8 +173,8 @@ fun HomeScreen(
                     }
                     HomeRail.PLATFORMS -> if (state.platforms.isNotEmpty()) {
                         item(key = rail.name) {
-                            Rail("Systems", subtitle = "${state.platforms.size} systems, ${state.totalGames} games", autoFocus = first) {
-                                items(state.platforms, key = { it.id.value }) { entry ->
+                            Rail("Systems", subtitle = "${state.platforms.size} systems, ${state.totalGames} games", autoFocus = first, memory = memory) {
+                                rememberedItems(memory, state.platforms, key = { it.id.value }) { entry ->
                                     PlatformTile(
                                         name = entry.displayName,
                                         shortName = entry.platform.shortName,
@@ -186,8 +190,8 @@ fun HomeScreen(
                     }
                     HomeRail.COLLECTIONS -> if (state.collections.isNotEmpty()) {
                         item(key = rail.name) {
-                            Rail("Collections", autoFocus = first) {
-                                items(state.collections, key = { it.id.value }) { collection ->
+                            Rail("Collections", autoFocus = first, memory = memory) {
+                                rememberedItems(memory, state.collections, key = { it.id.value }) { collection ->
                                     CollectionTile(
                                         name = collection.name,
                                         count = collection.gameCount,
@@ -233,11 +237,12 @@ private fun androidx.compose.foundation.lazy.LazyListScope.gameRail(
     subtitle: String? = null,
     accentOverride: Color? = null,
     autoFocus: Boolean = false,
+    memory: FocusMemory,
 ) {
     if (games.isEmpty()) return
     item(key = key) {
-        Rail(title, subtitle = subtitle, autoFocus = autoFocus) {
-            items(games, key = { it.id.value }) { game ->
+        Rail(title, subtitle = subtitle, autoFocus = autoFocus, memory = memory) {
+            rememberedItems(memory, games, key = { it.id.value }) { game ->
                 val accent = accentOverride ?: state.platformOf(game)?.platform?.color() ?: VelaTheme.colors.accentSecondary
                 GameCard(
                     game = game,

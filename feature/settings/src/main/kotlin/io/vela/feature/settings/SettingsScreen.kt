@@ -1,5 +1,7 @@
 package io.vela.feature.settings
 
+import io.vela.core.ui.components.rememberedItems
+import io.vela.core.ui.components.rememberFocusMemory
 import io.vela.core.model.ControllerLayout
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -96,9 +98,10 @@ fun SettingsScreen(
                 Text("Vela ${viewModel.appVersion}", style = VelaTheme.typography.caption, color = colors.muted)
             }
             Spacer(Modifier.height(12.dp))
-            val autoFocus = rememberAutoFocus()
+            val memory = rememberFocusMemory()
+            val autoFocus = rememberAutoFocus(memory = memory)
             LazyColumn(Modifier.focusRequester(autoFocus).focusRestorer().focusGroup(), verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = 80.dp)) {
-                items(SettingsSection.entries, key = { it.name }) { s ->
+                rememberedItems(memory, SettingsSection.entries, key = { it.name }) { s ->
                     SettingRow(
                         title = s.title,
                         description = s.summary,

@@ -39,6 +39,8 @@ fun Rail(
     focusRequester: FocusRequester? = null,
     /** Move focus into this rail as soon as it appears (first rail of a screen). */
     autoFocus: Boolean = false,
+    /** With [autoFocus], the focus first goes back to the item [memory] remembers, in any rail. */
+    memory: FocusMemory? = null,
     trailing: (@Composable () -> Unit)? = null,
     content: LazyListScope.() -> Unit,
 ) {
@@ -49,7 +51,7 @@ fun Rail(
         LaunchedEffect(Unit) {
             withFrameNanos { }
             withFrameNanos { }
-            runCatching { requester.requestFocus() }
+            if (memory?.restore() != true) runCatching { requester.requestFocus() }
         }
     }
     Column(modifier.fillMaxWidth()) {

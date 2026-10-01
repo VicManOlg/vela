@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.components.rememberedItemsIndexed
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -292,7 +293,8 @@ private fun TileGrid(
     spotOf: (PlatformEntry) -> Spot,
 ) {
     val colors = VelaTheme.colors
-    val autoFocus = rememberAutoFocus(keys = arrayOf(platforms.isNotEmpty()))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(platforms.isNotEmpty()), memory = memory)
     LazyVerticalGrid(
         columns = GridCells.Adaptive(VelaTheme.dimens.cardWidth * 1.35f),
         modifier = Modifier.fillMaxSize().focusRequester(autoFocus).focusRestorer().focusGroup(),
@@ -314,7 +316,7 @@ private fun TileGrid(
                 modifier = Modifier.fillMaxWidth().staggeredEntrance(1, clock),
             )
         }
-        itemsIndexed(platforms, key = { _, it -> it.id.value }) { index, entry ->
+        rememberedItemsIndexed(memory, platforms, key = { _, it -> it.id.value }) { index, entry ->
             PlatformTile(
                 name = entry.displayName,
                 shortName = entry.platform.shortName,

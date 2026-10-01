@@ -1,5 +1,7 @@
 package io.vela.feature.search
 
+import io.vela.core.ui.components.rememberedItems
+import io.vela.core.ui.components.rememberFocusMemory
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.Flow
 import io.vela.core.model.GameMenuEvent
@@ -153,7 +155,8 @@ fun SearchScreen(
     // The text field only takes focus (and shows the keyboard) after an explicit press.
     var editing by remember { mutableStateOf(false) }
     val fieldInteraction = remember { MutableInteractionSource() }
-    val wrapperFocus = rememberAutoFocus()
+    val memory = rememberFocusMemory()
+    val wrapperFocus = rememberAutoFocus(memory = memory)
 
     LaunchedEffect(Unit) { onBackgroundArtwork(null, 0xFF7FD7FF) }
     LaunchedEffect(editing) { if (editing) runCatching { fieldFocus.requestFocus() } }
@@ -227,7 +230,7 @@ fun SearchScreen(
             horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
             verticalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing + 4.dp),
         ) {
-            items(state.results, key = { it.id.value }) { game ->
+            rememberedItems(memory, state.results, key = { it.id.value }) { game ->
                 val platform = state.platforms[game.platformId]
                 Column {
                     GameCard(

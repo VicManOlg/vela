@@ -1,5 +1,7 @@
 package io.vela.feature.apps
 
+import io.vela.core.ui.components.rememberedItems
+import io.vela.core.ui.components.rememberFocusMemory
 import kotlinx.coroutines.flow.Flow
 import io.vela.core.model.GameMenuEvent
 import io.vela.core.model.GameMenuActions
@@ -141,7 +143,8 @@ fun AndroidScreen(
         }
     }
 
-    val autoFocus = rememberAutoFocus(keys = arrayOf(state.games.isNotEmpty(), state.apps.isNotEmpty()))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(state.games.isNotEmpty(), state.apps.isNotEmpty()), memory = memory)
     LazyColumn(modifier.fillMaxSize().focusRequester(autoFocus).focusGroup(), contentPadding = PaddingValues(bottom = 90.dp), verticalArrangement = Arrangement.spacedBy(VelaTheme.dimens.sectionSpacing - 12.dp)) {
         item {
             Column(Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding).height(96.dp), verticalArrangement = Arrangement.Bottom) {
@@ -155,7 +158,7 @@ fun AndroidScreen(
                 EmptyState("No Android games yet", "Games are detected from the Play Store category. Anything missing can be added by hand.", actionLabel = "Choose games", onAction = { viewModel.openPicker(true) })
             } else {
                 Rail("Games", trailing = { VelaButton("Edit", { viewModel.openPicker(true) }) }) {
-                    items(state.games, key = { it.id.value }) { game ->
+                    rememberedItems(memory, state.games, key = { it.id.value }) { game ->
                         GameCard(game, androidGreen, onClick = { viewModel.launch(game) }, onLongPress = { viewModel.openMenu(game) }, onFocused = { onBackgroundArtwork(game.boxArt, 0xFF3DDC84) })
                     }
                 }
@@ -175,7 +178,7 @@ fun AndroidScreen(
                 }
             } else {
                 Rail("Apps", trailing = { VelaButton("Edit", { viewModel.openPicker(false) }) }) {
-                    items(state.apps, key = { it.id.value }) { app ->
+                    rememberedItems(memory, state.apps, key = { it.id.value }) { app ->
                         GameCard(app, appBlue, width = VelaTheme.dimens.cardWidth * 0.8f, onClick = { viewModel.launch(app) }, onLongPress = { viewModel.openMenu(app) }, onFocused = { onBackgroundArtwork(null, 0xFF8AB4F8) })
                     }
                 }

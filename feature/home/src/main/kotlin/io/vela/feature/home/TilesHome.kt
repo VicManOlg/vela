@@ -1,5 +1,7 @@
 package io.vela.feature.home
 
+import io.vela.core.ui.components.rememberedItems
+import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +59,7 @@ fun TilesHome(
     navigation: HomeNavigation,
     modifier: Modifier = Modifier,
 ) {
+    val memory = rememberFocusMemory()
     val colors = VelaTheme.colors
     val games = remember(state) { state.gamesInOrder(30) }
     // The first tile is focused before any focus callback fires; announce it right away.
@@ -78,8 +81,8 @@ fun TilesHome(
             }
         }
         Spacer(Modifier.height(8.dp))
-        Rail("", autoFocus = true) {
-            items(games, key = { it.id.value }) { game ->
+        Rail("", autoFocus = true, memory = memory) {
+            rememberedItems(memory, games, key = { it.id.value }) { game ->
                 val accent = state.platformOf(game)?.platform?.color() ?: colors.accent
                 GameCard(
                     game = game,
@@ -99,7 +102,7 @@ fun TilesHome(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (state.showsPlatforms) {
-                items(state.platforms, key = { it.id.value }) { entry ->
+                rememberedItems(memory, state.platforms, key = { it.id.value }) { entry ->
                     RoundButton(label = entry.platform.shortName, accent = entry.platform.color(), icon = entry.iconPath, onClick = { navigation.openPlatform(entry.id) }, onFocused = { viewModel.spotlightPlatform(entry) })
                 }
             }

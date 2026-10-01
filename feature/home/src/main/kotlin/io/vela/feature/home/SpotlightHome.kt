@@ -1,5 +1,7 @@
 package io.vela.feature.home
 
+import io.vela.core.ui.components.rememberedItems
+import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -50,6 +52,7 @@ fun SpotlightHome(
     navigation: HomeNavigation,
     modifier: Modifier = Modifier,
 ) {
+    val memory = rememberFocusMemory()
     val colors = VelaTheme.colors
     val games = remember(state) { state.spotlightGames() }
     val focusedGame = spotlight?.gameId?.let { id -> games.firstOrNull { it.id.value == id } }
@@ -113,8 +116,8 @@ fun SpotlightHome(
         }
 
         if (games.isNotEmpty()) {
-            Rail("", autoFocus = true) {
-                items(games, key = { it.id.value }) { game ->
+            Rail("", autoFocus = true, memory = memory) {
+                rememberedItems(memory, games, key = { it.id.value }) { game ->
                     val accent = state.platformOf(game)?.platform?.color() ?: colors.accentSecondary
                     GameCard(
                         game = game,
@@ -129,8 +132,8 @@ fun SpotlightHome(
         }
         if (state.showsPlatforms && state.platforms.isNotEmpty()) {
             Spacer(Modifier.height(4.dp))
-            Rail("", autoFocus = games.isEmpty()) {
-                items(state.platforms, key = { it.id.value }) { entry ->
+            Rail("", autoFocus = games.isEmpty(), memory = memory) {
+                rememberedItems(memory, state.platforms, key = { it.id.value }) { entry ->
                     PlatformChip(
                         shortName = entry.platform.shortName,
                         count = entry.gameCount,

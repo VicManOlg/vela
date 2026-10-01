@@ -252,6 +252,12 @@ class FocusMemory internal constructor(private val saved: MutableState<String?>)
     internal fun restore(): Boolean = saved.value != null && runCatching { requester.requestFocus() }.getOrDefault(false)
 }
 
+/** Tags a list item for [memory]: remembers it when it gets the focus and gives the focus back to it. */
+fun Modifier.rememberedFocus(memory: FocusMemory, key: Any): Modifier {
+    val k = key.toString()
+    return then(memory.item(k)).onFocusChanged { if (it.hasFocus) memory.onFocused(k) }
+}
+
 @Composable
 fun rememberFocusMemory(): FocusMemory {
     val saved = rememberSaveable { mutableStateOf<String?>(null) }

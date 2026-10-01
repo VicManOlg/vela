@@ -1,5 +1,8 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.components.rememberedItemsIndexed
+import io.vela.core.ui.components.rememberedItems
+import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -94,7 +97,8 @@ internal fun BookSystems(entries: List<StageEntry>, initialIndex: Int, clock: Lo
     val colors = VelaTheme.colors
     val motion = VelaTheme.motion
     val rowState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex.coerceIn(0, entries.lastIndex.coerceAtLeast(0)))
-    val autoFocus = rememberAutoFocus(keys = arrayOf(entries.size))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(entries.size), memory = memory)
     var selected by remember { mutableIntStateOf(initialIndex.coerceIn(0, entries.lastIndex.coerceAtLeast(0))) }
     val current = entries.getOrNull(selected)
 
@@ -129,7 +133,7 @@ internal fun BookSystems(entries: List<StageEntry>, initialIndex: Int, clock: Lo
                 horizontalArrangement = Arrangement.spacedBy(spacing),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                itemsIndexed(entries, key = { _, e -> e.key }) { index, entry ->
+                rememberedItemsIndexed(memory, entries, key = { _, e -> e.key }) { index, entry ->
                     BookSystemCard(
                         entry = entry,
                         width = cardWidth,
@@ -230,7 +234,8 @@ internal fun BookContent(
     val colors = VelaTheme.colors
     val listState = rememberLazyListState()
     val clock = rememberEntranceClock()
-    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0), memory = memory)
     Row(Modifier.fillMaxSize().padding(horizontal = VelaTheme.dimens.screenPadding)) {
         LazyColumn(
             state = listState,
@@ -238,8 +243,8 @@ internal fun BookContent(
             contentPadding = PaddingValues(top = 6.dp, bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            items(count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
-                val game = items[index] ?: return@items
+            rememberedItems(memory, count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
+                val game = items[index] ?: return@rememberedItems
                 BookTitleRow(game, accent, callbacks, subtitle = if (showPlatform) platformLabel(game) else null, modifier = Modifier.staggeredEntrance(index, clock))
             }
         }

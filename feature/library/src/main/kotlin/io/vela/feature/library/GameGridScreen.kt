@@ -1,5 +1,7 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.components.rememberedItems
+import io.vela.core.ui.components.rememberFocusMemory
 import io.vela.core.model.GameMenuEvent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
@@ -186,7 +188,8 @@ private fun GridContent(items: LazyPagingItems<GameSummary>, accent: Color, call
     val cardWidth: Dp = if (compact) VelaTheme.dimens.cardWidth * 0.68f else VelaTheme.dimens.cardWidth
     val spacing = if (compact) VelaTheme.dimens.railSpacing * 0.6f else VelaTheme.dimens.railSpacing
     val bleed = focusBleed()
-    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0), memory = memory)
     LazyVerticalGrid(
         state = gridState,
         columns = when {
@@ -203,8 +206,8 @@ private fun GridContent(items: LazyPagingItems<GameSummary>, accent: Color, call
         horizontalArrangement = Arrangement.spacedBy(spacing),
         verticalArrangement = Arrangement.spacedBy(spacing + 4.dp),
     ) {
-        items(count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
-            val game = items[index] ?: return@items
+        rememberedItems(memory, count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
+            val game = items[index] ?: return@rememberedItems
             GameCard(
                 game = game,
                 accent = accent,
@@ -229,7 +232,8 @@ private fun ListContent(
 ) {
     val listState = rememberLazyListState()
     val clock = rememberEntranceClock()
-    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0), memory = memory)
     Row(Modifier.fillMaxSize().padding(horizontal = VelaTheme.dimens.screenPadding)) {
         LazyColumn(
             state = listState,
@@ -242,8 +246,8 @@ private fun ListContent(
             contentPadding = PaddingValues(top = 6.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            items(count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
-                val game = items[index] ?: return@items
+            rememberedItems(memory, count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
+                val game = items[index] ?: return@rememberedItems
                 GameRow(
                     game = game,
                     accent = accent,
@@ -281,7 +285,8 @@ private fun ShowcaseContent(
     platformLabel: (GameSummary) -> String?,
 ) {
     val rowState = rememberLazyListState()
-    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0), memory = memory)
     val colors = VelaTheme.colors
     val motion = VelaTheme.motion
     var focusedIndex by remember { mutableIntStateOf(-1) }
@@ -311,8 +316,8 @@ private fun ShowcaseContent(
                 horizontalArrangement = Arrangement.spacedBy(spacing),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                items(count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
-                    val game = items[index] ?: return@items
+                rememberedItems(memory, count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
+                    val game = items[index] ?: return@rememberedItems
                     GameCard(
                         game = game,
                         accent = accent,

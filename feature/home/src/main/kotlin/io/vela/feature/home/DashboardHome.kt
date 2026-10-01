@@ -1,5 +1,7 @@
 package io.vela.feature.home
 
+import io.vela.core.ui.components.rememberedItems
+import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,7 +54,8 @@ fun DashboardHome(
     val rest = recent.drop(1).take(24)
     val gap = VelaTheme.dimens.railSpacing
     val small = VelaTheme.dimens.cardWidth * 0.72f
-    val autoFocus = rememberAutoFocus(keys = arrayOf(recent.isNotEmpty()))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(recent.isNotEmpty()), memory = memory)
 
     LazyColumn(
         modifier.fillMaxSize(),
@@ -82,7 +85,7 @@ fun DashboardHome(
                     Column(Modifier.weight(1f).fillMaxHeight().focusRestorer().focusGroup(), verticalArrangement = Arrangement.spacedBy(gap)) {
                         half.take(2).forEach { row ->
                             LazyRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(gap)) {
-                                items(row, key = { it.id.value }) { game ->
+                                rememberedItems(memory, row, key = { it.id.value }) { game ->
                                     val accent = state.platformOf(game)?.platform?.color() ?: colors.accent
                                     GameCard(
                                         game = game,
@@ -107,7 +110,7 @@ fun DashboardHome(
                         contentPadding = PaddingValues(horizontal = VelaTheme.dimens.screenPadding),
                         horizontalArrangement = Arrangement.spacedBy(gap),
                     ) {
-                        items(state.platforms, key = { it.id.value }) { entry ->
+                        rememberedItems(memory, state.platforms, key = { it.id.value }) { entry ->
                             PlatformTile(
                                 name = entry.displayName,
                                 shortName = entry.platform.shortName,
@@ -132,7 +135,7 @@ fun DashboardHome(
                         contentPadding = PaddingValues(horizontal = VelaTheme.dimens.screenPadding),
                         horizontalArrangement = Arrangement.spacedBy(gap),
                     ) {
-                        items(state.quickApps, key = { it.id.value }) { app ->
+                        rememberedItems(memory, state.quickApps, key = { it.id.value }) { app ->
                             GameCard(
                                 game = app,
                                 accent = Color(0xFF3DDC84),

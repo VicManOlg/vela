@@ -1,5 +1,7 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.components.rememberedItems
+import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -93,6 +95,7 @@ fun CollectionsScreen(
             )
         }
         Spacer(Modifier.height(6.dp))
+        val memory = rememberFocusMemory()
         if (loadedCollections == null) {
             // Nothing yet: neither the empty state nor the grid.
         } else if (collections.isEmpty()) {
@@ -105,7 +108,7 @@ fun CollectionsScreen(
                 onAction = { creating = true },
             )
         } else {
-            val autoFocus = rememberAutoFocus()
+            val autoFocus = rememberAutoFocus(memory = memory)
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(VelaTheme.dimens.cardWidth * 1.6f),
                 modifier = Modifier.fillMaxSize().focusRequester(autoFocus).focusRestorer().focusGroup(),
@@ -113,7 +116,7 @@ fun CollectionsScreen(
                 horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
                 verticalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
             ) {
-                items(collections, key = { it.id.value }) { c ->
+                rememberedItems(memory, collections, key = { it.id.value }) { c ->
                     CollectionTile(
                         name = c.name,
                         count = c.gameCount,

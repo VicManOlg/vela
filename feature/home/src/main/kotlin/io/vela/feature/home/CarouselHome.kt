@@ -1,5 +1,8 @@
 package io.vela.feature.home
 
+import io.vela.core.ui.components.rememberedItemsIndexed
+import io.vela.core.ui.components.rememberedItems
+import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -67,7 +70,8 @@ fun CarouselHome(
     val games = remember(state) { state.gamesInOrder(40) }
     val focusedGame = spotlight?.gameId?.let { id -> games.firstOrNull { it.id.value == id } }
     val rowState = rememberLazyListState()
-    val autoFocus = rememberAutoFocus(keys = arrayOf(games.isNotEmpty()))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(games.isNotEmpty()), memory = memory)
     var focusedIndex by remember { mutableIntStateOf(-1) }
 
     LaunchedEffect(games.firstOrNull()?.id) { if (spotlight == null) games.firstOrNull()?.let(viewModel::spotlightGame) }
@@ -89,7 +93,7 @@ fun CarouselHome(
                 horizontalArrangement = Arrangement.spacedBy(spacing),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                itemsIndexed(games, key = { _, g -> g.id.value }) { index, game ->
+                rememberedItemsIndexed(memory, games, key = { _, g -> g.id.value }) { index, game ->
                     val accent = state.platformOf(game)?.platform?.color() ?: colors.accent
                     GameCard(
                         game = game,
@@ -147,7 +151,7 @@ fun CarouselHome(
                 contentPadding = PaddingValues(horizontal = VelaTheme.dimens.screenPadding),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                items(state.platforms, key = { it.id.value }) { entry ->
+                rememberedItems(memory, state.platforms, key = { it.id.value }) { entry ->
                     PlatformChip(
                         shortName = entry.platform.shortName,
                         count = entry.gameCount,

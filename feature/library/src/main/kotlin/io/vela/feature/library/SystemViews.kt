@@ -1,5 +1,7 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.components.rememberedItemsIndexed
+import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -103,7 +105,8 @@ internal fun WheelSystems(entries: List<StageEntry>, initialIndex: Int, clock: L
     var selected by rememberSaveable { mutableIntStateOf(initialIndex.coerceIn(0, entries.lastIndex.coerceAtLeast(0))) }
     val current = entries.getOrNull(selected)
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = (selected - 1).coerceAtLeast(0))
-    val autoFocus = rememberAutoFocus(keys = arrayOf(entries.size))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(entries.size), memory = memory)
 
     LaunchedEffect(current?.key) { current?.let { onSpot(it.spot()) } }
 
@@ -119,7 +122,7 @@ internal fun WheelSystems(entries: List<StageEntry>, initialIndex: Int, clock: L
             contentPadding = PaddingValues(top = 12.dp, bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            itemsIndexed(entries, key = { _, e -> e.key }) { index, entry ->
+            rememberedItemsIndexed(memory, entries, key = { _, e -> e.key }) { index, entry ->
                 val interaction = remember { MutableInteractionSource() }
                 val focused by rememberFocusState(interaction)
                 val accent = Color(entry.accent)
@@ -190,7 +193,8 @@ internal fun WheelSystems(entries: List<StageEntry>, initialIndex: Int, clock: L
  */
 @Composable
 internal fun MosaicSystems(entries: List<StageEntry>, clock: Long, onSpot: (Spot) -> Unit, modifier: Modifier = Modifier) {
-    val autoFocus = rememberAutoFocus(keys = arrayOf(entries.size))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(entries.size), memory = memory)
     LazyVerticalGrid(
         columns = GridCells.Adaptive(VelaTheme.dimens.cardWidth * 1.15f),
         modifier = modifier.fillMaxSize().focusRequester(autoFocus).focusRestorer().focusGroup(),
@@ -198,7 +202,7 @@ internal fun MosaicSystems(entries: List<StageEntry>, clock: Long, onSpot: (Spot
         horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
         verticalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
     ) {
-        itemsIndexed(entries, key = { _, e -> e.key }) { index, entry ->
+        rememberedItemsIndexed(memory, entries, key = { _, e -> e.key }) { index, entry ->
             MosaicTile(entry, onFocused = { onSpot(entry.spot()) }, modifier = Modifier.fillMaxWidth().staggeredEntrance(index, clock))
         }
     }
@@ -259,7 +263,8 @@ private fun MosaicTile(entry: StageEntry, onFocused: () -> Unit, modifier: Modif
 @Composable
 internal fun ColumnsSystems(entries: List<StageEntry>, clock: Long, onSpot: (Spot) -> Unit, modifier: Modifier = Modifier) {
     val rowState = rememberLazyListState()
-    val autoFocus = rememberAutoFocus(keys = arrayOf(entries.size))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(entries.size), memory = memory)
     BoxWithConstraints(modifier.fillMaxSize()) {
         val bleed = focusBleed()
         val narrow = VelaTheme.dimens.cardWidth * 0.9f
@@ -270,7 +275,7 @@ internal fun ColumnsSystems(entries: List<StageEntry>, clock: Long, onSpot: (Spo
             contentPadding = PaddingValues(start = VelaTheme.dimens.screenPadding, end = VelaTheme.dimens.screenPadding, top = bleed, bottom = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(VelaTheme.dimens.railSpacing),
         ) {
-            itemsIndexed(entries, key = { _, e -> e.key }) { index, entry ->
+            rememberedItemsIndexed(memory, entries, key = { _, e -> e.key }) { index, entry ->
                 SystemColumn(entry, narrow, wide, onFocused = { onSpot(entry.spot()) }, modifier = Modifier.fillMaxHeight().staggeredEntrance(index, clock))
             }
         }
