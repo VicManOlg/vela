@@ -127,20 +127,31 @@ class HomeViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState(layout = settings.loaded.homeLayout))
 
     private val _spotlight = MutableStateFlow<Spotlight?>(null)
-    val spotlight: StateFlow<Spotlight?> = _spotlight
+
+    /**
+     * The focused item. A focused game's line is rebuilt from the current lists, so coming back
+     * from playing shows the new "last played" and play time without moving the focus.
+     */
+    val spotlight: StateFlow<Spotlight?> = combine(_spotlight, state) { spot, lists ->
+        spot?.gameId?.let { id -> lists.gameById(id) }?.let { gameSpotlight(it, lists) } ?: spot
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val menu: GameMenuActions = menuController.attach(viewModelScope)
     val menuState: StateFlow<GameMenuState> = menuController.state
     val menuEvents: Flow<GameMenuEvent> = menuController.events
 
     fun spotlightGame(game: GameSummary) {
-        val platform = state.value.platformOf(game)?.platform
+        _spotlight.value = gameSpotlight(game, state.value)
+    }
+
+    private fun gameSpotlight(game: GameSummary, lists: HomeUiState): Spotlight {
+        val platform = lists.platformOf(game)?.platform
         val parts = listOfNotNull(
             platform?.shortName ?: if (game.kind == io.vela.core.model.GameKind.ANDROID_APP) "Android" else null,
             formatLastPlayedShort(game.lastPlayedAt),
             game.totalPlayTimeMs.takeIf { it > 0 }?.let { io.vela.core.ui.components.formatPlayTime(it) + " played" },
         )
-        _spotlight.value = Spotlight(
+        return Spotlight(
             title = game.title,
             subtitle = parts.joinToString("   "),
             artwork = game.background ?: game.boxArt,
@@ -148,6 +159,11 @@ class HomeViewModel @Inject constructor(
             gameId = game.id.value,
         )
     }
+
+    private fun HomeUiState.gameById(id: Long): GameSummary? =
+        sequenceOf(continuePlaying, recent, favorites, recommended, recentlyAdded, topRated, android, quickApps)
+            .flatten()
+            .firstOrNull { it.id.value == id }
 
     fun spotlightPlatform(entry: PlatformEntry) {
         _spotlight.value = Spotlight(
