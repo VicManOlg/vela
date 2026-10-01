@@ -1,5 +1,6 @@
 package io.vela.feature.home
 
+import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItems
 import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.animation.AnimatedContent
@@ -95,7 +96,7 @@ fun StripHome(
                     }
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        (s?.subtitle ?: "Pick up where you left off").split("   ").filter { it.isNotBlank() }.joinToString("  ·  ").uppercase(),
+                        metaLine(s?.subtitle ?: "Pick up where you left off"),
                         style = VelaTheme.typography.overline,
                         color = colors.muted,
                         maxLines = 1,

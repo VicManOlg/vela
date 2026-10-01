@@ -17,6 +17,7 @@
     "scrim": "#001A1C2C"
   },
   "typography": {
+    "allCapsLabels": true,
     "displayFamily": "mono",
     "bodyFamily": "mono",
     "displaySize": 34,

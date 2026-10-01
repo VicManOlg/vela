@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItems
 import io.vela.core.ui.components.rememberFocusMemory
 import io.vela.core.model.GameMenuEvent
@@ -383,7 +384,7 @@ private fun GridHeader(header: GameGridHeader, focusedTitle: String?, view: Libr
             Text(header.title, style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(8.dp))
             Text(
-                focusedTitle ?: header.subtitle.split("   ").filter { it.isNotBlank() }.joinToString("  ·  ").uppercase(),
+                focusedTitle ?: metaLine(header.subtitle),
                 style = if (focusedTitle != null) VelaTheme.typography.body else VelaTheme.typography.overline,
                 color = if (focusedTitle != null) colors.onBackground else colors.muted,
                 maxLines = 1,

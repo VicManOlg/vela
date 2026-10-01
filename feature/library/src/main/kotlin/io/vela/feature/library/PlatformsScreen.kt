@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItemsIndexed
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -150,7 +151,7 @@ fun PlatformsScreen(
             Text(spot?.title ?: "Library", style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(8.dp))
             Text(
-                (spot?.subtitle ?: "${platforms.size + 1} systems   ${total + android.games} games").split("   ").filter { it.isNotBlank() }.joinToString("  ·  ").uppercase(),
+                metaLine(spot?.subtitle ?: "${platforms.size + 1} systems   ${total + android.games} games"),
                 style = VelaTheme.typography.overline,
                 color = colors.muted,
                 maxLines = 1,

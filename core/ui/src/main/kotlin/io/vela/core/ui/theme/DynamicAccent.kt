@@ -15,3 +15,14 @@ val LocalDynamicAccent = compositionLocalOf<Color?> { null }
 /** The accent to use right now: the artwork's when there is one, the theme's otherwise. */
 val VelaTheme.liveAccent: Color
     @Composable @ReadOnlyComposable get() = LocalDynamicAccent.current ?: colors.accent
+
+/**
+ * A metadata line from parts separated by three spaces ("SNES   1995   12 games"). Plain words with
+ * room between them, or spaced capitals with dots for themes that set `allCapsLabels`.
+ */
+@Composable
+@ReadOnlyComposable
+fun metaLine(parts: String): String {
+    val items = parts.split("   ").filter { it.isNotBlank() }
+    return if (VelaTheme.spec.typography.allCapsLabels) items.joinToString("  ·  ").uppercase() else items.joinToString("     ")
+}

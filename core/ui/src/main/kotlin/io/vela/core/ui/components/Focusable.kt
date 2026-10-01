@@ -1,5 +1,8 @@
 package io.vela.core.ui.components
 
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
@@ -78,12 +81,16 @@ fun Modifier.velaFocusable(
     val colors = VelaTheme.colors
     val shapes = VelaTheme.shapes
     val effects = VelaTheme.effects
-    val glow = LocalDynamicAccent.current ?: colors.accent
+    val glow = colors.focusGlow ?: LocalDynamicAccent.current ?: colors.accent
     val targetScale = if (focused) (scaleOverride ?: motion.focusScale) else 1f
-    val scale = animateFloatAsState(targetScale, tween(motion.focusDurationMs), label = "focusScale")
+    // A slightly underdamped spring: the item settles with a small overshoot, and a quick
+    // D-pad run retargets it smoothly instead of restarting a fixed-length tween.
+    val scaleSpec: AnimationSpec<Float> = if (motion.focusDurationMs == 0) snap() else spring(dampingRatio = 0.62f, stiffness = 480f)
+    val scale = animateFloatAsState(targetScale, scaleSpec, label = "focusScale")
     val ring = animateFloatAsState(if (focused) 1f else 0f, tween(motion.focusDurationMs), label = "focusRing")
     val density = LocalDensity.current
     val ringWidthPx = with(density) { shapes.focusBorderWidth.toPx() }
+    val ringGapPx = with(density) { shapes.focusRingGap.toPx() }
     val edgeWidthPx = with(density) { 1.dp.toPx() }
     val shadowPx = with(density) { 18.dp.toPx() }
     val edgeColor = colors.onBackground
@@ -160,7 +167,9 @@ fun Modifier.velaFocusable(
                 // Hairline edge at rest so cards read as objects, replaced by the ring when focused.
                 if (edge && r < 1f) drawBorder(outline, edgeColor.copy(alpha = 0.10f * (1f - r)), edgeWidthPx)
                 if (r > 0f) {
-                    drawBorder(outline, ringColor.copy(alpha = r), ringWidthPx)
+                    // On artwork (cards, tiles) a gap lets the ring float outside, so it never covers
+                    // the cover; rows and buttons keep it on their edge, inside the list's bounds.
+                    drawBorder(outline, ringColor.copy(alpha = r), ringWidthPx, outset = if (edge && ringGapPx > 0f) ringGapPx + ringWidthPx else 0f)
                     // Specular sheen along the top edge while focused.
                     drawOutline(
                         outline,
@@ -177,8 +186,11 @@ fun Modifier.velaFocusable(
         .focusable(enabled, interactionSource)
 }
 
-/** Same geometry as `Modifier.border`: the stroke sits inside the outline and the corners follow it. */
-private fun DrawScope.drawBorder(outline: Outline, color: Color, width: Float) {
+/**
+ * Same geometry as `Modifier.border`: the stroke sits inside the outline and the corners follow it.
+ * [outset] grows the outline first (corners stay concentric), for a ring that floats outside.
+ */
+private fun DrawScope.drawBorder(outline: Outline, color: Color, width: Float, outset: Float = 0f) {
     if (width <= 0f || color.alpha <= 0f) return
     val half = width / 2f
     when (outline) {
@@ -186,15 +198,15 @@ private fun DrawScope.drawBorder(outline: Outline, color: Color, width: Float) {
             val rr = outline.roundRect
             drawRoundRect(
                 color = color,
-                topLeft = Offset(rr.left + half, rr.top + half),
-                size = Size(max(0f, rr.width - width), max(0f, rr.height - width)),
-                cornerRadius = CornerRadius(max(0f, rr.topLeftCornerRadius.x - half), max(0f, rr.topLeftCornerRadius.y - half)),
+                topLeft = Offset(rr.left - outset + half, rr.top - outset + half),
+                size = Size(max(0f, rr.width + 2 * outset - width), max(0f, rr.height + 2 * outset - width)),
+                cornerRadius = CornerRadius(max(0f, rr.topLeftCornerRadius.x + outset - half), max(0f, rr.topLeftCornerRadius.y + outset - half)),
                 style = Stroke(width),
             )
         }
         is Outline.Rectangle -> {
             val r = outline.rect
-            drawRect(color, Offset(r.left + half, r.top + half), Size(max(0f, r.width - width), max(0f, r.height - width)), style = Stroke(width))
+            drawRect(color, Offset(r.left - outset + half, r.top - outset + half), Size(max(0f, r.width + 2 * outset - width), max(0f, r.height + 2 * outset - width)), style = Stroke(width))
         }
         is Outline.Generic -> drawOutline(outline, color, style = Stroke(width))
     }
@@ -213,7 +225,10 @@ fun Modifier.focusScale(focused: Boolean, durationMs: Int, scale: Float): Modifi
 
 /** Spacing that keeps a scaled card from being clipped by its rail. */
 @Composable
-fun focusBleed(): Dp = (VelaTheme.dimens.cardWidth.value * (VelaTheme.motion.focusScale - 1f) / 2f + 6f).dp
+fun focusBleed(): Dp {
+    val ring = if (VelaTheme.shapes.focusRingGap.value > 0f) VelaTheme.shapes.focusRingGap.value + VelaTheme.shapes.focusBorderWidth.value else 0f
+    return (VelaTheme.dimens.cardWidth.value * (VelaTheme.motion.focusScale - 1f) / 2f + 6f + ring).dp
+}
 
 
 /**

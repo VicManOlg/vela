@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.theme.metaLine
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -210,7 +211,7 @@ internal fun SystemStage(
                         Text(e.title, style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            e.subtitle.split("   ").filter { it.isNotBlank() }.joinToString("  ·  ").uppercase(),
+                            metaLine(e.subtitle),
                             style = VelaTheme.typography.overline,
                             color = colors.muted,
                             maxLines = 1,

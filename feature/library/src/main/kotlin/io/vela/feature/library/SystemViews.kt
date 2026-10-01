@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItemsIndexed
 import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.animation.AnimatedContent
@@ -168,7 +169,7 @@ internal fun WheelSystems(entries: List<StageEntry>, initialIndex: Int, clock: L
                         Spacer(Modifier.width(18.dp))
                         Column(Modifier.weight(1f)) {
                             Text(entry.title, style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                            Text(entry.subtitle.split("   ").filter { it.isNotBlank() }.joinToString("  ·  ").uppercase(), style = VelaTheme.typography.overline, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(metaLine(entry.subtitle), style = VelaTheme.typography.overline, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -316,7 +317,7 @@ private fun SystemColumn(entry: StageEntry, narrow: androidx.compose.ui.unit.Dp,
         Column(Modifier.align(Alignment.BottomStart).padding(16.dp)) {
             Text(entry.title, style = if (focused) VelaTheme.typography.title else VelaTheme.typography.headline, color = colors.onBackground, maxLines = if (focused) 2 else 1, overflow = TextOverflow.Ellipsis)
             Text(
-                if (focused) entry.subtitle.split("   ").filter { it.isNotBlank() }.joinToString("  ·  ").uppercase() else countLine(entry.subtitle),
+                if (focused) metaLine(entry.subtitle) else countLine(entry.subtitle),
                 style = if (focused) VelaTheme.typography.overline else VelaTheme.typography.caption,
                 color = colors.muted, maxLines = 2, overflow = TextOverflow.Ellipsis,
             )

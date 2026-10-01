@@ -1,5 +1,6 @@
 package io.vela.feature.home
 
+import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItemsIndexed
 import io.vela.core.ui.components.rememberedItems
 import io.vela.core.ui.components.rememberFocusMemory
@@ -132,7 +133,7 @@ fun CarouselHome(
                 Text(s?.title ?: "Welcome back", style = VelaTheme.typography.title, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    (s?.subtitle ?: "Pick up where you left off").split("   ").filter { it.isNotBlank() }.joinToString("  ·  ").uppercase(),
+                    metaLine(s?.subtitle ?: "Pick up where you left off"),
                     style = VelaTheme.typography.overline, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
                 )
                 if (focusedGame != null && s?.gameId == focusedGame.id.value) {

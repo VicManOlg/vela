@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItemsIndexed
 import io.vela.core.ui.components.rememberedItems
 import io.vela.core.ui.components.rememberFocusMemory
@@ -112,7 +113,7 @@ internal fun BookSystems(entries: List<StageEntry>, initialIndex: Int, clock: Lo
                     Text(entry?.title ?: "Library", style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        (entry?.subtitle ?: "").split("   ").filter { it.isNotBlank() }.joinToString("  ·  ").uppercase(),
+                        metaLine(entry?.subtitle ?: ""),
                         style = VelaTheme.typography.overline, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                 }

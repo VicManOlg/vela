@@ -1,5 +1,11 @@
 package io.vela.core.ui.components
 
+import kotlinx.coroutines.launch
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Animatable
 import io.vela.core.model.ControllerLayout
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.foundation.Canvas
@@ -84,8 +90,36 @@ fun TopBar(
         VelaMark()
         Spacer(Modifier.width(28.dp))
         if (dimens.showButtonHints) ShoulderHint("L1")
+        // The keel: one bar under the selected tab that slides to the next one on L1/R1, so the
+        // current section reads from across the room. Tab bounds are measured, the bar is drawn.
+        val scroll = rememberScrollState()
+        val bounds = remember { mutableStateMapOf<String, Pair<Float, Float>>() }
+        val keelX = remember { Animatable(0f) }
+        val keelW = remember { Animatable(0f) }
+        val instant = VelaTheme.motion.transitionDurationMs == 0
+        val target = bounds[selectedId]
+        LaunchedEffect(target, instant) {
+            val (x, w) = target ?: return@LaunchedEffect
+            if (keelW.value == 0f || instant) {
+                keelX.snapTo(x)
+                keelW.snapTo(w)
+            } else {
+                launch { keelX.animateTo(x, spring(dampingRatio = 0.75f, stiffness = 420f)) }
+                keelW.animateTo(w, spring(dampingRatio = 0.75f, stiffness = 420f))
+            }
+        }
+        val keel = colors.focusRing
         Row(
-            Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+            Modifier
+                .weight(1f)
+                .horizontalScroll(scroll)
+                .drawBehind {
+                    val w = keelW.value
+                    if (w <= 0f) return@drawBehind
+                    val h = 3.dp.toPx()
+                    val inset = 14.dp.toPx()
+                    drawRoundRect(keel, Offset(keelX.value + inset - scroll.value, size.height - h), Size((w - 2 * inset).coerceAtLeast(h), h), CornerRadius(h / 2, h / 2))
+                },
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -94,7 +128,8 @@ fun TopBar(
                     label = tab.label,
                     selected = tab.id == selectedId,
                     onClick = { onSelect(tab.id) },
-                    modifier = if (index == 0 && firstTabFocus != null) Modifier.focusRequester(firstTabFocus) else Modifier,
+                    modifier = (if (index == 0 && firstTabFocus != null) Modifier.focusRequester(firstTabFocus) else Modifier)
+                        .onGloballyPositioned { bounds[tab.id] = it.positionInParent().x to it.size.width.toFloat() },
                 )
             }
         }
@@ -114,15 +149,12 @@ private fun TabChip(label: String, selected: Boolean, onClick: () -> Unit, modif
     val shape = VelaTheme.shapes.chip
     val interaction = remember { MutableInteractionSource() }
     val focused by rememberFocusState(interaction)
-    val underline = animateFloatAsState(if (selected) 1f else 0f, tween(VelaTheme.motion.transitionDurationMs), label = "tabUnderline")
-    val accent = VelaTheme.liveAccent
-    val underlineRadius = VelaTheme.spec.shapes.chipRadius
     Column(
         modifier
             .velaFocusable(shape, interaction, onClick, scaleOverride = 1.04f)
             .clip(shape)
             .background(if (focused) colors.surfaceElevated.copy(alpha = 0.9f) else Color.Transparent)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -131,18 +163,6 @@ private fun TabChip(label: String, selected: Boolean, onClick: () -> Unit, modif
             maxLines = 1,
             softWrap = false,
             color = if (selected || focused) colors.onBackground else colors.muted,
-        )
-        Spacer(Modifier.height(4.dp))
-        // The selected tab is marked by a short accent underline that grows in, not a solid pill.
-        // Drawn (not laid out) from the animated value so the grow-in never recomposes the tab.
-        Box(
-            Modifier.height(2.dp).fillMaxWidth().drawBehind {
-                val u = underline.value
-                if (u <= 0f) return@drawBehind
-                val w = size.width * u.coerceIn(0.001f, 1f)
-                val radius = minOf(underlineRadius.dp.toPx(), size.height / 2f)
-                drawRoundRect(accent.copy(alpha = u), Offset((size.width - w) / 2f, 0f), Size(w, size.height), CornerRadius(radius, radius))
-            },
         )
     }
 }
@@ -242,7 +262,7 @@ fun ButtonHints(hints: List<ButtonHint>, modifier: Modifier = Modifier, swapped:
         modifier
             .fillMaxWidth()
             .background(Brush.verticalGradient(listOf(Color.Transparent, colors.background.copy(alpha = 0.8f))))
-            .padding(horizontal = VelaTheme.dimens.screenPadding, vertical = 16.dp),
+            .padding(horizontal = VelaTheme.dimens.screenPadding, vertical = 10.dp),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -263,7 +283,7 @@ fun ButtonHints(hints: List<ButtonHint>, modifier: Modifier = Modifier, swapped:
             ) {
                 ButtonGlyph(hint.button, swapped)
                 Spacer(Modifier.width(8.dp))
-                Text(hint.label, style = VelaTheme.typography.label, color = colors.muted)
+                Text(hint.label, style = VelaTheme.typography.label, color = colors.onBackground.copy(alpha = 0.82f))
             }
         }
     }
@@ -278,7 +298,7 @@ val LocalControllerLayout = staticCompositionLocalOf { ControllerLayout.ODIN3 }
  * the layout's colour, so a hint reads the same way as looking at the pad.
  */
 @Composable
-fun ButtonGlyph(button: GamepadButton, swapped: Boolean = false, size: Int = 22) {
+fun ButtonGlyph(button: GamepadButton, swapped: Boolean = false, size: Int = 26) {
     val colors = VelaTheme.colors
     val layout = LocalControllerLayout.current
     val physical = when {

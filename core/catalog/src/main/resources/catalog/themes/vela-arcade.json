@@ -17,6 +17,7 @@
     "scrim": "#A60B0014"
   },
   "typography": {
+    "allCapsLabels": true,
     "displayFamily": "mono",
     "bodyFamily": "manrope",
     "displaySize": 36,

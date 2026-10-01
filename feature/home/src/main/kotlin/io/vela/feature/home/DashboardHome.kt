@@ -154,5 +154,5 @@ fun DashboardHome(
 
 @Composable
 private fun BlockTitle(text: String, modifier: Modifier = Modifier) {
-    Text(text.uppercase(), style = VelaTheme.typography.overline, color = VelaTheme.colors.muted, modifier = modifier.padding(bottom = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+    Text(if (VelaTheme.spec.typography.allCapsLabels) text.uppercase() else text, style = VelaTheme.typography.overline, color = VelaTheme.colors.muted, modifier = modifier.padding(bottom = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
 }

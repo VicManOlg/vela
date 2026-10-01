@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItems
 import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.animation.Crossfade
@@ -136,7 +137,7 @@ internal fun HeroContent(
                             Text(game.title, style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                         Spacer(Modifier.height(6.dp))
-                        Text(gameFacts(game, platformLabel(game)).split("   ").filter { it.isNotBlank() }.joinToString("  ·  ").uppercase(), style = VelaTheme.typography.overline, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(metaLine(gameFacts(game, platformLabel(game))), style = VelaTheme.typography.overline, color = colors.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }

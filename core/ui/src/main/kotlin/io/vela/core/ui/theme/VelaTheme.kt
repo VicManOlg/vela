@@ -37,6 +37,8 @@ data class VelaColors(
     val danger: Color,
     val success: Color,
     val scrim: Color,
+    /** Halo under the focused item; null follows the (live) accent. */
+    val focusGlow: Color?,
 )
 
 @Immutable
@@ -58,7 +60,10 @@ data class VelaShapes(
     val tile: Shape,
     val chip: Shape,
     val panel: Shape,
+    val button: Shape,
+    val tag: Shape,
     val focusBorderWidth: Dp,
+    val focusRingGap: Dp,
 )
 
 @Immutable
@@ -182,28 +187,42 @@ fun resolveTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = f
         danger = Color.fromArgbHex(c.danger),
         success = Color.fromArgbHex(c.success),
         scrim = Color.fromArgbHex(c.scrim),
+        focusGlow = c.focusGlow?.let(Color::fromArgbHex),
     )
     val t = spec.typography
     val display = VelaFonts.family(t.displayFamily)
     val body = VelaFonts.family(t.bodyFamily)
     val s = uiScale
+    // The fit-to-screen factor may shrink cards and margins on a short screen, never the text
+    // below what reads at arm's length on a 5-7" handheld.
+    fun size(base: Float, floor: Float) = maxOf(base * s, floor)
+    val displaySp = size(t.displaySize, 34f)
+    val titleSp = size(t.titleSize, 22f)
+    val headlineSp = size(t.headlineSize, 18f)
+    val bodySp = size(t.bodySize, 16f)
+    val labelSp = size(t.labelSize, 14f)
+    val captionSp = size(t.labelSize * 0.92f, 13f)
+    val overlineSp = size(t.labelSize * 0.86f, 13f)
     val typography = VelaTypography(
-        display = TextStyle(fontFamily = display, fontWeight = FontWeight.Medium, fontSize = (t.displaySize * s).sp, lineHeight = (t.displaySize * s * 1.08f).sp, letterSpacing = (t.letterSpacingDisplay * t.displaySize).sp),
-        title = TextStyle(fontFamily = display, fontWeight = FontWeight.Medium, fontSize = (t.titleSize * s).sp, lineHeight = (t.titleSize * s * 1.2f).sp, letterSpacing = (-0.01f * t.titleSize).sp),
-        headline = TextStyle(fontFamily = display, fontWeight = FontWeight.Medium, fontSize = (t.headlineSize * s).sp, lineHeight = (t.headlineSize * s * 1.3f).sp),
-        body = TextStyle(fontFamily = body, fontWeight = FontWeight.Normal, fontSize = (t.bodySize * s).sp, lineHeight = (t.bodySize * s * 1.5f).sp),
-        bodyStrong = TextStyle(fontFamily = body, fontWeight = FontWeight.SemiBold, fontSize = (t.bodySize * s).sp, lineHeight = (t.bodySize * s * 1.5f).sp),
-        label = TextStyle(fontFamily = body, fontWeight = FontWeight.Medium, fontSize = (t.labelSize * s).sp, lineHeight = (t.labelSize * s * 1.4f).sp, letterSpacing = 0.2.sp),
-        caption = TextStyle(fontFamily = body, fontWeight = FontWeight.Normal, fontSize = (t.labelSize * s * 0.92f).sp, lineHeight = (t.labelSize * s * 1.35f).sp),
-        overline = TextStyle(fontFamily = body, fontWeight = FontWeight.SemiBold, fontSize = (t.labelSize * s * 0.86f).sp, lineHeight = (t.labelSize * s * 1.3f).sp, letterSpacing = 1.6.sp),
+        display = TextStyle(fontFamily = display, fontWeight = FontWeight.Medium, fontSize = displaySp.sp, lineHeight = (displaySp * 1.08f).sp, letterSpacing = (t.letterSpacingDisplay * t.displaySize).sp),
+        title = TextStyle(fontFamily = display, fontWeight = FontWeight.Medium, fontSize = titleSp.sp, lineHeight = (titleSp * 1.2f).sp, letterSpacing = (-0.01f * t.titleSize).sp),
+        headline = TextStyle(fontFamily = display, fontWeight = FontWeight.Medium, fontSize = headlineSp.sp, lineHeight = (headlineSp * 1.3f).sp),
+        body = TextStyle(fontFamily = body, fontWeight = FontWeight.Normal, fontSize = bodySp.sp, lineHeight = (bodySp * 1.45f).sp),
+        bodyStrong = TextStyle(fontFamily = body, fontWeight = FontWeight.SemiBold, fontSize = bodySp.sp, lineHeight = (bodySp * 1.45f).sp),
+        label = TextStyle(fontFamily = body, fontWeight = FontWeight.Medium, fontSize = labelSp.sp, lineHeight = (labelSp * 1.4f).sp, letterSpacing = 0.2.sp),
+        caption = TextStyle(fontFamily = body, fontWeight = FontWeight.Normal, fontSize = captionSp.sp, lineHeight = (captionSp * 1.35f).sp),
+        overline = TextStyle(fontFamily = body, fontWeight = FontWeight.SemiBold, fontSize = overlineSp.sp, lineHeight = (overlineSp * 1.3f).sp, letterSpacing = if (t.allCapsLabels) 1.6.sp else 0.2.sp),
     )
     val sh = spec.shapes
     val shapes = VelaShapes(
         card = RoundedCornerShape(sh.cardRadius.dp),
         tile = RoundedCornerShape(sh.tileRadius.dp),
         chip = RoundedCornerShape(sh.chipRadius.coerceAtMost(200f).dp),
-        panel = RoundedCornerShape((sh.tileRadius + 4f).dp),
+        panel = RoundedCornerShape((sh.panelRadius ?: (sh.tileRadius + 4f)).dp),
+        button = RoundedCornerShape((sh.buttonRadius ?: sh.chipRadius).coerceAtMost(200f).dp),
+        tag = RoundedCornerShape((sh.tagRadius ?: sh.chipRadius).coerceAtMost(200f).dp),
         focusBorderWidth = sh.focusBorderWidth.dp,
+        focusRingGap = sh.focusRingGap.dp,
     )
     val l = spec.layout
     val dimens = VelaDimens(

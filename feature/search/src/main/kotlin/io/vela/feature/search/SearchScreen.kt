@@ -179,8 +179,8 @@ fun SearchScreen(
                 Modifier
                     .weight(1f)
                     .focusRequester(wrapperFocus)
-                    .velaFocusable(VelaTheme.shapes.chip, fieldInteraction, onClick = { editing = true }, scaleOverride = 1.01f)
-                    .clip(VelaTheme.shapes.chip)
+                    .velaFocusable(VelaTheme.shapes.button, fieldInteraction, onClick = { editing = true }, scaleOverride = 1.01f)
+                    .clip(VelaTheme.shapes.button)
                     .background(colors.surfaceElevated.copy(alpha = 0.9f))
                     .padding(horizontal = 18.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,

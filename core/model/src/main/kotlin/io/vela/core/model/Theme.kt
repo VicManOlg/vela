@@ -37,6 +37,8 @@ data class ThemeColors(
     val success: String = "#FF5CE0A8",
     /** Scrim drawn over the dynamic background so text stays readable. */
     val scrim: String = "#99050710",
+    /** Halo under the focused item; null follows the accent (or the artwork, with dynamicAccent). */
+    val focusGlow: String? = null,
 )
 
 @Serializable
@@ -50,6 +52,7 @@ data class ThemeTypography(
     val bodySize: Float = 15f,
     val labelSize: Float = 12f,
     val letterSpacingDisplay: Float = -0.02f,
+    /** Metadata lines ("SNES · 1995") in spaced capitals with dots, instead of plain words. */
     val allCapsLabels: Boolean = false,
 )
 
@@ -59,6 +62,14 @@ data class ThemeShapes(
     val tileRadius: Float = 18f,
     val chipRadius: Float = 999f,
     val focusBorderWidth: Float = 3f,
+    /** Menus and glass panels; null = tileRadius + 4. */
+    val panelRadius: Float? = null,
+    /** Buttons and the search field; null = chipRadius (pills). */
+    val buttonRadius: Float? = null,
+    /** Metadata tags ("1995", "RPG"); null = chipRadius. */
+    val tagRadius: Float? = null,
+    /** Space between an item and its focus ring; 0 draws the ring on the item's edge. */
+    val focusRingGap: Float = 0f,
 )
 
 @Serializable

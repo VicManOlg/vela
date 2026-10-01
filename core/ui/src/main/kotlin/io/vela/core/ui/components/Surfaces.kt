@@ -208,7 +208,7 @@ fun VelaButton(
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
     val colors = VelaTheme.colors
-    val shape = VelaTheme.shapes.chip
+    val shape = VelaTheme.shapes.button
     val focused by rememberFocusState(interactionSource)
     val bg = when {
         primary -> colors.onBackground
@@ -237,7 +237,7 @@ fun VelaButton(
 fun Pill(text: String, modifier: Modifier = Modifier, tint: Color = VelaTheme.colors.onBackground) {
     Box(
         modifier
-            .clip(VelaTheme.shapes.chip)
+            .clip(VelaTheme.shapes.tag)
             .background(tint.copy(alpha = 0.12f))
             .padding(horizontal = 10.dp, vertical = 4.dp),
     ) {
