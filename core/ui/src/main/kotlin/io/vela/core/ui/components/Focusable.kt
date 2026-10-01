@@ -11,7 +11,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -214,16 +218,42 @@ fun focusBleed(): Dp = (VelaTheme.dimens.cardWidth.value * (VelaTheme.motion.foc
 
 /**
  * Focus requester that fires once the composable is on screen. Attach it to a focus group (grid,
- * row, list) and focus lands on its first child, or to a single focusable.
+ * row, list) and focus lands on its first child, or to a single focusable. With [memory], focus
+ * goes back to the item that had it last, when that item is still there.
  */
 @Composable
-fun rememberAutoFocus(enabled: Boolean = true, vararg keys: Any?): FocusRequester {
+fun rememberAutoFocus(enabled: Boolean = true, vararg keys: Any?, memory: FocusMemory? = null): FocusRequester {
     val requester = remember { FocusRequester() }
     LaunchedEffect(enabled, *keys) {
         if (!enabled) return@LaunchedEffect
         withFrameNanos { }
         withFrameNanos { }
-        runCatching { requester.requestFocus() }
+        if (memory?.restore() != true) runCatching { requester.requestFocus() }
     }
     return requester
+}
+
+/**
+ * Which item of a list had the focus, kept across the list leaving composition (a Shell tab
+ * switch keeps the tab's saveable state). `focusRestorer` alone forgets it there. Tag every item
+ * with [item] and report focus with [onFocused]; pass it to [rememberAutoFocus].
+ */
+@Stable
+class FocusMemory internal constructor(private val saved: MutableState<String?>) {
+    private val requester = FocusRequester()
+
+    fun onFocused(key: String) {
+        saved.value = key
+    }
+
+    fun item(key: String): Modifier = if (key == saved.value) Modifier.focusRequester(requester) else Modifier
+
+    /** False when nothing was focused yet or that item is gone (not composed). */
+    internal fun restore(): Boolean = saved.value != null && runCatching { requester.requestFocus() }.getOrDefault(false)
+}
+
+@Composable
+fun rememberFocusMemory(): FocusMemory {
+    val saved = rememberSaveable { mutableStateOf<String?>(null) }
+    return remember(saved) { FocusMemory(saved) }
 }

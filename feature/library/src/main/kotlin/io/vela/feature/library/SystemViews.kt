@@ -41,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -99,7 +100,7 @@ private fun countLine(subtitle: String): String = subtitle.substringAfterLast(" 
 @Composable
 internal fun WheelSystems(entries: List<StageEntry>, initialIndex: Int, clock: Long, onSpot: (Spot) -> Unit, modifier: Modifier = Modifier) {
     val colors = VelaTheme.colors
-    var selected by remember { mutableIntStateOf(initialIndex.coerceIn(0, entries.lastIndex.coerceAtLeast(0))) }
+    var selected by rememberSaveable { mutableIntStateOf(initialIndex.coerceIn(0, entries.lastIndex.coerceAtLeast(0))) }
     val current = entries.getOrNull(selected)
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = (selected - 1).coerceAtLeast(0))
     val autoFocus = rememberAutoFocus(keys = arrayOf(entries.size))

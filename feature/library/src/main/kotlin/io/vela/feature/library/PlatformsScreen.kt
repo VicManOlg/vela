@@ -52,6 +52,7 @@ import io.vela.core.ui.components.SystemCard
 import io.vela.core.ui.components.color
 import io.vela.core.ui.components.focusBleed
 import io.vela.core.ui.components.rememberAutoFocus
+import io.vela.core.ui.components.rememberFocusMemory
 import io.vela.core.ui.components.rememberEntranceClock
 import io.vela.core.ui.components.staggeredEntrance
 import io.vela.core.ui.theme.VelaTheme
@@ -225,7 +226,8 @@ private fun ShowcaseRow(
 ) {
     val colors = VelaTheme.colors
     val rowState = rememberLazyListState()
-    val autoFocus = rememberAutoFocus(keys = arrayOf(platforms.isNotEmpty()))
+    val memory = rememberFocusMemory()
+    val autoFocus = rememberAutoFocus(keys = arrayOf(platforms.isNotEmpty()), memory = memory)
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val bleed = focusBleed() * 1.4f
         val cardHeight = (maxHeight - bleed * 2 - 24.dp).coerceIn(150.dp, 360.dp)
@@ -245,14 +247,14 @@ private fun ShowcaseRow(
                 SystemCard(
                     name = "All games", subtitle = allSpot.subtitle.substringAfterLast("   "), accent = colors.accent,
                     covers = allCovers, iconVector = Icons.Rounded.Apps, width = cardWidth,
-                    onClick = onOpenAll, onFocused = { onSpot(allSpot) }, modifier = Modifier.staggeredEntrance(0, clock),
+                    onClick = onOpenAll, onFocused = { memory.onFocused("all"); onSpot(allSpot) }, modifier = memory.item("all").staggeredEntrance(0, clock),
                 )
             }
             item(key = "favorites") {
                 SystemCard(
                     name = "Favorites", subtitle = "Your picks", accent = colors.accentSecondary,
                     iconVector = Icons.Rounded.Favorite, width = cardWidth,
-                    onClick = onOpenFavorites, onFocused = { onSpot(favoritesSpot) }, modifier = Modifier.staggeredEntrance(1, clock),
+                    onClick = onOpenFavorites, onFocused = { memory.onFocused("favorites"); onSpot(favoritesSpot) }, modifier = memory.item("favorites").staggeredEntrance(1, clock),
                 )
             }
             itemsIndexed(platforms, key = { _, it -> it.id.value }) { index, entry ->
@@ -265,15 +267,15 @@ private fun ShowcaseRow(
                     covers = art[entry.id]?.covers.orEmpty(),
                     width = cardWidth,
                     onClick = { onOpenPlatform(entry.id) },
-                    onFocused = { onSpot(spotOf(entry)) },
-                    modifier = Modifier.staggeredEntrance(index + 2, clock),
+                    onFocused = { memory.onFocused(entry.id.value); onSpot(spotOf(entry)) },
+                    modifier = memory.item(entry.id.value).staggeredEntrance(index + 2, clock),
                 )
             }
             item(key = "android") {
                 SystemCard(
                     name = android.name, subtitle = "${android.games} games   ${android.apps} apps", accent = Color(android.accent),
                     iconVector = Icons.Rounded.Android, width = cardWidth,
-                    onClick = onOpenAndroid, onFocused = { onSpot(androidSpot) }, modifier = Modifier.staggeredEntrance(platforms.size + 2, clock),
+                    onClick = onOpenAndroid, onFocused = { memory.onFocused("android"); onSpot(androidSpot) }, modifier = memory.item("android").staggeredEntrance(platforms.size + 2, clock),
                 )
             }
         }

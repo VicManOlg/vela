@@ -23,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -197,6 +198,7 @@ fun VelaApp(
 private fun Shell(navController: NavHostController, route: ShellRoute, appViewModel: AppViewModel, homePresses: Flow<Unit>, swapped: Boolean, tabBar: TabBarMode) {
     var tab by rememberSaveable { mutableStateOf(runCatching { ShellTab.valueOf(route.tab) }.getOrDefault(ShellTab.HOME)) }
     val tabs = remember { ShellTab.entries.map { TopTab(it.name, it.label) } }
+    val tabState = rememberSaveableStateHolder()
     val sounds = LocalUiSounds.current
     var seenTab by remember { mutableStateOf(tab) }
     LaunchedEffect(tab) {
@@ -255,6 +257,9 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
                 },
                 label = "tab",
             ) { current ->
+            // A tab leaves composition when another is shown; keep its saveable state (scroll
+            // positions, open pickers) so coming back lands where the user left it.
+            tabState.SaveableStateProvider(current.name) {
             when (current) {
                 ShellTab.HOME -> HomeScreen(
                     navigation = HomeNavigation(
@@ -280,6 +285,7 @@ private fun Shell(navController: NavHostController, route: ShellRoute, appViewMo
                 ShellTab.COLLECTIONS -> CollectionsScreen(onOpenCollection = openCollection)
                 ShellTab.SEARCH -> SearchScreen(onOpenGame = openGame, onBackgroundArtwork = appViewModel::setBackdrop)
                 ShellTab.SETTINGS -> SettingsScreen(onBackgroundAccent = { appViewModel.setBackdrop(null, it) })
+            }
             }
             }
         }
