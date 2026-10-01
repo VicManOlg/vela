@@ -56,36 +56,57 @@ class ScrapeService @Inject constructor(
     private val startLock = Any()
     private var job: Job? = null
     private val notFound: MutableSet<Long> = java.util.concurrent.ConcurrentHashMap.newKeySet()
+    private val attemptedThisPass: MutableSet<Long> = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
     val isRunning: Boolean get() = job?.isActive == true
 
-    /** Scrapes every visible ROM lacking box art, in the background. */
-    fun scrapeMissingInBackground() = startInBackground {
+    /**
+     * One batch of "every visible ROM lacking artwork or metadata", up to [deadlineMs] (wall clock).
+     * Runs from [ScrapeWorker]; ask [ScrapeScheduler] to start it.
+     * @return true when games are left for a next batch.
+     */
+    suspend fun scrapeMissing(deadlineMs: Long = Long.MAX_VALUE): Boolean = stopOnFailure(default = false) {
         val prefs = settings.current().scraping
         val wantsLogos = providers.all.any { it.isAvailable(prefs) && ArtworkType.LOGO in it.info.artworkTypes }
-        val ids = gameDao.idsNeedingScrape(wantsLogos)
+        // Games tried earlier in this pass (and still lacking art) wait for the next pass, or a
+        // provider error would make every batch retry them and the chain never end.
+        val ids = gameDao.idsNeedingScrape(wantsLogos).filterNot { it in notFound || it in attemptedThisPass }
         Timber.i("Scrape queue: %d games", ids.size)
-        scrapeGames(ids.map(::GameId))
+        scrapeGames(ids.map(::GameId), deadlineMs) == BatchEnd.DEADLINE
     }
 
-    fun scrapeInBackground(ids: List<GameId>) = startInBackground { scrapeGames(ids) }
+    /** A new pass (Settings, a scan, setup) retries everything still missing. */
+    fun beginPass() = attemptedThisPass.clear()
+
+    /** Shown while the work waits for its network constraint. */
+    fun markWaitingForWifi() {
+        if (_progress.value !is ScrapeProgress.Running) _progress.value = ScrapeProgress.Stopped("Waiting for Wi-Fi")
+    }
+
+    /** The system stopped the work (connection lost, battery); WorkManager resumes it later. */
+    fun markPausedIfRunning() {
+        if (_progress.value is ScrapeProgress.Running) _progress.value = ScrapeProgress.Stopped("Paused, resumes when the connection allows")
+    }
+
+    fun scrapeInBackground(ids: List<GameId>) = startInBackground { stopOnFailure(Unit) { scrapeGames(ids) } }
 
     /** Setup, the startup coordinator and Settings may all ask at once: only one run starts. */
     private fun startInBackground(block: suspend () -> Unit) = synchronized(startLock) {
         if (isRunning) return@synchronized
-        job = scope.launch { stopOnFailure(block) }
+        job = scope.launch { block() }
     }
 
-    /** A background run that dies (database or storage error) ends as Stopped, not stuck on Running. */
-    private suspend fun stopOnFailure(block: suspend () -> Unit) {
-        try {
-            block()
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e(e, "Background scrape failed")
-            _progress.value = ScrapeProgress.Stopped("Artwork fetch failed: ${e.message ?: e::class.simpleName}")
-        }
+    /** A run that dies (database or storage error) ends as Stopped, not stuck on Running. */
+    private suspend fun <T> stopOnFailure(default: T, block: suspend () -> T): T = try {
+        block()
+    } catch (e: Exception) {
+        if (e is kotlinx.coroutines.CancellationException) throw e
+        Timber.e(e, "Background scrape failed")
+        _progress.value = ScrapeProgress.Stopped("Artwork fetch failed: ${e.message ?: e::class.simpleName}")
+        default
     }
+
+    private enum class BatchEnd { DONE, DEADLINE, STOPPED }
 
     fun cancel() = synchronized(startLock) {
         job?.cancel()
@@ -94,18 +115,20 @@ class ScrapeService @Inject constructor(
         _progress.value = ScrapeProgress.Idle
     }
 
-    suspend fun scrapeGames(ids: List<GameId>) = mutex.withLock {
+    private suspend fun scrapeGames(ids: List<GameId>, deadlineMs: Long = Long.MAX_VALUE): BatchEnd = mutex.withLock {
         withContext(dispatchers.io) {
             val prefs = settings.current().scraping
             if (prefs.wifiOnly && !network.isUnmetered()) {
                 Timber.i("Scrape postponed: Wi-Fi only and the connection is metered or absent")
                 _progress.value = ScrapeProgress.Stopped("Waiting for Wi-Fi")
-                return@withContext
+                return@withContext BatchEnd.STOPPED
             }
             var ok = 0
             var failed = 0
             var missing = 0
             ids.forEachIndexed { index, id ->
+                if (System.currentTimeMillis() >= deadlineMs) return@withContext BatchEnd.DEADLINE
+                attemptedThisPass += id.value
                 val entity = gameDao.byId(id.value) ?: return@forEachIndexed
                 _progress.value = ScrapeProgress.Running(index, ids.size, entity.title)
                 when (val outcome = scrapeOne(entity, prefs)) {
@@ -115,13 +138,14 @@ class ScrapeService @Inject constructor(
                         val err = outcome.error
                         if (err is VelaError.RateLimited || err is VelaError.Unauthorized) {
                             _progress.value = ScrapeProgress.Stopped(err.message)
-                            return@withContext
+                            return@withContext BatchEnd.STOPPED
                         }
                     }
                 }
                 delay(REQUEST_SPACING_MS)
             }
             _progress.value = ScrapeProgress.Finished(ok, failed, missing)
+            BatchEnd.DONE
         }
     }
 

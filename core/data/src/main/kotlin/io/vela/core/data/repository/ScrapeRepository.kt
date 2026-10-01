@@ -7,6 +7,7 @@ import io.vela.core.model.MetadataProviderInfo
 import io.vela.core.model.ScrapingSettings
 import io.vela.core.scraper.ProviderRegistry
 import io.vela.core.model.ScrapeProgress
+import io.vela.core.scraper.ScrapeScheduler
 import io.vela.core.scraper.ScrapeService
 import io.vela.core.scraper.store.ArtworkStore
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +19,7 @@ import javax.inject.Singleton
 @Singleton
 class ScrapeRepository @Inject constructor(
     private val service: ScrapeService,
+    private val scheduler: ScrapeScheduler,
     private val registry: ProviderRegistry,
     private val artwork: ArtworkStore,
 ) {
@@ -29,13 +31,13 @@ class ScrapeRepository @Inject constructor(
     fun availableProviders(settings: ScrapingSettings): List<MetadataProviderInfo> =
         registry.all.filter { it.isAvailable(settings) }.map { it.info }
 
-    fun scrapeMissingInBackground() = service.scrapeMissingInBackground()
+    fun scrapeMissingInBackground() = scheduler.scrapeMissing()
 
     fun scrapeInBackground(ids: List<GameId>) = service.scrapeInBackground(ids)
 
     suspend fun scrapeGame(id: GameId, overwrite: Boolean = true): Outcome<Boolean> = service.scrapeGame(id, overwrite)
 
-    fun cancel() = service.cancel()
+    fun cancel() = scheduler.cancel()
 
     suspend fun importArtwork(id: GameId, type: ArtworkType, stream: InputStream, extension: String) =
         artwork.importLocal(id, type, stream, extension)

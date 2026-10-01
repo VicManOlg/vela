@@ -1,5 +1,6 @@
 package io.vela.core.scraper.di
 
+import androidx.work.WorkManager
 import android.content.Context
 import dagger.Binds
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -54,6 +55,9 @@ object ScraperModule {
             chain.proceed(chain.request().newBuilder().header("User-Agent", "Vela/0.1 (Android; +https://github.com/vela-frontend)").build())
         }
         .build()
+
+    @Provides @Singleton
+    fun provideWorkManager(@ApplicationContext context: Context): WorkManager = WorkManager.getInstance(context)
 
     @Provides @Singleton
     fun provideRegistry(providers: Set<@JvmSuppressWildcards MetadataProvider>): ProviderRegistry = ProviderRegistry(providers)

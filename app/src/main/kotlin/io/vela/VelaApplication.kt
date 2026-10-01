@@ -1,6 +1,8 @@
 package io.vela
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
@@ -19,9 +21,14 @@ import javax.inject.Inject
 import io.vela.core.ui.sound.UiSounds
 
 @HiltAndroidApp
-class VelaApplication : Application(), SingletonImageLoader.Factory {
+class VelaApplication : Application(), SingletonImageLoader.Factory, Configuration.Provider {
 
     @Inject lateinit var okHttpClient: OkHttpClient
+    @Inject lateinit var workerFactory: HiltWorkerFactory
+
+    /** Workers get their dependencies from Hilt (the default initializer is removed in the manifest). */
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 
     /** Interface sounds; created on first use so app start stays quiet and cheap. */
     val uiSounds: UiSounds by lazy { UiSounds(this) }

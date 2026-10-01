@@ -97,6 +97,8 @@ dependencies {
     implementation(libs.coil.video)
     implementation(libs.okhttp)
     implementation(libs.timber)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)
