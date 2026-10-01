@@ -22,8 +22,8 @@ import io.vela.core.model.PlayerId
 import io.vela.core.model.ScanProgress
 import io.vela.core.model.SourceAccess
 import io.vela.core.model.ThemeSpec
-import io.vela.core.scraper.ScrapeProgress
-import io.vela.core.settings.SettingsRepository
+import io.vela.core.model.ScrapeProgress
+import io.vela.core.data.repository.AppSettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -50,7 +50,7 @@ data class PlayerStatus(val definition: PlayerDefinition, val installedPackage: 
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository,
+    private val settingsRepository: AppSettingsRepository,
     private val storage: StorageAccess,
     private val homeRole: HomeAppRole,
     private val library: LibraryRepository,

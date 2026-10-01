@@ -96,3 +96,16 @@ data class ResolvedPlayer(
     val installedPackage: String,
     val core: CoreOption?,
 )
+
+/** What the UI learns after a successful launch. */
+data class LaunchedGame(val game: Game, val player: ResolvedPlayer?)
+
+/** Which player would run a game right now. */
+sealed interface PlayerResolution {
+    data class Ready(val player: ResolvedPlayer) : PlayerResolution
+
+    /** A player is configured or suggested but none of its packages is installed. */
+    data class NotInstalled(val player: PlayerDefinition) : PlayerResolution
+
+    data object NoCandidate : PlayerResolution
+}

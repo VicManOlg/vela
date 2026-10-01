@@ -3,7 +3,7 @@ package io.vela.core.data.usecase
 import io.vela.core.common.Outcome
 import io.vela.core.data.repository.CollectionRepository
 import io.vela.core.data.repository.GameRepository
-import io.vela.core.launcher.LaunchedGame
+import io.vela.core.model.LaunchedGame
 import io.vela.core.model.CollectionId
 import io.vela.core.model.CompletionStatus
 import io.vela.core.model.GameMenuState

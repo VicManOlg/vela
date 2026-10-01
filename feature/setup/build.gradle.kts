@@ -6,6 +6,4 @@ plugins {
 dependencies {
     implementation(libs.androidx.paging.compose)
     implementation(libs.androidx.activity.compose)
-    implementation(project(":core:settings"))
-    implementation(project(":core:catalog"))
 }

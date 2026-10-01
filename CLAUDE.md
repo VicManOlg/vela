@@ -7,7 +7,9 @@ first, touch supported everywhere. Public repo: https://github.com/VicManOlg/vel
 
 ## Architecture rules
 
-- Feature modules (`feature/*`) depend only on `core/data`, `core/ui`, `core/model`, `core/common`.
+- Feature modules (`feature/*`) depend only on `core/data`, `core/ui`, `core/model`, `core/common`
+  (enforced by `AndroidFeatureConventionPlugin`). They read settings through `AppSettingsRepository`;
+  a type a feature needs from another core module belongs in `core/model`.
 - Anything specific to an emulator, a system or a theme is **data, never code**:
   `core/catalog/src/main/resources/catalog/platforms.json`, `players.json`, `themes/*.json`.
   Adding an emulator means adding a JSON entry with its intent recipe (activity, action, extras,

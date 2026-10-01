@@ -1,5 +1,6 @@
 package io.vela.core.scraper
 
+import io.vela.core.model.ScrapeProgress
 import io.vela.core.catalog.PlatformCatalog
 import io.vela.core.common.ApplicationScope
 import io.vela.core.common.DispatcherProvider
@@ -29,13 +30,6 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
-
-sealed interface ScrapeProgress {
-    data object Idle : ScrapeProgress
-    data class Running(val done: Int, val total: Int, val currentTitle: String) : ScrapeProgress
-    data class Finished(val scraped: Int, val failed: Int, val notFound: Int) : ScrapeProgress
-    data class Stopped(val reason: String) : ScrapeProgress
-}
 
 /**
  * Runs scraping jobs sequentially with a small delay between requests. Metadata comes from the

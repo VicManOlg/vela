@@ -1,5 +1,6 @@
 package io.vela.core.data.usecase
 
+import io.vela.core.model.PlayerResolution
 import io.vela.core.common.Outcome
 import io.vela.core.common.VelaError
 import io.vela.core.data.repository.GameRepository
@@ -8,7 +9,7 @@ import io.vela.core.catalog.PlayerCatalog
 import io.vela.core.common.DispatcherProvider
 import io.vela.core.launcher.GameLauncher
 import io.vela.core.launcher.InstalledPackages
-import io.vela.core.launcher.LaunchedGame
+import io.vela.core.model.LaunchedGame
 import io.vela.core.launcher.PlaySessionTracker
 import io.vela.core.launcher.PlayerResolver
 import io.vela.core.model.CoreOption
@@ -67,7 +68,7 @@ class PlayGame @Inject constructor(
     }
 
     /** Which player would run this game right now, if any. */
-    suspend fun currentPlayer(game: Game): PlayerResolver.Resolution {
+    suspend fun currentPlayer(game: Game): PlayerResolution {
         val settings = library.platformSettings(game.platformId)
         return withContext(dispatchers.io) { resolver.resolve(game, settings) }
     }
@@ -76,7 +77,7 @@ class PlayGame @Inject constructor(
         val platform = library.platform(game.platformId) ?: return emptyList()
         val settings = library.platformSettings(game.platformId)
         return withContext(dispatchers.io) {
-            val current = (resolver.resolve(game, settings) as? PlayerResolver.Resolution.Ready)?.player?.definition?.id
+            val current = (resolver.resolve(game, settings) as? PlayerResolution.Ready)?.player?.definition?.id
             resolver.optionsFor(platform).map { (def, pkg) ->
                 PlayerOption(def, pkg, def.coresFor(platform.id), isCurrent = def.id == current)
             }

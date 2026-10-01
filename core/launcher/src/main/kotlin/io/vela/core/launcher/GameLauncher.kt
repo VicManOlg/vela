@@ -1,5 +1,7 @@
 package io.vela.core.launcher
 
+import io.vela.core.model.LaunchedGame
+import io.vela.core.model.PlayerResolution
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Context
@@ -29,9 +31,6 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
-
-/** What the UI learns after a successful launch. */
-data class LaunchedGame(val game: Game, val player: ResolvedPlayer?)
 
 /**
  * Tracks the game currently in the foreground. Android never tells a frontend when an emulator
@@ -131,10 +130,10 @@ class GameLauncher @Inject constructor(
     private suspend fun launchWithPlayer(game: Game, platformSettings: PlatformSettings?): Outcome<LaunchedGame> {
         val platformName = platforms[game.platformId]?.name ?: game.platformId.value
         val resolved = when (val r = resolver.resolve(game, platformSettings)) {
-            is PlayerResolver.Resolution.Ready -> r.player
-            is PlayerResolver.Resolution.NotInstalled ->
+            is PlayerResolution.Ready -> r.player
+            is PlayerResolution.NotInstalled ->
                 return Outcome.failure(VelaError.NotInstalled(r.player.packages, r.player.name))
-            PlayerResolver.Resolution.NoCandidate -> return Outcome.failure(VelaError.NoPlayer(platformName))
+            PlayerResolution.NoCandidate -> return Outcome.failure(VelaError.NoPlayer(platformName))
         }
         val prepared = intentBuilder.build(game, resolved, platformSettings)
         val pathMissing = prepared.intent.hasEmptyPathExtra(resolved) ||

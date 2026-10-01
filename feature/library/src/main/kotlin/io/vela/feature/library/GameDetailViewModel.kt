@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import io.vela.core.model.PlayerResolution
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,7 +11,6 @@ import io.vela.core.data.repository.LibraryRepository
 import io.vela.core.data.usecase.GameActions
 import io.vela.core.data.usecase.GameMenuController
 import io.vela.core.data.usecase.PlayGame
-import io.vela.core.launcher.PlayerResolver
 import io.vela.core.model.CollectionId
 import io.vela.core.model.CompletionStatus
 import io.vela.core.model.Game
@@ -62,12 +62,12 @@ class GameDetailViewModel @Inject constructor(
                 game = g,
                 platform = platform,
                 playerName = when (resolution) {
-                    is PlayerResolver.Resolution.Ready -> resolution.player.definition.name + (resolution.player.core?.let { " · ${it.name}" } ?: "")
-                    is PlayerResolver.Resolution.NotInstalled -> resolution.player.name
-                    PlayerResolver.Resolution.NoCandidate -> null
+                    is PlayerResolution.Ready -> resolution.player.definition.name + (resolution.player.core?.let { " · ${it.name}" } ?: "")
+                    is PlayerResolution.NotInstalled -> resolution.player.name
+                    PlayerResolution.NoCandidate -> null
                     null -> "Android"
                 },
-                playerMissing = resolution is PlayerResolver.Resolution.NotInstalled || resolution is PlayerResolver.Resolution.NoCandidate,
+                playerMissing = resolution is PlayerResolution.NotInstalled || resolution is PlayerResolution.NoCandidate,
                 otherVersions = games.duplicatesOf(g),
                 franchise = games.sameFranchise(g),
                 loading = false,

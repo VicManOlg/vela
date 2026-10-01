@@ -45,7 +45,7 @@ import io.vela.core.data.repository.PlatformArt
 import io.vela.core.data.repository.PlatformEntry
 import io.vela.core.model.LibraryLayout
 import io.vela.core.model.PlatformId
-import io.vela.core.settings.SettingsRepository
+import io.vela.core.data.repository.AppSettingsRepository
 import io.vela.core.ui.components.EmptyState
 import io.vela.core.ui.components.PlatformTile
 import io.vela.core.ui.components.SystemCard
@@ -75,7 +75,7 @@ class PlatformsViewModel @Inject constructor(
     storage: StorageAccess,
     library: LibraryRepository,
     apps: AppsRepository,
-    settings: SettingsRepository,
+    settings: AppSettingsRepository,
 ) : ViewModel() {
     /**
      * Optional art the user supplies per system: `Android/data/<app>/files/system-art/<platform id>.png`

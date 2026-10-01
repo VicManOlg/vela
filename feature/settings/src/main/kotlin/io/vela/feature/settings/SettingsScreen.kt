@@ -54,7 +54,7 @@ import io.vela.core.model.PlatformKind
 import io.vela.core.model.PlayerId
 import io.vela.core.model.ScanProgress
 import io.vela.core.model.StorageMode
-import io.vela.core.scraper.ScrapeProgress
+import io.vela.core.model.ScrapeProgress
 import io.vela.core.ui.components.ConfirmDialog
 import io.vela.core.ui.components.rememberAutoFocus
 import androidx.compose.ui.focus.focusRequester

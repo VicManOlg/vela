@@ -1,10 +1,11 @@
 package io.vela.core.data.usecase
 
+import io.vela.core.model.PlayerResolution
 import io.vela.core.common.Outcome
 import io.vela.core.data.repository.CollectionRepository
 import io.vela.core.data.repository.GameRepository
 import io.vela.core.data.repository.ScrapeRepository
-import io.vela.core.launcher.LaunchedGame
+import io.vela.core.model.LaunchedGame
 import io.vela.core.model.CollectionId
 import io.vela.core.model.CompletionStatus
 import io.vela.core.model.GameId
@@ -17,7 +18,6 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import io.vela.core.data.mapper.toSummary
-import io.vela.core.launcher.PlayerResolver
 import io.vela.core.model.Game
 import io.vela.core.model.GameKind
 import io.vela.core.model.GameSummary
@@ -59,7 +59,7 @@ class GameActions @Inject constructor(
 
     private suspend fun playerNameFor(game: Game): String? {
         if (game.kind == GameKind.ANDROID_APP) return null
-        return (play.currentPlayer(game) as? PlayerResolver.Resolution.Ready)?.player?.definition?.name
+        return (play.currentPlayer(game) as? PlayerResolution.Ready)?.player?.definition?.name
     }
 
     suspend fun launchWith(id: GameId, player: PlayerId, coreId: String?, remember: Boolean): Outcome<LaunchedGame> {

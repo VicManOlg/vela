@@ -23,7 +23,7 @@ import io.vela.core.model.GameSummary
 import io.vela.core.model.LibraryView
 import io.vela.core.model.LaunchOption
 import io.vela.core.model.PlatformId
-import io.vela.core.settings.SettingsRepository
+import io.vela.core.data.repository.AppSettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -50,7 +50,7 @@ class GameGridViewModel @Inject constructor(
     private val games: GameRepository,
     private val library: LibraryRepository,
     private val collections: CollectionRepository,
-    private val settings: SettingsRepository,
+    private val settings: AppSettingsRepository,
     private val actions: GameActions,
     val menu: GameMenuController,
 ) : ViewModel() {

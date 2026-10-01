@@ -45,7 +45,7 @@ import io.vela.core.data.repository.LibraryRepository
 import io.vela.core.data.repository.ScrapeRepository
 import io.vela.core.model.ScanProgress
 import io.vela.core.model.SourceAccess
-import io.vela.core.settings.SettingsRepository
+import io.vela.core.data.repository.AppSettingsRepository
 import io.vela.core.ui.components.GlassPanel
 import io.vela.core.ui.components.SettingRow
 import io.vela.core.ui.components.TextInputDialog
@@ -63,7 +63,7 @@ enum class SetupStep { WELCOME, STORAGE, FOLDERS, SCANNING, DONE }
 @HiltViewModel
 class SetupViewModel @Inject constructor(
     private val storage: StorageAccess,
-    private val settings: SettingsRepository,
+    private val settings: AppSettingsRepository,
     private val library: LibraryRepository,
     private val apps: AppsRepository,
     private val scrape: ScrapeRepository,

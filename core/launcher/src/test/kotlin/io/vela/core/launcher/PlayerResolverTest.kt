@@ -1,5 +1,6 @@
 package io.vela.core.launcher
 
+import io.vela.core.model.PlayerResolution
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
@@ -60,7 +61,7 @@ class PlayerResolverTest {
     @Test
     fun `nothing installed resolves to not installed, never to a catalogue player`() {
         val r = resolver.resolve(game("nds"), null)
-        assertThat(r).isInstanceOf(PlayerResolver.Resolution.NotInstalled::class.java)
+        assertThat(r).isInstanceOf(PlayerResolution.NotInstalled::class.java)
         assertThat(resolver.optionsFor(platforms.require(PlatformId("nds"))).none { it.first.id.value.startsWith("catalog.") }).isTrue()
     }
 
@@ -70,8 +71,8 @@ class PlayerResolverTest {
         install(recipe.packageName!!, recipe.activity!!)
 
         val r = resolver.resolve(game("nds"), null)
-        assertThat(r).isInstanceOf(PlayerResolver.Resolution.Ready::class.java)
-        val ready = r as PlayerResolver.Resolution.Ready
+        assertThat(r).isInstanceOf(PlayerResolution.Ready::class.java)
+        val ready = r as PlayerResolution.Ready
         assertThat(ready.player.definition.id).isEqualTo(PlayerId("catalog.nds.com.hydra.noods"))
         assertThat(ready.player.installedPackage).isEqualTo(recipe.packageName)
         assertThat(resolver.optionsFor(platforms.require(PlatformId("nds"))).map { it.first.id.value }).contains("catalog.nds.com.hydra.noods")
@@ -85,7 +86,7 @@ class PlayerResolverTest {
         val recipe = emulators.emulator("nds.com.hydra.noods")!!
         install(recipe.packageName!!, recipe.activity!!)
 
-        val r = resolver.resolve(game("nds"), null) as PlayerResolver.Resolution.Ready
+        val r = resolver.resolve(game("nds"), null) as PlayerResolution.Ready
         assertThat(r.player.definition.id).isEqualTo(PlayerId("melonds"))
     }
 
@@ -93,7 +94,7 @@ class PlayerResolverTest {
     fun `a catalogue emulator whose activity is gone is skipped`() {
         val recipe = emulators.emulator("nds.com.hydra.noods")!!
         install(recipe.packageName!!, "com.example.SomethingElse")
-        assertThat(resolver.resolve(game("nds"), null)).isInstanceOf(PlayerResolver.Resolution.NotInstalled::class.java)
+        assertThat(resolver.resolve(game("nds"), null)).isInstanceOf(PlayerResolution.NotInstalled::class.java)
     }
 
     @Test
@@ -101,7 +102,7 @@ class PlayerResolverTest {
         val recipe = emulators.emulator("nds.com.hydra.noods")!!
         install(recipe.packageName!!, recipe.activity!!)
         val g = game("nds").copy(playerOverride = PlayerId("catalog.nds.com.hydra.noods"))
-        val r = resolver.resolve(g, null) as PlayerResolver.Resolution.Ready
+        val r = resolver.resolve(g, null) as PlayerResolution.Ready
         assertThat(r.player.definition.id.value).isEqualTo("catalog.nds.com.hydra.noods")
     }
 }

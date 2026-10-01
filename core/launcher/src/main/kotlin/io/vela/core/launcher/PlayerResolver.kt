@@ -1,5 +1,6 @@
 package io.vela.core.launcher
 
+import io.vela.core.model.PlayerResolution
 import android.content.Context
 import android.content.pm.PackageManager
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -96,17 +97,8 @@ class PlayerResolver @Inject constructor(
     fun installedCatalogPlayers(): List<PlayerDefinition> =
         platforms.platforms.flatMap { catalogCandidates(it) }.distinctBy { it.id }
 
-    sealed interface Resolution {
-        data class Ready(val player: ResolvedPlayer) : Resolution
-
-        /** A player is configured or suggested but none of its packages is installed. */
-        data class NotInstalled(val player: PlayerDefinition) : Resolution
-
-        data object NoCandidate : Resolution
-    }
-
-    fun resolve(game: Game, settings: PlatformSettings?): Resolution {
-        val platform = platforms[game.platformId] ?: return Resolution.NoCandidate
+    fun resolve(game: Game, settings: PlatformSettings?): PlayerResolution {
+        val platform = platforms[game.platformId] ?: return PlayerResolution.NoCandidate
         val explicit = game.playerOverride ?: settings?.playerId
         val candidates: List<PlayerDefinition> = buildList {
             explicit?.let { id -> definition(id)?.let(::add) }
@@ -114,20 +106,20 @@ class PlayerResolver @Inject constructor(
             addAll(catalogCandidates(platform))
         }.distinct()
 
-        if (candidates.isEmpty()) return Resolution.NoCandidate
+        if (candidates.isEmpty()) return PlayerResolution.NoCandidate
 
         // If the user explicitly chose a player we do not silently fall back to another one.
         if (explicit != null) {
             val chosen = candidates.first()
-            val pkg = installed.installedPackage(chosen) ?: return Resolution.NotInstalled(chosen)
-            return Resolution.Ready(ResolvedPlayer(chosen, pkg, pickCore(chosen, platform, game, settings)))
+            val pkg = installed.installedPackage(chosen) ?: return PlayerResolution.NotInstalled(chosen)
+            return PlayerResolution.Ready(ResolvedPlayer(chosen, pkg, pickCore(chosen, platform, game, settings)))
         }
 
         for (candidate in candidates) {
             val pkg = installed.installedPackage(candidate) ?: continue
-            return Resolution.Ready(ResolvedPlayer(candidate, pkg, pickCore(candidate, platform, game, settings)))
+            return PlayerResolution.Ready(ResolvedPlayer(candidate, pkg, pickCore(candidate, platform, game, settings)))
         }
-        return Resolution.NotInstalled(candidates.first())
+        return PlayerResolution.NotInstalled(candidates.first())
     }
 
     /** All players that could run this platform, with install state, for the Settings UI. */

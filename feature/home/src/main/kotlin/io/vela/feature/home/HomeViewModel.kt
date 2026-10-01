@@ -18,7 +18,7 @@ import io.vela.core.model.HomeRail
 import io.vela.core.model.LaunchOption
 import io.vela.core.model.CollectionId
 import io.vela.core.model.PlatformId
-import io.vela.core.settings.SettingsRepository
+import io.vela.core.data.repository.AppSettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -83,7 +83,7 @@ class HomeViewModel @Inject constructor(
     private val library: LibraryRepository,
     collections: CollectionRepository,
     apps: AppsRepository,
-    settings: SettingsRepository,
+    settings: AppSettingsRepository,
     private val actions: GameActions,
     val menu: GameMenuController,
 ) : ViewModel() {

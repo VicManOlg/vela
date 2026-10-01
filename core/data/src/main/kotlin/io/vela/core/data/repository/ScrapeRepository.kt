@@ -6,7 +6,7 @@ import io.vela.core.model.GameId
 import io.vela.core.model.MetadataProviderInfo
 import io.vela.core.model.ScrapingSettings
 import io.vela.core.scraper.ProviderRegistry
-import io.vela.core.scraper.ScrapeProgress
+import io.vela.core.model.ScrapeProgress
 import io.vela.core.scraper.ScrapeService
 import io.vela.core.scraper.store.ArtworkStore
 import kotlinx.coroutines.flow.StateFlow
