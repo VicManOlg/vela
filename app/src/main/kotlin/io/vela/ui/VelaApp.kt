@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
@@ -153,7 +154,7 @@ fun VelaApp(
                     popExitTransition = { fadeOut(tween(short)) + slideOutHorizontally(tween(long)) { it / 14 } },
                 ) {
                     composable<SetupRoute> {
-                        SetupScreen(onDone = { navController.navigate(ShellRoute) { popUpTo<SetupRoute> { inclusive = true } } })
+                        SetupScreen(onDone = whileResumed { navController.navigate(ShellRoute) { popUpTo<SetupRoute> { inclusive = true } } })
                     }
                     composable<ShellRoute> {
                         Shell(navController, viewModel, swapped = prefs.confirmButton == ConfirmButton.B, tabBar = prefs.tabBar)
@@ -161,7 +162,7 @@ fun VelaApp(
                     composable<GameGridRoute> {
                         Column(Modifier.fillMaxSize()) {
                             GameGridScreen(
-                                onOpenGame = { navController.navigate(GameDetailRoute(it.value)) },
+                                onOpenGame = whileResumed { id: GameId -> navController.navigate(GameDetailRoute(id.value)) },
                                 onBackgroundArtwork = viewModel::setBackdrop,
                                 modifier = Modifier.weight(1f),
                             )
@@ -171,7 +172,7 @@ fun VelaApp(
                     composable<AndroidRoute> {
                         Column(Modifier.fillMaxSize()) {
                             AndroidScreen(
-                                onOpenGame = { navController.navigate(GameDetailRoute(it.value)) },
+                                onOpenGame = whileResumed { id: GameId -> navController.navigate(GameDetailRoute(id.value)) },
                                 onBackgroundArtwork = viewModel::setBackdrop,
                                 modifier = Modifier.weight(1f),
                             )
@@ -181,8 +182,8 @@ fun VelaApp(
                     composable<GameDetailRoute> {
                         Column(Modifier.fillMaxSize()) {
                             GameDetailScreen(
-                                onBack = { navController.popBackStack() },
-                                onOpenGame = { navController.navigate(GameDetailRoute(it.value)) },
+                                onBack = whileResumed { navController.popBackStack() },
+                                onOpenGame = whileResumed { id: GameId -> navController.navigate(GameDetailRoute(id.value)) },
                                 onBackgroundArtwork = viewModel::setBackdrop,
                                 modifier = Modifier.weight(1f),
                             )
@@ -195,6 +196,26 @@ fun VelaApp(
             }
         }
     }
+}
+
+/**
+ * Navigation from a screen that is no longer the resumed destination is dropped: a second press of
+ * "Finish" would stack another Shell, a second popBackStack during the exit animation would pop
+ * the start destination, and a ViewModel may call back after a suspension, when the user has left.
+ * The lifecycle is the current NavBackStackEntry's.
+ */
+@Composable
+private fun whileResumed(action: () -> Unit): () -> Unit {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val latest by rememberUpdatedState(action)
+    return remember(lifecycle) { { if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) latest() } }
+}
+
+@Composable
+private fun <T> whileResumed(action: (T) -> Unit): (T) -> Unit {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val latest by rememberUpdatedState(action)
+    return remember(lifecycle) { { value: T -> if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) latest(value) } }
 }
 
 @Composable
@@ -222,10 +243,10 @@ private fun Shell(navController: NavHostController, appViewModel: AppViewModel, 
         }
     }
 
-    val openGame: (GameId) -> Unit = { navController.navigate(GameDetailRoute(it.value)) }
-    val openPlatform: (PlatformId) -> Unit = { navController.navigate(GameGridRoute(platformId = it.value)) }
-    val openCollection: (CollectionId) -> Unit = { navController.navigate(GameGridRoute(collectionId = it.value)) }
-    val openAndroid: () -> Unit = { navController.navigate(AndroidRoute) }
+    val openGame = whileResumed { id: GameId -> navController.navigate(GameDetailRoute(id.value)) }
+    val openPlatform = whileResumed { id: PlatformId -> navController.navigate(GameGridRoute(platformId = id.value)) }
+    val openCollection = whileResumed { id: CollectionId -> navController.navigate(GameGridRoute(collectionId = id.value)) }
+    val openAndroid = whileResumed { navController.navigate(AndroidRoute) }
 
     Column(Modifier.fillMaxSize()) {
         val showTabs = when (tabBar) {
@@ -279,8 +300,8 @@ private fun Shell(navController: NavHostController, appViewModel: AppViewModel, 
                 ShellTab.LIBRARY -> PlatformsScreen(
                     onOpenPlatform = openPlatform,
                     onOpenAndroid = openAndroid,
-                    onOpenFavorites = { navController.navigate(GameGridRoute(favorites = true, title = "Favorites")) },
-                    onOpenAll = { navController.navigate(GameGridRoute(title = "All games")) },
+                    onOpenFavorites = whileResumed { navController.navigate(GameGridRoute(favorites = true, title = "Favorites")) },
+                    onOpenAll = whileResumed { navController.navigate(GameGridRoute(title = "All games")) },
                     onOpenSettings = { appViewModel.selectTab(ShellTab.SETTINGS) },
                     onBackgroundArtwork = appViewModel::setBackdrop,
                 )
