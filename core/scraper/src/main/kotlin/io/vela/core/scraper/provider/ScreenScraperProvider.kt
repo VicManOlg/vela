@@ -22,6 +22,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import io.vela.core.scraper.executeCancellable
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -77,7 +78,7 @@ class ScreenScraperProvider @Inject constructor(
 
         return withContext(Dispatchers.IO) {
             try {
-                client.newCall(Request.Builder().url(url).build()).execute().use { response ->
+                client.newCall(Request.Builder().url(url).build()).executeCancellable { response ->
                     when (response.code) {
                         200 -> Unit
                         401, 403 -> return@withContext Outcome.failure(VelaError.Unauthorized(ID))

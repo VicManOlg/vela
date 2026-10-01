@@ -42,6 +42,7 @@ class LibraryScanner @Inject constructor(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + dispatchers.io)
     private val mutex = Mutex()
+    private val startLock = Any()
     private var job: Job? = null
 
     private val _progress = MutableStateFlow<ScanProgress>(ScanProgress.Idle)
@@ -50,13 +51,21 @@ class LibraryScanner @Inject constructor(
     val isRunning: Boolean get() = job?.isActive == true
 
     /** Starts a full scan in the background; a no-op if one is already running. */
-    fun scanAllInBackground(purgeMissing: Boolean = false) {
-        if (isRunning) return
-        job = scope.launch { runCatching { scanAll(purgeMissing) }.onFailure { Timber.e(it, "Scan failed") } }
+    fun scanAllInBackground(purgeMissing: Boolean = false) = synchronized(startLock) {
+        if (isRunning) return@synchronized
+        job = scope.launch {
+            try {
+                scanAll(purgeMissing)
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Timber.e(e, "Scan failed")
+            }
+        }
     }
 
-    fun cancel() {
+    fun cancel() = synchronized(startLock) {
         job?.cancel()
+        job = null
         _progress.value = ScanProgress.Idle
     }
 

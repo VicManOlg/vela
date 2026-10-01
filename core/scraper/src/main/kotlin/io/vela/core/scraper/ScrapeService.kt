@@ -59,28 +59,27 @@ class ScrapeService @Inject constructor(
     val progress: StateFlow<ScrapeProgress> = _progress
 
     private val mutex = Mutex()
+    private val startLock = Any()
     private var job: Job? = null
     private val notFound: MutableSet<Long> = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
     val isRunning: Boolean get() = job?.isActive == true
 
     /** Scrapes every visible ROM lacking box art, in the background. */
-    fun scrapeMissingInBackground() {
-        if (isRunning) return
-        job = scope.launch {
-            stopOnFailure {
-                val prefs = settings.current().scraping
-                val wantsLogos = providers.all.any { it.isAvailable(prefs) && ArtworkType.LOGO in it.info.artworkTypes }
-                val ids = gameDao.idsNeedingScrape(wantsLogos)
-                Timber.i("Scrape queue: %d games", ids.size)
-                scrapeGames(ids.map(::GameId))
-            }
-        }
+    fun scrapeMissingInBackground() = startInBackground {
+        val prefs = settings.current().scraping
+        val wantsLogos = providers.all.any { it.isAvailable(prefs) && ArtworkType.LOGO in it.info.artworkTypes }
+        val ids = gameDao.idsNeedingScrape(wantsLogos)
+        Timber.i("Scrape queue: %d games", ids.size)
+        scrapeGames(ids.map(::GameId))
     }
 
-    fun scrapeInBackground(ids: List<GameId>) {
-        if (isRunning) return
-        job = scope.launch { stopOnFailure { scrapeGames(ids) } }
+    fun scrapeInBackground(ids: List<GameId>) = startInBackground { scrapeGames(ids) }
+
+    /** Setup, the startup coordinator and Settings may all ask at once: only one run starts. */
+    private fun startInBackground(block: suspend () -> Unit) = synchronized(startLock) {
+        if (isRunning) return@synchronized
+        job = scope.launch { stopOnFailure(block) }
     }
 
     /** A background run that dies (database or storage error) ends as Stopped, not stuck on Running. */
@@ -94,8 +93,10 @@ class ScrapeService @Inject constructor(
         }
     }
 
-    fun cancel() {
+    fun cancel() = synchronized(startLock) {
         job?.cancel()
+        // Forget it now: a new start must not be ignored while the cancelled run winds down.
+        job = null
         _progress.value = ScrapeProgress.Idle
     }
 

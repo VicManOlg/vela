@@ -7,6 +7,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import io.vela.core.scraper.executeCancellable
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import timber.log.Timber
@@ -58,8 +59,8 @@ class WikipediaSummaries @Inject constructor(
         }
     }
 
-    private fun get(url: String): String? =
-        client.newCall(Request.Builder().url(url).header("Accept", "application/json").build()).execute().use { response ->
+    private suspend fun get(url: String): String? =
+        client.newCall(Request.Builder().url(url).header("Accept", "application/json").build()).executeCancellable { response ->
             if (!response.isSuccessful) {
                 Timber.d("Wikipedia %s -> HTTP %d", url, response.code)
                 null

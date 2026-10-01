@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import io.vela.core.scraper.executeCancellable
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.buffer
@@ -106,11 +107,11 @@ class PlatformIconStore @Inject constructor(
         return result
     }
 
-    private fun download(url: String, target: File): Result {
+    private suspend fun download(url: String, target: File): Result {
         target.parentFile?.mkdirs()
         val tmp = File(target.path + ".part")
         return try {
-            client.newCall(Request.Builder().url(url).build()).execute().use { response ->
+            client.newCall(Request.Builder().url(url).build()).executeCancellable { response ->
                 if (!response.isSuccessful) {
                     Timber.d("Platform icon %s -> HTTP %d", url, response.code)
                     return if (response.code in 500..599) Result.NETWORK_ERROR else Result.NOT_FOUND

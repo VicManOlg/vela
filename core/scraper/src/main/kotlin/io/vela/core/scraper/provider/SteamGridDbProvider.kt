@@ -20,6 +20,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import io.vela.core.scraper.executeCancellable
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import timber.log.Timber
@@ -94,8 +95,8 @@ class SteamGridDbProvider @Inject constructor(
 
     private data class Candidate(val id: Int, val name: String, val verified: Boolean)
 
-    private fun call(url: String, key: String): Outcome<JsonObject> =
-        client.newCall(Request.Builder().url(url).header("Authorization", "Bearer $key").build()).execute().use { response ->
+    private suspend fun call(url: String, key: String): Outcome<JsonObject> =
+        client.newCall(Request.Builder().url(url).header("Authorization", "Bearer $key").build()).executeCancellable { response ->
             when (response.code) {
                 200 -> Outcome.success(json.parseToJsonElement(response.body.string()).jsonObject)
                 401, 403 -> Outcome.failure(VelaError.Unauthorized(ID))

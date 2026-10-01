@@ -7,6 +7,7 @@ import io.vela.core.common.TitleCleaner
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import io.vela.core.scraper.executeCancellable
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import timber.log.Timber
@@ -80,11 +81,17 @@ class LibretroDatabase @Inject constructor(
         loaded
     }
 
-    private fun load(system: String): Index? {
+    private suspend fun load(system: String): Index? {
         val file = File(dir, system.replace(Regex("[^A-Za-z0-9._-]"), "_") + ".rdb")
         val fresh = file.exists() && System.currentTimeMillis() - file.lastModified() < TTL_MS
         if (!fresh) {
-            val ok = runCatching { download(system, file) }.onFailure { Timber.w(it, "libretro-database for %s unavailable", system) }.getOrDefault(false)
+            val ok = try {
+                download(system, file)
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Timber.w(e, "libretro-database for %s unavailable", system)
+                false
+            }
             if (!ok && !file.exists()) return null
         }
         return runCatching {
@@ -97,9 +104,9 @@ class LibretroDatabase @Inject constructor(
         }.getOrNull()
     }
 
-    private fun download(system: String, target: File): Boolean {
+    private suspend fun download(system: String, target: File): Boolean {
         val url = "$BASE/${URLEncoder.encode(system, "UTF-8").replace("+", "%20")}.rdb"
-        client.newCall(Request.Builder().url(url).build()).execute().use { response ->
+        client.newCall(Request.Builder().url(url).build()).executeCancellable { response ->
             if (!response.isSuccessful) {
                 Timber.d("libretro-database %s -> HTTP %d", url, response.code)
                 return false

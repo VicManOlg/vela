@@ -9,6 +9,7 @@ import io.vela.core.model.ArtworkCandidate
 import io.vela.core.model.ArtworkType
 import io.vela.core.model.GameId
 import kotlinx.coroutines.withContext
+import io.vela.core.scraper.executeCancellable
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.buffer
@@ -48,7 +49,7 @@ class ArtworkStore @Inject constructor(
             target.parentFile?.mkdirs()
             val tmp = File(target.path + ".part")
             try {
-                client.newCall(Request.Builder().url(candidate.url).build()).execute().use { response ->
+                client.newCall(Request.Builder().url(candidate.url).build()).executeCancellable { response ->
                     if (!response.isSuccessful) {
                         Timber.d("Artwork %s -> HTTP %d", candidate.url, response.code)
                         return@withContext false

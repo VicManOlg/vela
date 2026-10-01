@@ -6,6 +6,7 @@ import io.vela.core.common.DispatcherProvider
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import io.vela.core.scraper.executeCancellable
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import timber.log.Timber
@@ -46,14 +47,18 @@ class LibretroIndex @Inject constructor(
         loaded
     }
 
-    private fun load(system: String): LibretroNames? {
+    private suspend fun load(system: String): LibretroNames? {
         val file = File(dir, system.replace(Regex("[^A-Za-z0-9._-]"), "_") + ".txt")
         val fresh = file.exists() && System.currentTimeMillis() - file.lastModified() < TTL_MS
         if (fresh) readCached(file)?.let { return it }
 
-        val downloaded = runCatching { download(system) }
-            .onFailure { Timber.w(it, "libretro index for %s unavailable", system) }
-            .getOrNull()
+        val downloaded = try {
+            download(system)
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.w(e, "libretro index for %s unavailable", system)
+            null
+        }
         if (downloaded != null) {
             runCatching {
                 dir.mkdirs()
@@ -74,9 +79,9 @@ class LibretroIndex @Inject constructor(
             .getOrNull()
             ?.takeIf { it.size > 0 }
 
-    private fun download(system: String): List<String>? {
+    private suspend fun download(system: String): List<String>? {
         val url = "${LibretroThumbnailsProvider.BASE}/${LibretroThumbnailsProvider.encode(system)}/Named_Boxarts/"
-        client.newCall(Request.Builder().url(url).build()).execute().use { response ->
+        client.newCall(Request.Builder().url(url).build()).executeCancellable { response ->
             if (!response.isSuccessful) {
                 Timber.d("libretro index %s -> HTTP %d", url, response.code)
                 return null
