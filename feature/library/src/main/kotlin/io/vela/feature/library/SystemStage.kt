@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import androidx.compose.foundation.text.TextAutoSize
 import io.vela.core.ui.theme.metaLine
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.animation.AnimatedContent
@@ -208,7 +209,17 @@ internal fun SystemStage(
                     }
                     Spacer(Modifier.width(22.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(e.title, style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        // Long names ("Super Nintendo Entertainment System") step down in size before
+                        // they would be cut: the full name, in two lines at most.
+                        val display = VelaTheme.typography.display
+                        Text(
+                            e.title,
+                            style = display,
+                            color = colors.onBackground,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            autoSize = TextAutoSize.StepBased(minFontSize = VelaTheme.typography.title.fontSize, maxFontSize = display.fontSize),
+                        )
                         Spacer(Modifier.height(8.dp))
                         Text(
                             metaLine(e.subtitle),
