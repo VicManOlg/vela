@@ -8,7 +8,6 @@ import io.vela.core.catalog.CatalogPlayers
 import io.vela.core.catalog.EmulatorCatalog
 import io.vela.core.catalog.PlatformCatalog
 import io.vela.core.catalog.PlayerCatalog
-import io.vela.core.catalog.ThemeCatalog
 import io.vela.core.common.ApplicationScope
 import io.vela.core.common.DefaultDispatcherProvider
 import io.vela.core.common.DispatcherProvider
@@ -32,9 +31,6 @@ object CoreModule {
 
     @Provides @Singleton
     fun providePlayerCatalog(): PlayerCatalog = PlayerCatalog()
-
-    @Provides @Singleton
-    fun provideThemeCatalog(): ThemeCatalog = ThemeCatalog()
 
     /** Generated emulator catalogue (Daijishō + ES-DE, MIT); parsed lazily on first use. */
     @Provides @Singleton
