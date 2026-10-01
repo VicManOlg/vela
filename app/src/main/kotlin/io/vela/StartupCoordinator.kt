@@ -5,6 +5,7 @@ import io.vela.core.data.repository.AppsRepository
 import io.vela.core.data.repository.LibraryRepository
 import io.vela.core.data.repository.ScrapeRepository
 import io.vela.core.model.ScanProgress
+import io.vela.core.model.ScanResult
 import io.vela.core.scraper.NetworkStatus
 import io.vela.core.scraper.store.PlatformIconStore
 import io.vela.core.settings.SettingsRepository
@@ -14,9 +15,13 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -54,10 +59,9 @@ class StartupCoordinator @Inject constructor(
     }
 
     private suspend fun autoScrapeAfterScans() {
-        settings.settings.map { it.setupCompleted }.filter { it }.first()
-        library.scanProgress.filterIsInstance<ScanProgress.Finished>().collect { finished ->
-            if (finished.result.added > 0 && settings.current().scraping.autoScrapeNewGames) {
-                Timber.i("Scan added %d games, fetching artwork", finished.result.added)
+        scansToScrape(settings.settings.map { it.setupCompleted }, library.scanProgress).collect { result ->
+            if (result.added > 0 && settings.current().scraping.autoScrapeNewGames) {
+                Timber.i("Scan added %d games, fetching artwork", result.added)
                 scrape.scrapeMissingInBackground()
             }
         }
@@ -82,4 +86,16 @@ class StartupCoordinator @Inject constructor(
         runCatching { apps.syncInstalled() }.onFailure { Timber.w(it, "App sync failed") }
         if (prefs.scanOnStartup) library.scanInBackground()
     }
+}
+
+/**
+ * Finished scans whose new games should get artwork: every scan once setup is complete, except the
+ * setup flow's own. [progress] is a StateFlow, so when setup completes in this process its current
+ * value is the setup scan's result and must not count.
+ */
+internal fun scansToScrape(setupCompleted: Flow<Boolean>, progress: StateFlow<ScanProgress>): Flow<ScanResult> = flow {
+    val completedAtStart = setupCompleted.first()
+    if (!completedAtStart) setupCompleted.first { it }
+    val scans = if (completedAtStart) progress else progress.drop(1)
+    emitAll(scans.filterIsInstance<ScanProgress.Finished>().map { it.result })
 }
