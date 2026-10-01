@@ -307,7 +307,11 @@ private fun Shell(navController: NavHostController, appViewModel: AppViewModel, 
                     onOpenSettings = { appViewModel.selectTab(ShellTab.SETTINGS) },
                     onBackgroundArtwork = appViewModel::setBackdrop,
                 )
-                ShellTab.COLLECTIONS -> CollectionsScreen(onOpenCollection = openCollection)
+                ShellTab.COLLECTIONS -> {
+                    // No artwork of its own: do not keep the previous tab's cover behind it.
+                    LaunchedEffect(Unit) { appViewModel.setBackdrop(null, 0xFF7FD7FF) }
+                    CollectionsScreen(onOpenCollection = openCollection)
+                }
                 ShellTab.SEARCH -> SearchScreen(onOpenGame = openGame, onBackgroundArtwork = appViewModel::setBackdrop)
                 ShellTab.SETTINGS -> SettingsScreen(onBackgroundAccent = { appViewModel.setBackdrop(null, it) })
             }

@@ -170,10 +170,8 @@ fun SearchScreen(
     }
 
     Column(modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding).height(96.dp), verticalArrangement = Arrangement.Bottom) {
-            Text("Search", style = VelaTheme.typography.display, color = colors.onBackground)
-        }
-        Spacer(Modifier.height(10.dp))
+        // The tab bar already names the section: the field is the first thing on the page.
+        Spacer(Modifier.height(12.dp))
         Row(Modifier.padding(horizontal = VelaTheme.dimens.screenPadding), verticalAlignment = Alignment.CenterVertically) {
             Row(
                 Modifier

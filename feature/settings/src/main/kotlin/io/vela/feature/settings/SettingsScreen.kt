@@ -109,12 +109,7 @@ fun SettingsScreen(
     }
 
     Row(modifier.fillMaxSize().padding(horizontal = VelaTheme.dimens.screenPadding)) {
-        Column(Modifier.width(300.dp).fillMaxHeight()) {
-            Column(Modifier.height(96.dp), verticalArrangement = Arrangement.Bottom) {
-                Text("Settings", style = VelaTheme.typography.display, color = colors.onBackground)
-                Spacer(Modifier.height(4.dp))
-                Text("Vela ${viewModel.appVersion}", style = VelaTheme.typography.caption, color = colors.muted)
-            }
+        Column(Modifier.width(340.dp).fillMaxHeight()) {
             Spacer(Modifier.height(12.dp))
             val memory = rememberFocusMemory()
             val autoFocus = rememberAutoFocus(memory = memory)
@@ -133,7 +128,7 @@ fun SettingsScreen(
         }
         Spacer(Modifier.width(32.dp))
         Column(Modifier.weight(1f).fillMaxHeight()) {
-            Spacer(Modifier.height(96.dp + 12.dp))
+            Spacer(Modifier.height(12.dp))
             LazyColumn(Modifier.fillMaxSize().focusRestorer().focusGroup(), verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = 80.dp)) {
                 when (section) {
                     SettingsSection.LIBRARY -> librarySection(viewModel, settings)

@@ -85,13 +85,14 @@ fun CollectionsScreen(
     }
 
     Column(modifier.fillMaxSize()) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding).height(96.dp), verticalArrangement = Arrangement.Bottom) {
-            Text("Collections", style = VelaTheme.typography.display, color = colors.onBackground)
-            Spacer(Modifier.height(4.dp))
+        // The tab bar already names the section; one line counts what is here (the empty state
+        // speaks for itself).
+        if (collections.isNotEmpty()) {
             Text(
-                if (collections.isEmpty()) "Group games any way you like" else "${collections.size} collections",
+                if (collections.size == 1) "1 collection" else "${collections.size} collections",
                 style = VelaTheme.typography.body,
                 color = colors.muted,
+                modifier = Modifier.padding(horizontal = VelaTheme.dimens.screenPadding).padding(top = 12.dp),
             )
         }
         Spacer(Modifier.height(6.dp))
