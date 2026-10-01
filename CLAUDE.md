@@ -35,6 +35,12 @@ first, touch supported everywhere. Public repo: https://github.com/VicManOlg/vel
 - Compose: animated values are read in `graphicsLayer` / `draw` lambdas, not in composition.
   `clickable` alone is not focusable on touch devices; use `velaFocusable` (sounds, ring, glow).
   Touch-only targets use `pointerInput` tap gestures. Dialogs consume gamepad buttons.
+- A list that sets an initial focus (`rememberAutoFocus`, `Rail(autoFocus = true)`) takes a
+  `rememberFocusMemory()` and builds its items with `rememberedItems` / `rememberedItemsIndexed`,
+  or the focus goes back to the first item after a tab switch or a screen on top
+  (`focusRestorer` alone does not survive the tab leaving composition).
+- ViewModel tests use fakes of repository interfaces (`CollectionRepository` is the model) and
+  `MainDispatcherRule`; pass its dispatcher to `runTest` and create the ViewModel lazily.
 - Keyboard letter shortcuts (X/Y/Q/E) exist only in debuggable builds.
 
 ## Build, test, install
