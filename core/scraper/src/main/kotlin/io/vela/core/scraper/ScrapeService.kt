@@ -68,17 +68,30 @@ class ScrapeService @Inject constructor(
     fun scrapeMissingInBackground() {
         if (isRunning) return
         job = scope.launch {
-            val prefs = settings.current().scraping
-            val wantsLogos = providers.all.any { it.isAvailable(prefs) && ArtworkType.LOGO in it.info.artworkTypes }
-            val ids = gameDao.idsNeedingScrape(wantsLogos)
-            Timber.i("Scrape queue: %d games", ids.size)
-            scrapeGames(ids.map(::GameId))
+            stopOnFailure {
+                val prefs = settings.current().scraping
+                val wantsLogos = providers.all.any { it.isAvailable(prefs) && ArtworkType.LOGO in it.info.artworkTypes }
+                val ids = gameDao.idsNeedingScrape(wantsLogos)
+                Timber.i("Scrape queue: %d games", ids.size)
+                scrapeGames(ids.map(::GameId))
+            }
         }
     }
 
     fun scrapeInBackground(ids: List<GameId>) {
         if (isRunning) return
-        job = scope.launch { scrapeGames(ids) }
+        job = scope.launch { stopOnFailure { scrapeGames(ids) } }
+    }
+
+    /** A background run that dies (database or storage error) ends as Stopped, not stuck on Running. */
+    private suspend fun stopOnFailure(block: suspend () -> Unit) {
+        try {
+            block()
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.e(e, "Background scrape failed")
+            _progress.value = ScrapeProgress.Stopped("Artwork fetch failed: ${e.message ?: e::class.simpleName}")
+        }
     }
 
     fun cancel() {

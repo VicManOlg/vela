@@ -12,6 +12,7 @@ import io.vela.core.catalog.ThemeCatalog
 import io.vela.core.common.ApplicationScope
 import io.vela.core.common.DefaultDispatcherProvider
 import io.vela.core.common.DispatcherProvider
+import timber.log.Timber
 import javax.inject.Singleton
 
 /** Bindings for the pure-Kotlin modules that have no Hilt annotations of their own. */
@@ -23,7 +24,8 @@ object CoreModule {
     fun provideDispatchers(): DispatcherProvider = DefaultDispatcherProvider()
 
     @Provides @Singleton
-    fun provideApplicationScope(dispatchers: DispatcherProvider): ApplicationScope = ApplicationScope(dispatchers)
+    fun provideApplicationScope(dispatchers: DispatcherProvider): ApplicationScope =
+        ApplicationScope(dispatchers) { Timber.e(it, "Uncaught error in a background job") }
 
     @Provides @Singleton
     fun providePlatformCatalog(): PlatformCatalog = PlatformCatalog()
