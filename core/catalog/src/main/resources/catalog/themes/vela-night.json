@@ -37,6 +37,7 @@
     "focusBorderWidth": 3,
     "focusRingGap": 4
   },
+  "layout": { "homeLayout": "spotlight", "railSpacing": 18, "cardLabels": "never" },
   "background": { "mode": "hero", "blurRadius": 0, "dim": 0.5, "saturation": 1.15 },
   "effects": { "glassPanels": true, "panelAlpha": 0.62, "focusGlow": true, "videoPreviews": true, "dynamicAccent": false },
   "platformIcons": { "set": "systematic" }
