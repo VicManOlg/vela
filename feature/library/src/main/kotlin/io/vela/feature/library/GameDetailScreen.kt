@@ -180,7 +180,8 @@ fun GameDetailScreen(
             }
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                platform?.let { Pill(it.shortName, tint = accent) }
+                // In the text colour: platform accents (SNES blue, N64 green) are often too dark to read.
+                platform?.let { Pill(it.shortName) }
                 meta?.releaseYear?.let { Pill(it.toString()) }
                 meta?.genres?.firstOrNull()?.let { Pill(it) }
                 meta?.players?.let { Pill(if (it.toIntOrNull() == 1) "1 player" else "$it players") }
@@ -199,7 +200,8 @@ fun GameDetailScreen(
                     modifier = Modifier.focusRequester(playFocus),
                 )
                 VelaButton(
-                    text = if (game.favorite) "Favorite" else "Add to favorites",
+                    // The filled or outlined heart says which; one short label keeps the actions on one row.
+                    text = "Favorite",
                     onClick = viewModel::toggleFavorite,
                     icon = if (game.favorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                 )
