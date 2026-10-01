@@ -17,8 +17,9 @@ android {
         versionName = "0.3.2"
     }
 
-    // Release signing comes from the untracked secrets.properties (see README > Releases);
-    // without it, release builds fall back to the debug key so the project still compiles.
+    // Release signing comes from the untracked secrets.properties (see README > Releases).
+    // Without it the release APK is left unsigned: never signed with the debug key, which would
+    // install fine but break updates for every existing copy.
     val secrets = Properties().apply {
         val file = rootProject.file("secrets.properties")
         if (file.exists()) file.inputStream().use(::load)
@@ -35,6 +36,8 @@ android {
         }
     }
 
+    if (releaseStore == null) logger.warn("secrets.properties has no release keystore: release builds will be unsigned")
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
@@ -44,7 +47,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release")
         }
         // Optimised build that installs over the debug app: same package, same signature, so the
         // library and settings on the device are kept. Not debuggable, so ART runs compiled code
