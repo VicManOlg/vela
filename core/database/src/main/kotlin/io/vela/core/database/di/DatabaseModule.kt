@@ -1,7 +1,6 @@
 package io.vela.core.database.di
 
 import android.content.Context
-import android.content.pm.ApplicationInfo
 import androidx.room.Room
 import io.vela.core.database.VelaDatabase
 import io.vela.core.database.dao.CollectionDao
@@ -24,11 +23,10 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): VelaDatabase {
-        val debuggable = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        // No destructive fallback in any build: debug and perf share a package (and the library on
+        // the test devices), so a missing migration must fail loudly rather than wipe it.
         return Room.databaseBuilder(context, VelaDatabase::class.java, VelaDatabase.NAME)
             .addMigrations(MIGRATION_1_2)
-            // Debug builds may wipe on a schema jump; a user's library must never be dropped silently.
-            .apply { if (debuggable) fallbackToDestructiveMigration(dropAllTables = true) }
             .build()
     }
 
