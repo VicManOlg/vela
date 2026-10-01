@@ -50,7 +50,15 @@ class PlaySessionTracker @Inject constructor(
     private val _active = MutableStateFlow<ActiveSession?>(null)
     val active: StateFlow<ActiveSession?> = _active
 
-    init {
+    private var started = false
+
+    /**
+     * Watches the process coming back to the foreground (that is when a session ends) and closes
+     * sessions a killed process left open. Main thread: ProcessLifecycleOwner requires it.
+     */
+    fun start() {
+        if (started) return
+        started = true
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         scope.launch { recoverOpenSessions() }
     }

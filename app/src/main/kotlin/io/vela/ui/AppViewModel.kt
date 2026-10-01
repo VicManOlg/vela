@@ -1,5 +1,6 @@
 package io.vela.ui
 
+import kotlinx.coroutines.flow.asStateFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import io.vela.core.data.usecase.LaunchingGame
@@ -61,20 +61,21 @@ class AppViewModel @Inject constructor(
     fun onUiPaused() = handoff.onPaused()
     fun onUiResumed() = handoff.onResumed()
 
-    val backdrop = MutableStateFlow(Backdrop())
+    private val _backdrop = MutableStateFlow(Backdrop())
+    val backdrop: StateFlow<Backdrop> = _backdrop.asStateFlow()
 
     private var paletteJob: Job? = null
 
     fun setBackdrop(artwork: String?, accent: Long) {
-        val current = backdrop.value
+        val current = _backdrop.value
         if (current.artwork == artwork && current.accent == accent) return
-        backdrop.value = Backdrop(artwork, accent, dynamicAccent = if (artwork == current.artwork) current.dynamicAccent else null)
+        _backdrop.value = Backdrop(artwork, accent, dynamicAccent = if (artwork == current.artwork) current.dynamicAccent else null)
         paletteJob?.cancel()
         if (artwork == null) return
         paletteJob = viewModelScope.launch {
             val colour = ArtworkPalette.dominant(artwork)
-            val latest = backdrop.value
-            if (latest.artwork == artwork) backdrop.value = latest.copy(dynamicAccent = colour)
+            val latest = _backdrop.value
+            if (latest.artwork == artwork) _backdrop.value = latest.copy(dynamicAccent = colour)
         }
     }
 

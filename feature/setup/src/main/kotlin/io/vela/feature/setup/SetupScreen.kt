@@ -1,5 +1,6 @@
 package io.vela.feature.setup
 
+import kotlinx.coroutines.flow.asStateFlow
 import androidx.activity.compose.BackHandler
 import android.content.Intent
 import android.net.Uri
@@ -69,7 +70,9 @@ class SetupViewModel @Inject constructor(
     private val scrape: ScrapeRepository,
 ) : ViewModel() {
 
-    val step = MutableStateFlow(SetupStep.WELCOME)
+    private val _step = MutableStateFlow(SetupStep.WELCOME)
+    val step: StateFlow<SetupStep> = _step.asStateFlow()
+    fun goTo(value: SetupStep) { _step.value = value }
     val scanProgress: StateFlow<ScanProgress> = library.scanProgress
     private val _added = MutableStateFlow<List<String>>(emptyList())
     val added: StateFlow<List<String>> = _added
@@ -94,22 +97,22 @@ class SetupViewModel @Inject constructor(
     }
 
     fun startScan() = viewModelScope.launch {
-        step.value = SetupStep.SCANNING
+        _step.value = SetupStep.SCANNING
         val result = runCatching { library.scanNow() }.getOrNull()
         runCatching { apps.syncInstalled() }
         _result.value = result?.added ?: 0
-        step.value = SetupStep.DONE
+        _step.value = SetupStep.DONE
     }
 
     /** B on the wizard: one step back, never out of the app. */
     fun back(): Boolean {
-        val previous = when (step.value) {
+        val previous = when (_step.value) {
             SetupStep.STORAGE -> SetupStep.WELCOME
             SetupStep.FOLDERS -> SetupStep.STORAGE
             SetupStep.DONE -> SetupStep.FOLDERS
             else -> return false
         }
-        step.value = previous
+        _step.value = previous
         return true
     }
 
@@ -130,8 +133,8 @@ fun SetupScreen(onDone: () -> Unit, modifier: Modifier = Modifier, viewModel: Se
         GlassPanel(Modifier.fillMaxWidth(0.72f).fillMaxHeight(0.92f)) {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 when (step) {
-                SetupStep.WELCOME -> Welcome { viewModel.step.value = SetupStep.STORAGE }
-                SetupStep.STORAGE -> Storage(viewModel) { viewModel.step.value = SetupStep.FOLDERS }
+                SetupStep.WELCOME -> Welcome { viewModel.goTo(SetupStep.STORAGE) }
+                SetupStep.STORAGE -> Storage(viewModel) { viewModel.goTo(SetupStep.FOLDERS) }
                 SetupStep.FOLDERS -> Folders(viewModel) { viewModel.startScan() }
                 SetupStep.SCANNING -> Scanning(viewModel)
                 SetupStep.DONE -> Done(viewModel, onDone)

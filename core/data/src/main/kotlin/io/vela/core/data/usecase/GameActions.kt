@@ -17,7 +17,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import io.vela.core.data.mapper.toSummary
+import io.vela.core.model.toSummary
 import io.vela.core.model.Game
 import io.vela.core.model.GameKind
 import io.vela.core.model.GameSummary

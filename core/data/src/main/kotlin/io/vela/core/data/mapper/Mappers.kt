@@ -29,14 +29,14 @@ import io.vela.core.model.SourceAccess
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 
-fun GameEntity.toLocation(): GameLocation = when (locationType) {
+internal fun GameEntity.toLocation(): GameLocation = when (locationType) {
     LocationType.FILE -> GameLocation.File(locationValue)
     LocationType.DOCUMENT -> GameLocation.Document(locationValue)
     LocationType.ANDROID_APP -> GameLocation.AndroidApp(locationValue, locationExtra)
     LocationType.EXTERNAL -> GameLocation.External(locationValue)
 }
 
-fun GameEntity.toDomain(metadata: GameMetadataEntity?, artwork: List<ArtworkEntity>): Game = Game(
+internal fun GameEntity.toDomain(metadata: GameMetadataEntity?, artwork: List<ArtworkEntity>): Game = Game(
     id = GameId(id),
     platformId = PlatformId(platformId),
     kind = runCatching { GameKind.valueOf(kind) }.getOrDefault(GameKind.ROM),
@@ -61,7 +61,7 @@ fun GameEntity.toDomain(metadata: GameMetadataEntity?, artwork: List<ArtworkEnti
     artwork = artwork.associate { runCatching { ArtworkType.valueOf(it.type) }.getOrDefault(ArtworkType.SCREENSHOT) to it.localPath },
 )
 
-fun GameMetadataEntity.toDomain(): GameMetadata = GameMetadata(
+internal fun GameMetadataEntity.toDomain(): GameMetadata = GameMetadata(
     title = title,
     description = description,
     developer = developer,
@@ -79,7 +79,7 @@ fun GameMetadataEntity.toDomain(): GameMetadata = GameMetadata(
     scrapedAt = scrapedAt,
 )
 
-fun GameSummaryView.toDomain(): GameSummary = GameSummary(
+internal fun GameSummaryView.toDomain(): GameSummary = GameSummary(
     id = GameId(id),
     platformId = PlatformId(platformId),
     kind = runCatching { GameKind.valueOf(kind) }.getOrDefault(GameKind.ROM),
@@ -95,7 +95,7 @@ fun GameSummaryView.toDomain(): GameSummary = GameSummary(
     userRating = userRating,
 )
 
-fun LibrarySourceEntity.toDomain(): LibrarySource = LibrarySource(
+internal fun LibrarySourceEntity.toDomain(): LibrarySource = LibrarySource(
     id = LibrarySourceId(id),
     uri = uri,
     displayName = displayName,
@@ -109,7 +109,7 @@ fun LibrarySourceEntity.toDomain(): LibrarySource = LibrarySource(
 
 private val overridesSerializer = MapSerializer(String.serializer(), String.serializer())
 
-fun PlatformSettingsEntity.toDomain(): PlatformSettings = PlatformSettings(
+internal fun PlatformSettingsEntity.toDomain(): PlatformSettings = PlatformSettings(
     platformId = PlatformId(platformId),
     enabled = enabled,
     playerId = playerId?.let(::PlayerId),
@@ -118,7 +118,7 @@ fun PlatformSettingsEntity.toDomain(): PlatformSettings = PlatformSettings(
     customName = customName,
 )
 
-fun PlatformSettings.toEntity(): PlatformSettingsEntity = PlatformSettingsEntity(
+internal fun PlatformSettings.toEntity(): PlatformSettingsEntity = PlatformSettingsEntity(
     platformId = platformId.value,
     enabled = enabled,
     playerId = playerId?.value,
@@ -127,7 +127,7 @@ fun PlatformSettings.toEntity(): PlatformSettingsEntity = PlatformSettingsEntity
     customName = customName,
 )
 
-fun CollectionWithStats.toDomain(): GameCollection = GameCollection(
+internal fun CollectionWithStats.toDomain(): GameCollection = GameCollection(
     id = CollectionId(id),
     name = name,
     kind = runCatching { CollectionKind.valueOf(kind) }.getOrDefault(CollectionKind.MANUAL),
@@ -136,21 +136,4 @@ fun CollectionWithStats.toDomain(): GameCollection = GameCollection(
     sortOrder = sortOrder,
     gameCount = gameCount,
     coverArt = coverArt,
-)
-
-/** Card-sized view of a full record, for rails and overlays that already hold the [Game]. */
-fun Game.toSummary(): GameSummary = GameSummary(
-    id = id,
-    platformId = platformId,
-    kind = kind,
-    title = displayTitle,
-    boxArt = artwork[ArtworkType.BOX_FRONT],
-    logo = artwork[ArtworkType.LOGO],
-    background = artwork[ArtworkType.BACKGROUND] ?: artwork[ArtworkType.HERO] ?: artwork[ArtworkType.SCREENSHOT],
-    favorite = favorite,
-    lastPlayedAt = lastPlayedAt,
-    playCount = playCount,
-    totalPlayTimeMs = totalPlayTimeMs,
-    packageName = (location as? GameLocation.AndroidApp)?.packageName,
-    userRating = userRating,
 )

@@ -10,7 +10,7 @@ import io.vela.core.model.MetadataProviderInfo
 import io.vela.core.model.MetadataQuery
 import io.vela.core.model.ScrapingSettings
 import io.vela.core.scraper.MetadataProvider
-import kotlinx.coroutines.Dispatchers
+import io.vela.core.common.DispatcherProvider
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -36,6 +36,7 @@ import javax.inject.Singleton
 @Singleton
 class SteamGridDbProvider @Inject constructor(
     private val client: OkHttpClient,
+    private val dispatchers: DispatcherProvider,
 ) : MetadataProvider {
 
     override val info = MetadataProviderInfo(
@@ -55,7 +56,7 @@ class SteamGridDbProvider @Inject constructor(
     /** The key from Settings, else the one compiled in from secrets.properties (personal builds). */
     private fun keyFor(settings: ScrapingSettings): String = settings.steamGridDbApiKey.trim().ifBlank { io.vela.core.scraper.BuildConfig.STEAMGRIDDB_API_KEY.trim() }
 
-    override suspend fun search(query: MetadataQuery, settings: ScrapingSettings): Outcome<List<MetadataMatch>> = withContext(Dispatchers.IO) {
+    override suspend fun search(query: MetadataQuery, settings: ScrapingSettings): Outcome<List<MetadataMatch>> = withContext(dispatchers.io) {
         val key = keyFor(settings)
         try {
             val results = when (val r = call("$BASE/search/autocomplete/${encode(query.title)}", key)) {

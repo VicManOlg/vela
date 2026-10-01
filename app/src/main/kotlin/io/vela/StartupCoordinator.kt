@@ -1,5 +1,6 @@
 package io.vela
 
+import io.vela.core.launcher.PlaySessionTracker
 import io.vela.core.common.ApplicationScope
 import io.vela.core.data.repository.AppsRepository
 import io.vela.core.data.repository.LibraryRepository
@@ -47,12 +48,14 @@ class StartupCoordinator @Inject constructor(
     private val platformIcons: PlatformIconStore,
     private val network: NetworkStatus,
     private val scope: ApplicationScope,
+    private val sessions: PlaySessionTracker,
 ) {
     private var started = false
 
     fun onAppStarted() {
         if (started) return
         started = true
+        sessions.start()
         scope.launch { autoScrapeAfterScans() }
         scope.launch { syncPlatformIcons() }
         scope.launch { startupWork() }

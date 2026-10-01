@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import io.vela.core.model.toSummary
 import kotlinx.coroutines.flow.Flow
 import io.vela.core.model.GameMenuAction
 import io.vela.core.model.GameMenuEvent
@@ -93,12 +94,4 @@ class GameDetailViewModel @Inject constructor(
     fun openCompletion() { state.value.game?.let { menuController.openAt(it.toSummary(), GameMenuAction.COMPLETION) } }
 
 
-    private fun Game.toSummary() = GameSummary(
-        id = id, platformId = platformId, kind = kind, title = displayTitle,
-        boxArt = artwork[io.vela.core.model.ArtworkType.BOX_FRONT], logo = artwork[io.vela.core.model.ArtworkType.LOGO],
-        background = artwork[io.vela.core.model.ArtworkType.BACKGROUND] ?: artwork[io.vela.core.model.ArtworkType.SCREENSHOT],
-        favorite = favorite, lastPlayedAt = lastPlayedAt, playCount = playCount, totalPlayTimeMs = totalPlayTimeMs,
-        packageName = (location as? io.vela.core.model.GameLocation.AndroidApp)?.packageName,
-        userRating = userRating,
-    )
 }

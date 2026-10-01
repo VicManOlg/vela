@@ -12,14 +12,13 @@ import io.vela.core.model.MetadataQuery
 import io.vela.core.model.ScrapingSettings
 import io.vela.core.scraper.BuildConfig
 import io.vela.core.scraper.MetadataProvider
-import kotlinx.coroutines.Dispatchers
+import io.vela.core.common.DispatcherProvider
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import io.vela.core.scraper.executeCancellable
@@ -39,6 +38,7 @@ import javax.inject.Singleton
 class ScreenScraperProvider @Inject constructor(
     private val client: OkHttpClient,
     private val platforms: PlatformCatalog,
+    private val dispatchers: DispatcherProvider,
 ) : MetadataProvider {
 
     override val info = MetadataProviderInfo(
@@ -76,7 +76,7 @@ class ScreenScraperProvider @Inject constructor(
             query.crc32?.let { addQueryParameter("crc", it) }
         }.build()
 
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatchers.io) {
             try {
                 client.newCall(Request.Builder().url(url).build()).executeCancellable { response ->
                     when (response.code) {

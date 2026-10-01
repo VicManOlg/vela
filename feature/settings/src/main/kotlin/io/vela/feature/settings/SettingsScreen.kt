@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -47,11 +46,8 @@ import io.vela.core.data.repository.PlatformEntry
 import io.vela.core.model.AppSettings
 import io.vela.core.model.ConfirmButton
 import io.vela.core.model.LibrarySource
-import io.vela.core.model.LibraryView
-import io.vela.core.model.TabBarMode
 import io.vela.core.model.PlatformId
 import io.vela.core.model.PlatformKind
-import io.vela.core.model.PlayerId
 import io.vela.core.model.ScanProgress
 import io.vela.core.model.StorageMode
 import io.vela.core.model.ScrapeProgress
@@ -66,8 +62,6 @@ import io.vela.core.ui.components.VelaMenuDialog
 import io.vela.core.ui.input.GamepadButton
 import io.vela.core.ui.input.GamepadHandler
 import io.vela.core.ui.theme.VelaTheme
-import io.vela.core.model.HomeLayout
-import io.vela.core.model.LibraryLayout
 
 /**
  * Settings: sections on the left, content on the right. L2/R2 switch sections so the user never
@@ -88,8 +82,8 @@ fun SettingsScreen(
     GamepadHandler { button ->
         val sections = SettingsSection.entries
         when (button) {
-            GamepadButton.L2 -> { viewModel.section.value = sections[(sections.indexOf(section) - 1 + sections.size) % sections.size]; true }
-            GamepadButton.R2 -> { viewModel.section.value = sections[(sections.indexOf(section) + 1) % sections.size]; true }
+            GamepadButton.L2 -> { viewModel.selectSection(sections[(sections.indexOf(section) - 1 + sections.size) % sections.size]); true }
+            GamepadButton.R2 -> { viewModel.selectSection(sections[(sections.indexOf(section) + 1) % sections.size]); true }
             else -> false
         }
     }
@@ -109,8 +103,8 @@ fun SettingsScreen(
                         title = s.title,
                         description = s.summary,
                         value = if (s == section) "•" else null,
-                        onClick = { viewModel.section.value = s },
-                        onFocused = { viewModel.section.value = s },
+                        onClick = { viewModel.selectSection(s) },
+                        onFocused = { viewModel.selectSection(s) },
                     )
                 }
             }

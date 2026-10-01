@@ -1,5 +1,6 @@
 package io.vela.feature.search
 
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.Flow
 import io.vela.core.model.GameMenuEvent
 import io.vela.core.model.GameMenuActions
@@ -103,7 +104,8 @@ class SearchViewModel @Inject constructor(
     private val menuController: GameMenuController,
 ) : ViewModel() {
 
-    val query = MutableStateFlow("")
+    private val _query = MutableStateFlow("")
+    val query: StateFlow<String> = _query.asStateFlow()
     private val platformFilter = MutableStateFlow<PlatformId?>(null)
     private val genres = MutableStateFlow<List<String>>(emptyList())
 
@@ -122,7 +124,7 @@ class SearchViewModel @Inject constructor(
 
     init { viewModelScope.launch { genres.value = games.genres() } }
 
-    fun setQuery(q: String) { query.value = q }
+    fun setQuery(q: String) { _query.value = q }
     fun cyclePlatformFilter() {
         val ids = matches.value.map { it.platformId }.distinct()
         if (ids.isEmpty()) { platformFilter.value = null; return }

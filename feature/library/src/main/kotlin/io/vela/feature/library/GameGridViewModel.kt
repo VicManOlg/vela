@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import kotlinx.coroutines.flow.asStateFlow
 import io.vela.core.model.GameMenuEvent
 import io.vela.core.model.GameMenuActions
 import androidx.lifecycle.SavedStateHandle
@@ -60,7 +61,9 @@ class GameGridViewModel @Inject constructor(
     private val collectionId = route.collectionId?.let(::CollectionId)
 
     private val sort = MutableStateFlow(GameSort.TITLE)
-    val focused = MutableStateFlow<GameSummary?>(null)
+    private val _focused = MutableStateFlow<GameSummary?>(null)
+    val focused: StateFlow<GameSummary?> = _focused.asStateFlow()
+    fun setFocused(value: GameSummary?) { _focused.value = value }
 
     val platform: StateFlow<PlatformEntry?> = (platformId?.let(library::observePlatform) ?: flowOf(null))
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -123,7 +126,7 @@ class GameGridViewModel @Inject constructor(
 
     fun launch(game: GameSummary) = viewModelScope.launch { actions.launch(game.id) }
     fun openMenu(game: GameSummary) = menuController.open(game)
-    fun openMenuForFocused() { focused.value?.let { openMenu(it) } }
+    fun openMenuForFocused() { _focused.value?.let { openMenu(it) } }
 
 }
 

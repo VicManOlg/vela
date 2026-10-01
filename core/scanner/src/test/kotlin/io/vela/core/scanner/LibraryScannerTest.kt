@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.google.common.truth.Truth.assertThat
 import io.vela.core.catalog.PlatformCatalog
+import io.vela.core.common.ApplicationScope
 import io.vela.core.common.DispatcherProvider
 import io.vela.core.database.VelaDatabase
 import io.vela.core.database.entity.LibrarySourceEntity
@@ -40,7 +41,7 @@ class LibraryScannerTest {
         val context: Context = RuntimeEnvironment.getApplication()
         db = Room.inMemoryDatabaseBuilder(context, VelaDatabase::class.java).allowMainThreadQueries().build()
         val catalog = PlatformCatalog()
-        scanner = LibraryScanner(db, FileSystemSourceFactory(context), PlatformDetector(catalog), dispatchers)
+        scanner = LibraryScanner(db, FileSystemSourceFactory(context), PlatformDetector(catalog), dispatchers, ApplicationScope(dispatchers))
         root = tmp.newFolder("ROMs")
     }
 

@@ -71,7 +71,9 @@ class SettingsViewModel @Inject constructor(
     private val _artworkBytes = MutableStateFlow(0L)
     val artworkBytes: StateFlow<Long> = _artworkBytes
 
-    val section = MutableStateFlow(SettingsSection.LIBRARY)
+    private val _section = MutableStateFlow(SettingsSection.LIBRARY)
+    val section: StateFlow<SettingsSection> = _section.asStateFlow()
+    fun selectSection(value: SettingsSection) { _section.value = value }
 
     init { refreshStorageStats() }
 

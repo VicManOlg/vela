@@ -1,5 +1,6 @@
 package io.vela.core.scanner
 
+import io.vela.core.common.ApplicationScope
 import io.vela.core.common.DispatcherProvider
 import io.vela.core.common.TitleCleaner
 import io.vela.core.database.VelaDatabase
@@ -14,9 +15,7 @@ import io.vela.core.model.ScanProgress
 import io.vela.core.model.ScanResult
 import io.vela.core.model.SourceAccess
 import androidx.room.withTransaction
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,8 +38,8 @@ class LibraryScanner @Inject constructor(
     private val sources: FileSystemSourceFactory,
     private val detector: PlatformDetector,
     private val dispatchers: DispatcherProvider,
+    private val scope: ApplicationScope,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + dispatchers.io)
     private val mutex = Mutex()
     private val startLock = Any()
     private var job: Job? = null
