@@ -62,11 +62,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.Dispatchers
-import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
-import java.io.File
+import io.vela.core.data.system.StorageAccess
 import javax.inject.Inject
 
 /** Android shown as one more system: detected games plus pinned apps. */
@@ -76,7 +72,7 @@ data class AndroidTile(val games: Int, val apps: Int, val accent: Long, val name
 
 @HiltViewModel
 class PlatformsViewModel @Inject constructor(
-    @ApplicationContext context: Context,
+    storage: StorageAccess,
     library: LibraryRepository,
     apps: AppsRepository,
     settings: SettingsRepository,
@@ -86,11 +82,8 @@ class PlatformsViewModel @Inject constructor(
      * (jpg/webp too; `all`, `favorites` and `android` name the smart shelves). Book, Columns and the
      * backdrop use it instead of the most recent game's scene.
      */
-    val systemArt: StateFlow<Map<String, String>> = flow {
-        val dir = File(context.getExternalFilesDir(null) ?: context.filesDir, "system-art")
-        val files = dir.listFiles { f -> f.isFile && f.extension.lowercase() in setOf("png", "jpg", "jpeg", "webp") }.orEmpty()
-        emit(files.associate { it.nameWithoutExtension.lowercase() to it.absolutePath })
-    }.flowOn(Dispatchers.IO).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+    val systemArt: StateFlow<Map<String, String>> = flow { emit(storage.systemArt()) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /** Null until the first database read: the empty state must not flash (and take the focus) meanwhile. */
     val platforms: StateFlow<List<PlatformEntry>?> = library.observePlatformsWithGames()

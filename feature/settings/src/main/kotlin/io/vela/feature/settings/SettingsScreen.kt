@@ -190,7 +190,7 @@ private fun LibrarySources(vm: SettingsViewModel) {
     }
 
     if (addMenu) {
-        val suggested = remember { vm.suggestedFolders() }
+        val suggested by produceState(emptyList<java.io.File>()) { value = vm.suggestedFolders() }
         val hasAccess = vm.hasAllFilesAccess()
         VelaMenuDialog(
             title = "Add folder",

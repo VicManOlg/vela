@@ -1,13 +1,8 @@
 package io.vela.feature.setup
 
 import androidx.activity.compose.BackHandler
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import android.provider.DocumentsContract
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +24,7 @@ import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,7 +39,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
+import io.vela.core.data.system.StorageAccess
 import io.vela.core.data.repository.AppsRepository
 import io.vela.core.data.repository.LibraryRepository
 import io.vela.core.data.repository.ScrapeRepository
@@ -66,7 +62,7 @@ enum class SetupStep { WELCOME, STORAGE, FOLDERS, SCANNING, DONE }
 
 @HiltViewModel
 class SetupViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    private val storage: StorageAccess,
     private val settings: SettingsRepository,
     private val library: LibraryRepository,
     private val apps: AppsRepository,
@@ -80,17 +76,9 @@ class SetupViewModel @Inject constructor(
     private val _result = MutableStateFlow<Int?>(null)
     val foundGames: StateFlow<Int?> = _result
 
-    fun hasAllFilesAccess(): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()
-    fun allFilesAccessIntent(): Intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:${context.packageName}"))
-
-    fun suggestedFolders(): List<File> {
-        val ext = Environment.getExternalStorageDirectory()
-        val names = listOf("ROMs", "Roms", "roms", "Games", "Emulation/roms", "Emulation", "RetroArch/roms")
-        val internal = names.map { File(ext, it) }
-        val sd = File("/storage").listFiles()?.filter { it.isDirectory && it.name != "emulated" && it.name != "self" }.orEmpty()
-        return (internal + sd.flatMap { r -> names.map { File(r, it) } + r }).filter { it.isDirectory && it.canRead() }
-            .distinctBy { it.absolutePath.lowercase() }
-    }
+    fun hasAllFilesAccess(): Boolean = storage.hasAllFilesAccess()
+    fun allFilesAccessIntent(): Intent = storage.allFilesAccessIntent()
+    suspend fun suggestedFolders(): List<File> = storage.suggestedFolders()
 
     fun addPath(path: String) = viewModelScope.launch {
         val f = File(path)
@@ -100,8 +88,7 @@ class SetupViewModel @Inject constructor(
     }
 
     fun addTree(uri: Uri) = viewModelScope.launch {
-        runCatching { context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-        val name = runCatching { DocumentsContract.getTreeDocumentId(uri).substringAfter(':').ifEmpty { "Storage" } }.getOrDefault("Folder")
+        val name = storage.persistTree(uri)
         library.addSource(uri.toString(), name, SourceAccess.DOCUMENT_TREE, null)
         _added.value = _added.value + name
     }
@@ -200,7 +187,9 @@ private fun Storage(vm: SetupViewModel, onNext: () -> Unit) {
 private fun Folders(vm: SetupViewModel, onNext: () -> Unit) {
     val added by vm.added.collectAsStateWithLifecycle()
     val hasAccess = vm.hasAllFilesAccess()
-    val suggestions = remember { vm.suggestedFolders() }
+    // Null while the folders are listed (file I/O, off the main thread); the focus waits for them.
+    val loaded by produceState<List<File>?>(null) { value = vm.suggestedFolders() }
+    val suggestions = loaded ?: return
     var typing by remember { mutableStateOf(false) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri -> uri?.let(vm::addTree) }
     val focus = remember { FocusRequester() }

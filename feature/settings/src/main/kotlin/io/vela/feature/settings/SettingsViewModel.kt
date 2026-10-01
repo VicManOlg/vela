@@ -1,20 +1,15 @@
 package io.vela.feature.settings
 
-import android.app.role.RoleManager
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import android.provider.DocumentsContract
-import android.provider.Settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import io.vela.core.data.repository.LibraryRepository
 import io.vela.core.data.repository.PlatformEntry
 import io.vela.core.data.repository.ScrapeRepository
+import io.vela.core.data.system.HomeAppRole
+import io.vela.core.data.system.StorageAccess
 import io.vela.core.data.usecase.PlayGame
 import io.vela.core.model.AppSettings
 import io.vela.core.model.AppearanceOverrides
@@ -22,7 +17,6 @@ import io.vela.core.model.LibrarySource
 import io.vela.core.model.LibrarySourceId
 import io.vela.core.model.MetadataProviderInfo
 import io.vela.core.model.PlatformId
-import io.vela.core.model.PlatformSettings
 import io.vela.core.model.PlayerDefinition
 import io.vela.core.model.PlayerId
 import io.vela.core.model.ScanProgress
@@ -56,8 +50,9 @@ data class PlayerStatus(val definition: PlayerDefinition, val installedPackage: 
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val settingsRepository: SettingsRepository,
+    private val storage: StorageAccess,
+    private val homeRole: HomeAppRole,
     private val library: LibraryRepository,
     private val scrape: ScrapeRepository,
     private val play: PlayGame,
@@ -85,10 +80,7 @@ class SettingsViewModel @Inject constructor(
     // ---- Library ------------------------------------------------------------------------------
 
     fun addTreeSource(uri: Uri, platformId: PlatformId?) = viewModelScope.launch {
-        runCatching {
-            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        val name = runCatching { DocumentsContract.getTreeDocumentId(uri).substringAfter(':').ifEmpty { "Storage" } }.getOrDefault("Folder")
+        val name = storage.persistTree(uri)
         val id = library.addSource(uri.toString(), name, SourceAccess.DOCUMENT_TREE, platformId)
         library.scanSource(id)
     }
@@ -110,19 +102,11 @@ class SettingsViewModel @Inject constructor(
     fun rescanSource(source: LibrarySource) = viewModelScope.launch { library.scanSource(source.id) }
     fun cancelScan() = library.cancelScan()
 
-    /** Common ROM locations that exist right now, offered as one-tap choices. */
-    fun suggestedFolders(): List<File> {
-        val ext = Environment.getExternalStorageDirectory()
-        val candidates = listOf("ROMs", "Roms", "roms", "Games", "Emulation/roms", "Emulation", "RetroArch/roms", "Download").map { File(ext, it) }
-        val sd = File("/storage").listFiles()?.filter { it.name != "emulated" && it.name != "self" && it.isDirectory }.orEmpty()
-        val sdCandidates = sd.flatMap { root -> listOf("ROMs", "Roms", "roms", "Games").map { File(root, it) } + root }
-        return (candidates + sdCandidates).filter { it.isDirectory && it.canRead() }
-            .distinctBy { it.absolutePath.lowercase() }
-    }
+    suspend fun suggestedFolders(): List<File> = storage.suggestedFolders()
 
-    fun hasAllFilesAccess(): Boolean = Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()
+    fun hasAllFilesAccess(): Boolean = storage.hasAllFilesAccess()
 
-    fun allFilesAccessIntent(): Intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:${context.packageName}"))
+    fun allFilesAccessIntent(): Intent = storage.allFilesAccessIntent()
 
     // ---- Platforms / players ------------------------------------------------------------------
 
@@ -159,20 +143,10 @@ class SettingsViewModel @Inject constructor(
 
     // ---- Launcher -----------------------------------------------------------------------------
 
-    fun isDefaultLauncher(): Boolean {
-        val rm = context.getSystemService(RoleManager::class.java)
-        return rm?.isRoleHeld(RoleManager.ROLE_HOME) == true
-    }
-
-    /** Intent that asks Android to make Vela the home app (or opens the chooser on older builds). */
-    fun requestHomeRoleIntent(): Intent {
-        val rm = context.getSystemService(RoleManager::class.java)
-        return if (rm != null && rm.isRoleAvailable(RoleManager.ROLE_HOME)) rm.createRequestRoleIntent(RoleManager.ROLE_HOME)
-        else Intent(Settings.ACTION_HOME_SETTINGS)
-    }
-
-    fun homeSettingsIntent(): Intent = Intent(Settings.ACTION_HOME_SETTINGS)
-    fun androidSettingsIntent(): Intent = Intent(Settings.ACTION_SETTINGS)
+    fun isDefaultLauncher(): Boolean = homeRole.isDefaultLauncher()
+    fun requestHomeRoleIntent(): Intent = homeRole.requestIntent()
+    fun homeSettingsIntent(): Intent = homeRole.homeSettingsIntent()
+    fun androidSettingsIntent(): Intent = homeRole.androidSettingsIntent()
 
     fun themeById(id: String): ThemeSpec = themes.byId(id)
     fun reloadThemes() = themes.reload()
@@ -185,8 +159,5 @@ class SettingsViewModel @Inject constructor(
     fun resetAppearance() = update { it.copy(appearance = AppearanceOverrides(), gridColumns = 0) }
     fun resetCustomTheme() = viewModelScope.launch { themes.clearCustom() }
 
-    val appVersion: String
-        get() = runCatching {
-            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "dev"
-        }.getOrDefault("dev")
+    val appVersion: String get() = homeRole.appVersion
 }
