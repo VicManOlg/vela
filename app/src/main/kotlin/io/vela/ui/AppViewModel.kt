@@ -33,8 +33,7 @@ class AppViewModel @Inject constructor(
     private val actions: GameActions,
 ) : ViewModel() {
 
-    val settings: StateFlow<AppSettings?> = settings.settings
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    val settings: StateFlow<AppSettings?> = settings.state
 
     /** The chosen theme with the user's Appearance tweaks on top; `gridColumns` predates the overrides and still counts. */
     val theme: StateFlow<ThemeSpec> = combine(settings.settings, themes.catalog) { s, catalog ->

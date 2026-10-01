@@ -124,7 +124,7 @@ class HomeViewModel @Inject constructor(
             totalGames = total,
             isEmpty = total == 0,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState(layout = settings.loaded.homeLayout))
 
     private val _spotlight = MutableStateFlow<Spotlight?>(null)
     val spotlight: StateFlow<Spotlight?> = _spotlight

@@ -15,12 +15,16 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.vela.core.common.ApplicationScope
 import io.vela.core.common.VelaJson
 import io.vela.core.model.AppSettings
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -32,6 +36,7 @@ import javax.inject.Singleton
 @Singleton
 class SettingsRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>,
+    scope: ApplicationScope,
 ) {
     val settings: Flow<AppSettings> = dataStore.data
         .catch { e ->
@@ -39,6 +44,16 @@ class SettingsRepository @Inject constructor(
         }
         .map { prefs -> prefs[KEY]?.let(::decodeOrNull) ?: AppSettings() }
         .distinctUntilChanged()
+
+    /**
+     * The settings, read once for the whole process; null only until that first read finishes.
+     * The root UI waits for it, so every screen can take `state.value` as its initial value and
+     * never draws one frame with the defaults (a grid before the theme's list, an empty state…).
+     */
+    val state: StateFlow<AppSettings?> = settings.stateIn(scope, SharingStarted.Eagerly, null)
+
+    /** The loaded settings, or the defaults in the instant before the first read. */
+    val loaded: AppSettings get() = state.value ?: AppSettings()
 
     suspend fun current(): AppSettings = settings.first()
 

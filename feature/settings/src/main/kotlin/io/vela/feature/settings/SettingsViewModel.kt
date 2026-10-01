@@ -65,7 +65,7 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings> = settingsRepository.settings
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), settingsRepository.loaded)
     val sources: StateFlow<List<LibrarySource>> = library.observeSources()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val platforms: StateFlow<List<PlatformEntry>> = library.observeAllPlatforms()

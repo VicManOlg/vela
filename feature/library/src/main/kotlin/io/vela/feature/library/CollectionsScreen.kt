@@ -54,8 +54,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CollectionsViewModel @Inject constructor(private val repo: CollectionRepository) : ViewModel() {
-    val collections: StateFlow<List<GameCollection>> = repo.observeCollections()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    /** Null until the first database read: the empty state must not flash (and take the focus) meanwhile. */
+    val collections: StateFlow<List<GameCollection>?> = repo.observeCollections()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun create(name: String) = viewModelScope.launch { repo.create(name) }
     fun rename(id: CollectionId, name: String) = viewModelScope.launch { repo.rename(id, name) }
@@ -69,7 +70,8 @@ fun CollectionsScreen(
     modifier: Modifier = Modifier,
     viewModel: CollectionsViewModel = hiltViewModel(),
 ) {
-    val collections by viewModel.collections.collectAsStateWithLifecycle()
+    val loadedCollections by viewModel.collections.collectAsStateWithLifecycle()
+    val collections = loadedCollections.orEmpty()
     val colors = VelaTheme.colors
     var creating by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<GameCollection?>(null) }
@@ -91,7 +93,9 @@ fun CollectionsScreen(
             )
         }
         Spacer(Modifier.height(6.dp))
-        if (collections.isEmpty()) {
+        if (loadedCollections == null) {
+            // Nothing yet: neither the empty state nor the grid.
+        } else if (collections.isEmpty()) {
             val emptyFocus = rememberAutoFocus()
             EmptyState(
                 title = "No collections yet",

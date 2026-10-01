@@ -104,7 +104,7 @@ class GameGridViewModel @Inject constructor(
 
     /** Persisted globally so every list opens the way the user last chose. */
     val view: StateFlow<LibraryView> = settings.settings.map { it.gameListView }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryView.GRID)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), settings.loaded.gameListView)
 
     fun setView(v: LibraryView) = viewModelScope.launch { settings.update { it.copy(gameListView = v) } }
 

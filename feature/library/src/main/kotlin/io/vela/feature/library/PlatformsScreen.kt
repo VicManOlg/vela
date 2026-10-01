@@ -91,15 +91,16 @@ class PlatformsViewModel @Inject constructor(
         emit(files.associate { it.nameWithoutExtension.lowercase() to it.absolutePath })
     }.flowOn(Dispatchers.IO).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
-    val platforms: StateFlow<List<PlatformEntry>> = library.observePlatformsWithGames()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    /** Null until the first database read: the empty state must not flash (and take the focus) meanwhile. */
+    val platforms: StateFlow<List<PlatformEntry>?> = library.observePlatformsWithGames()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** A few recent covers and one scene per system, for the showcase cards and the backdrop. */
     val art: StateFlow<Map<PlatformId, PlatformArt>> = library.observePlatformArt()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     val layout: StateFlow<LibraryLayout> = settings.settings.map { it.libraryLayout }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryLayout.THEME)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), settings.loaded.libraryLayout)
 
     private val androidPlatform = library.platform(PlatformId.ANDROID)
     val android: StateFlow<AndroidTile> = combine(apps.observeAndroidGames(), apps.observeApps()) { games, pinned ->
@@ -122,7 +123,8 @@ fun PlatformsScreen(
     modifier: Modifier = Modifier,
     viewModel: PlatformsViewModel = hiltViewModel(),
 ) {
-    val platforms by viewModel.platforms.collectAsStateWithLifecycle()
+    val loadedPlatforms by viewModel.platforms.collectAsStateWithLifecycle()
+    val platforms = loadedPlatforms.orEmpty()
     val android by viewModel.android.collectAsStateWithLifecycle()
     val art by viewModel.art.collectAsStateWithLifecycle()
     val systemArt by viewModel.systemArt.collectAsStateWithLifecycle()
@@ -161,6 +163,7 @@ fun PlatformsScreen(
             )
         }
         if (!ownHeader) Spacer(Modifier.height(8.dp))
+        if (loadedPlatforms == null) return@Column
         if (platforms.isEmpty() && android.count == 0) {
             EmptyState(
                 title = "No systems yet",
