@@ -129,3 +129,10 @@ keep every line working, with the controller and by touch. Files are under `feat
 3. Controller > Button map says Start is the sort picker; it opens the Display menu.
 4. Detail `openCompletion` / `refreshMetadata` and Home `rescan` have no button of their own.
 5. Grid sort resets to Title every time.
+
+## Fixed during the redesign
+
+- Focus could sink into the hint bar (and dialog scrims, the grid's "View · Sorted by" label) once
+  the D-pad was used: Android makes a plain `clickable` focusable outside touch mode, and nothing
+  drew a ring there. They are touch targets only now (`focusProperties { canFocus = false }`).
+- Right past the last theme in Settings › Appearance jumped to the Collections tab.

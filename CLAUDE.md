@@ -46,6 +46,18 @@ first, touch supported everywhere. Public repo: https://github.com/VicManOlg/vel
   `resolveTheme` (body 16, labels 14, captions 13 sp); metadata lines go through `metaLine()`.
   Theme tokens: `focusGlow`, `focusRingGap` (ring outside artwork), `buttonRadius`, `tagRadius`,
   `panelRadius`; leaving them out keeps a theme's old look.
+- Motion uses `VelaSprings` (the M3 Expressive springs: `spatialFast/spatial/spatialSlow` move,
+  `effects*` fade and recolour); Material 1.4 has no `MotionScheme`. Every new animation checks
+  `VelaTheme.motion.reduceMotion`. Pages swapped in place use `pageEntrance(key)`, dialogs
+  `panelEntrance()` + `animatedScrim()`.
+- `artworkTint` (theme effect + override): the focused game's colour comes down as
+  `LocalStageTint`, a `State<Color>` read only in draw/layer lambdas, and only by the focused item.
+  Background mode `stage` = sharp scene on the right over the same art decoded at 24 px.
+- Covers fly between screens with `Modifier.sharedCover(gameId, shape)` (no-op without the
+  `SharedTransitionLayout` in `VelaApp`). Only one element per game per screen: row thumbnails
+  and hero scenes never take it. Inside `AnimatedContent`, wrap `aspectRatio` children in a Box.
+- Touch-only targets (hints, dialog scrims, tappable labels) get `focusProperties { canFocus = false }`:
+  outside touch mode a plain `clickable` becomes focusable and focus disappears into it.
 - Keyboard letter shortcuts (X/Y/Q/E) exist only in debuggable builds.
 
 ## Build, test, install
