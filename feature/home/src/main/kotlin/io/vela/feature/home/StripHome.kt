@@ -1,5 +1,6 @@
 package io.vela.feature.home
 
+import io.vela.core.ui.components.VelaSprings
 import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItems
 import io.vela.core.ui.components.rememberFocusMemory
@@ -76,7 +77,7 @@ fun StripHome(
         Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding)) {
             AnimatedContent(
                 targetState = spotlight,
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                transitionSpec = { fadeIn(VelaSprings.effects()) togetherWith fadeOut(VelaSprings.effectsFast()) },
                 label = "stripHero",
                 modifier = Modifier.align(Alignment.CenterStart),
             ) { s ->

@@ -1,5 +1,6 @@
 package io.vela.feature.home
 
+import io.vela.core.ui.components.VelaSprings
 import io.vela.core.ui.components.FocusMemory
 import io.vela.core.ui.components.rememberedItems
 import io.vela.core.ui.components.rememberFocusMemory
@@ -269,7 +270,7 @@ private fun SpotlightHeader(spotlight: Spotlight?) {
         AnimatedContent(
             targetState = spotlight,
             transitionSpec = {
-                (fadeIn() + slideInVertically { it / 6 }) togetherWith (fadeOut() + slideOutVertically { -it / 6 })
+                (fadeIn(VelaSprings.effects()) + slideInVertically(VelaSprings.spatial()) { it / 6 }) togetherWith (fadeOut(VelaSprings.effectsFast()) + slideOutVertically(VelaSprings.spatial()) { -it / 10 })
             },
             label = "spotlight",
         ) { s ->

@@ -1,5 +1,6 @@
 package io.vela.feature.home
 
+import io.vela.core.ui.components.VelaSprings
 import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItemsIndexed
 import io.vela.core.ui.components.rememberedItems
@@ -125,7 +126,7 @@ fun CarouselHome(
         // The focused game explained, centred under the shelf.
         AnimatedContent(
             targetState = spotlight,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            transitionSpec = { fadeIn(VelaSprings.effects()) togetherWith fadeOut(VelaSprings.effectsFast()) },
             label = "carouselCaption",
             modifier = Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding),
         ) { s ->

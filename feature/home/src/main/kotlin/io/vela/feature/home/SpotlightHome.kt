@@ -1,5 +1,9 @@
 package io.vela.feature.home
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import io.vela.core.ui.components.VelaSprings
 import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItems
 import io.vela.core.ui.components.rememberFocusMemory
@@ -61,11 +65,15 @@ fun SpotlightHome(
                 .padding(horizontal = VelaTheme.dimens.screenPadding),
         ) {
             val roomy = maxHeight >= 150.dp
-            val logoHeight = (maxHeight - 44.dp).coerceIn(48.dp, 110.dp)
+            // Room left for the 8 dp gap, the facts line and the 10 dp bottom padding.
+            val logoHeight = (maxHeight - 48.dp).coerceIn(40.dp, 120.dp)
             AnimatedContent(
                 targetState = spotlight,
                 transitionSpec = {
-                    (fadeIn() + slideInVertically { it / 8 }) togetherWith (fadeOut() + slideOutVertically { -it / 8 })
+                    // The new title rises on the expressive spatial spring while the old one fades
+                    // quickly, so a D-pad run never shows two titles fighting.
+                    (fadeIn(VelaSprings.effects()) + slideInVertically(VelaSprings.spatial()) { it / 6 }) togetherWith
+                        (fadeOut(VelaSprings.effectsFast()) + slideOutVertically(VelaSprings.spatial()) { -it / 10 })
                 },
                 label = "spotlightHero",
                 modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 10.dp),
@@ -85,7 +93,8 @@ fun SpotlightHome(
                     } else {
                         Text(
                             s?.title ?: "Welcome back",
-                            style = VelaTheme.typography.display,
+                            // Over a sharp scene the title carries its own soft shadow.
+                            style = VelaTheme.typography.display.copy(shadow = TitleShadow),
                             color = colors.onBackground,
                             maxLines = if (roomy) 2 else 1,
                             overflow = TextOverflow.Ellipsis,
@@ -96,8 +105,8 @@ fun SpotlightHome(
                     // what A and X do, so the hero carries only the game.
                     Text(
                         metaLine(s?.subtitle ?: "Pick up where you left off"),
-                        style = VelaTheme.typography.body,
-                        color = colors.onBackground.copy(alpha = 0.86f),
+                        style = VelaTheme.typography.body.copy(shadow = TitleShadow),
+                        color = colors.onBackground.copy(alpha = 0.9f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -112,7 +121,8 @@ fun SpotlightHome(
                     GameCard(
                         game = game,
                         accent = accent,
-                        width = VelaTheme.dimens.cardWidth * 0.78f,
+                        // The covers are the stars of this Home: larger than on any rail.
+                        width = VelaTheme.dimens.cardWidth * 0.9f,
                         onClick = { viewModel.launch(game) },
                         onLongPress = { viewModel.openMenu(game) },
                         onFocused = { viewModel.spotlightGame(game) },
@@ -138,6 +148,8 @@ fun SpotlightHome(
         Spacer(Modifier.height(6.dp))
     }
 }
+
+private val TitleShadow = Shadow(Color.Black.copy(alpha = 0.55f), Offset(0f, 2f), blurRadius = 14f)
 
 /** One row for the whole Home: what you were playing, then favourites, then what is new; no repeats. */
 private fun HomeUiState.spotlightGames(): List<GameSummary> = gamesInOrder(40)
