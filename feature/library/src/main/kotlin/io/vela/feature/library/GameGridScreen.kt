@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import androidx.compose.ui.focus.focusProperties
 import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItems
 import io.vela.core.ui.components.rememberFocusMemory
@@ -393,7 +394,8 @@ private fun GridHeader(header: GameGridHeader, focusedTitle: String?, view: Libr
         }
         // Touch users tap this; controller users press Start.
         val sounds = LocalUiSounds.current
-        Box(Modifier.padding(bottom = 6.dp).clickable { sounds?.play(UiSound.CONFIRM); onOpenDisplay() }) {
+        // Touch shortcut to the Display menu (START does it on a pad); not a focus stop.
+        Box(Modifier.padding(bottom = 6.dp).focusProperties { canFocus = false }.clickable { sounds?.play(UiSound.CONFIRM); onOpenDisplay() }) {
             Text("${view.label}   Sorted by ${header.sort.label().lowercase()}", style = VelaTheme.typography.caption, color = colors.muted)
         }
     }

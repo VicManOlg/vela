@@ -1,10 +1,17 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.components.VelaSprings
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.AnimatedContent
 import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItems
 import io.vela.core.ui.components.rememberFocusMemory
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -112,8 +119,22 @@ internal fun HeroContent(
                 .clip(VelaTheme.shapes.tile)
                 .background(colors.surface),
         ) {
-            Crossfade(targetState = focused, animationSpec = tween(VelaTheme.motion.backgroundCrossfadeMs / 2), label = "heroScene") { game ->
-                if (game == null) return@Crossfade
+            // A new scene settles from a slight zoom like a camera finding its shot; the title
+            // slides in on its own spring.
+            val reduce = VelaTheme.motion.reduceMotion
+            AnimatedContent(
+                targetState = focused,
+                contentKey = { it?.id },
+                transitionSpec = {
+                    if (reduce) {
+                        EnterTransition.None togetherWith ExitTransition.None
+                    } else {
+                        (fadeIn(VelaSprings.effectsSlow()) + scaleIn(VelaSprings.spatialSlow(), initialScale = 1.06f)) togetherWith fadeOut(VelaSprings.effects())
+                    }
+                },
+                label = "heroScene",
+            ) { game ->
+                if (game == null) return@AnimatedContent
                 val scene = game.background ?: game.boxArt
                 Box(Modifier.fillMaxSize()) {
                     if (scene != null || game.kind == GameKind.ANDROID_APP) {
@@ -130,7 +151,13 @@ internal fun HeroContent(
                     }
                     Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(colors.background.copy(alpha = 0.85f), colors.background.copy(alpha = 0.2f), Color.Transparent))))
                     Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, colors.background.copy(alpha = 0.8f)), startY = 200f)))
-                    Column(Modifier.align(Alignment.BottomStart).padding(24.dp).fillMaxWidth(0.6f)) {
+                    Column(
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .animateEnterExit(enter = if (reduce) EnterTransition.None else slideInHorizontally(VelaSprings.spatial()) { -it / 8 } + fadeIn(VelaSprings.effects()))
+                            .padding(24.dp)
+                            .fillMaxWidth(0.6f),
+                    ) {
                         if (game.logo != null) {
                             VelaImage(model = artworkModel(game.logo), contentDescription = game.title, modifier = Modifier.height(64.dp).fillMaxWidth(0.8f), contentScale = ContentScale.Fit, alignment = Alignment.BottomStart, placeholder = {})
                         } else {

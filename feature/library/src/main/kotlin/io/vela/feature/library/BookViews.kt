@@ -1,11 +1,19 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.components.sharedCover
+import io.vela.core.ui.components.VelaSprings
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.AnimatedContent
 import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItemsIndexed
 import io.vela.core.ui.components.rememberedItems
 import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -108,7 +116,7 @@ internal fun BookSystems(entries: List<StageEntry>, initialIndex: Int, clock: Lo
 
     Column(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxWidth().padding(horizontal = VelaTheme.dimens.screenPadding).height(96.dp), verticalArrangement = Arrangement.Bottom) {
-            Crossfade(targetState = current, animationSpec = tween(200), label = "bookTitle") { entry ->
+            Crossfade(targetState = current, animationSpec = VelaSprings.effects(), label = "bookTitle") { entry ->
                 Column {
                     Text(entry?.title ?: "Library", style = VelaTheme.typography.display, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(8.dp))
@@ -251,8 +259,20 @@ internal fun BookContent(
         }
         Spacer(Modifier.width(VelaTheme.dimens.sectionSpacing))
         Box(Modifier.weight(0.6f).fillMaxHeight().padding(top = 6.dp, bottom = 24.dp)) {
-            Crossfade(targetState = focused?.id, animationSpec = tween(220), label = "bookPage") { id ->
-                val game = focused?.takeIf { it.id == id } ?: return@Crossfade
+            // The page turns: the new one rises in on the spatial spring, the old one fades fast.
+            val reduce = VelaTheme.motion.reduceMotion
+            AnimatedContent(
+                targetState = focused?.id,
+                transitionSpec = {
+                    if (reduce) {
+                        EnterTransition.None togetherWith ExitTransition.None
+                    } else {
+                        (fadeIn(VelaSprings.effects()) + slideInVertically(VelaSprings.spatial()) { it / 16 }) togetherWith fadeOut(VelaSprings.effectsFast())
+                    }
+                },
+                label = "bookPage",
+            ) { id ->
+                val game = focused?.takeIf { it.id == id } ?: return@AnimatedContent
                 val full = details?.takeIf { it.id == id }
                 val meta = full?.metadata
                 Column(Modifier.fillMaxSize()) {
@@ -261,7 +281,7 @@ internal fun BookContent(
                         FittedArtwork(
                             model = model,
                             contentDescription = game.title,
-                            modifier = Modifier.fillMaxHeight().aspectRatio(VelaTheme.dimens.boxArtAspect).clip(VelaTheme.shapes.card).background(colors.surface),
+                            modifier = Modifier.fillMaxHeight().aspectRatio(VelaTheme.dimens.boxArtAspect).sharedCover(game.id.value, VelaTheme.shapes.card).clip(VelaTheme.shapes.card).background(colors.surface),
                             accent = accent,
                             placeholder = { TitlePlaceholder(game.title, accent) },
                         )

@@ -1,12 +1,15 @@
 package io.vela.feature.library
 
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.snap
+import io.vela.core.ui.components.VelaSprings
 import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItemsIndexed
 import io.vela.core.ui.components.rememberFocusMemory
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -153,9 +156,18 @@ internal fun WheelSystems(entries: List<StageEntry>, initialIndex: Int, clock: L
         }
         Spacer(Modifier.width(VelaTheme.dimens.sectionSpacing))
         Box(Modifier.weight(0.6f).fillMaxHeight()) {
+            val reduce = VelaTheme.motion.reduceMotion
             AnimatedContent(
                 targetState = current,
-                transitionSpec = { (fadeIn(tween(220)) + slideInVertically { it / 10 }) togetherWith (fadeOut(tween(160)) + slideOutVertically { -it / 10 }) },
+                // The wheel turns the stage: the next system rises in on the spatial spring.
+                transitionSpec = {
+                    if (reduce) {
+                        EnterTransition.None togetherWith ExitTransition.None
+                    } else {
+                        (fadeIn(VelaSprings.effects()) + slideInVertically(VelaSprings.spatial()) { it / 8 }) togetherWith
+                            (fadeOut(VelaSprings.effectsFast()) + slideOutVertically(VelaSprings.spatial()) { -it / 10 })
+                    }
+                },
                 label = "wheelStage",
             ) { entry ->
                 if (entry == null) return@AnimatedContent
@@ -216,7 +228,7 @@ private fun MosaicTile(entry: StageEntry, onFocused: () -> Unit, modifier: Modif
     val accent = Color(entry.accent)
     val interaction = remember { MutableInteractionSource() }
     val focused by rememberFocusState(interaction)
-    val lift = animateFloatAsState(if (focused) 1f else 0f, tween(300), label = "mosaicLift")
+    val lift = animateFloatAsState(if (focused) 1f else 0f, if (VelaTheme.motion.reduceMotion) snap() else VelaSprings.spatialFast(), label = "mosaicLift")
     Box(
         modifier
             .aspectRatio(1f)
@@ -291,7 +303,7 @@ private fun SystemColumn(entry: StageEntry, narrow: androidx.compose.ui.unit.Dp,
     val interaction = remember { MutableInteractionSource() }
     val focused by rememberFocusState(interaction)
     // Width is a layout property, so this one animation does recompose; a handful of columns is cheap.
-    val width by animateDpAsState(if (focused) wide else narrow, tween(VelaTheme.motion.focusDurationMs + 120), label = "columnWidth")
+    val width by animateDpAsState(if (focused) wide else narrow, if (VelaTheme.motion.reduceMotion) snap() else VelaSprings.spatial(), label = "columnWidth")
     Box(
         modifier
             .width(width)

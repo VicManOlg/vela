@@ -1,12 +1,16 @@
 package io.vela.feature.library
 
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.snap
+import io.vela.core.ui.components.VelaSprings
 import androidx.compose.foundation.text.TextAutoSize
 import io.vela.core.ui.theme.metaLine
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -126,7 +130,8 @@ internal fun SystemStage(
         if (!focused) runCatching { autoFocus.requestFocus() }
     }
     // Read by the dial in its layout and layer phases only; the slide never recomposes the stage.
-    val position = animateFloatAsState(selected.toFloat(), tween(motion.transitionDurationMs, easing = FastOutSlowInEasing), label = "dial")
+    // The beads ride the expressive spatial spring: a quick turn that settles with a small sway.
+    val position = animateFloatAsState(selected.toFloat(), if (motion.reduceMotion) snap() else VelaSprings.spatial(), label = "dial")
 
     fun pick(index: Int) {
         val target = index.coerceIn(0, entries.lastIndex)
@@ -176,8 +181,12 @@ internal fun SystemStage(
             AnimatedContent(
                 targetState = entry,
                 transitionSpec = {
-                    (fadeIn(tween(motion.transitionDurationMs)) + slideInHorizontally(tween(motion.transitionDurationMs)) { direction * it / 5 }) togetherWith
-                        (fadeOut(tween(motion.transitionDurationMs / 2)) + slideOutHorizontally(tween(motion.transitionDurationMs)) { -direction * it / 5 })
+                    if (motion.reduceMotion) {
+                        EnterTransition.None togetherWith ExitTransition.None
+                    } else {
+                        (fadeIn(VelaSprings.effects()) + slideInHorizontally(VelaSprings.spatial()) { direction * it / 6 }) togetherWith
+                            (fadeOut(VelaSprings.effectsFast()) + slideOutHorizontally(VelaSprings.spatial()) { -direction * it / 8 })
+                    }
                 },
                 label = "stage",
                 modifier = Modifier.weight(0.56f).fillMaxHeight(),
@@ -188,6 +197,11 @@ internal fun SystemStage(
                         Modifier
                             .fillMaxHeight(0.72f)
                             .aspectRatio(1f)
+                            // The console swings in on its own fast spring, a beat livelier than the text.
+                            .animateEnterExit(
+                                enter = if (motion.reduceMotion) EnterTransition.None else scaleIn(VelaSprings.spatialFast(), initialScale = 0.78f),
+                                exit = if (motion.reduceMotion) ExitTransition.None else scaleOut(VelaSprings.effectsFast(), targetScale = 0.9f),
+                            )
                             .drawBehind {
                                 val c = Offset(size.width / 2f, size.height / 2f)
                                 drawCircle(Brush.radialGradient(listOf(accent.copy(alpha = 0.55f), Color.Transparent), center = c, radius = size.width * 0.6f), radius = size.width * 0.6f, center = c)
@@ -231,8 +245,22 @@ internal fun SystemStage(
                     }
                 }
             }
-            Box(Modifier.weight(0.44f).fillMaxHeight(), contentAlignment = Alignment.CenterEnd) {
-                CoverShelf(entry.covers, Color(entry.accent))
+            // The shelf restocks with the system: the covers slide in from the side the dial turned to.
+            AnimatedContent(
+                targetState = entry,
+                transitionSpec = {
+                    if (motion.reduceMotion) {
+                        EnterTransition.None togetherWith ExitTransition.None
+                    } else {
+                        (fadeIn(VelaSprings.effects()) + slideInHorizontally(VelaSprings.spatial()) { direction * it / 3 }) togetherWith
+                            fadeOut(VelaSprings.effectsFast())
+                    }
+                },
+                label = "shelf",
+                modifier = Modifier.weight(0.44f).fillMaxHeight(),
+                contentAlignment = Alignment.CenterEnd,
+            ) { e ->
+                CoverShelf(e.covers, Color(e.accent))
             }
         }
         Dial(entries, position, selected, focused, onPick = ::pick, modifier = Modifier.fillMaxWidth().height(DIAL_HEIGHT))
