@@ -1,5 +1,8 @@
 package io.vela.core.ui.components
 
+import io.vela.core.ui.theme.LocalStageTint
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.AnimationSpec
@@ -59,6 +62,8 @@ val LocalHapticsEnabled = staticCompositionLocalOf { false }
 
 /**
  * The one focus treatment used everywhere: scale up, thin light ring, optional glow underneath.
+ * Artwork ([edge]) also lifts, casts a shadow in the game's colour (themes with `artworkTint`) and
+ * catches one sweep of light when the focus lands on it.
  * Long-press on the confirm button triggers [onLongPress] (contextual menus without X/Y).
  *
  * Every animated value (scale, ring, glow) is read in the layer and draw phases only, so a focus
@@ -81,18 +86,33 @@ fun Modifier.velaFocusable(
     val colors = VelaTheme.colors
     val shapes = VelaTheme.shapes
     val effects = VelaTheme.effects
-    val glow = colors.focusGlow ?: LocalDynamicAccent.current ?: colors.accent
+    val themeGlow = colors.focusGlow ?: LocalDynamicAccent.current ?: colors.accent
+    // The game's colour, when the theme tints: read in the layer and draw phases only.
+    val tint = if (effects.artworkTint) LocalStageTint.current else null
     val targetScale = if (focused) (scaleOverride ?: motion.focusScale) else 1f
-    // A slightly underdamped spring: the item settles with a small overshoot, and a quick
+    // The expressive fast spatial spring: the item settles with a small overshoot, and a quick
     // D-pad run retargets it smoothly instead of restarting a fixed-length tween.
-    val scaleSpec: AnimationSpec<Float> = if (motion.focusDurationMs == 0) snap() else spring(dampingRatio = 0.62f, stiffness = 480f)
+    val scaleSpec: AnimationSpec<Float> = if (motion.focusDurationMs == 0) snap() else VelaSprings.spatialFast()
     val scale = animateFloatAsState(targetScale, scaleSpec, label = "focusScale")
     val ring = animateFloatAsState(if (focused) 1f else 0f, tween(motion.focusDurationMs), label = "focusRing")
+    // One sweep of light across artwork as the focus lands; never repeats while it stays.
+    val sweep = remember { Animatable(1f) }
+    val sweeps = edge && !motion.reduceMotion && effects.focusGlow
+    LaunchedEffect(focused, sweeps) {
+        if (focused && sweeps) {
+            sweep.snapTo(0f)
+            sweep.animateTo(1f, tween(SWEEP_MS, delayMillis = 70, easing = FastOutSlowInEasing))
+        } else {
+            sweep.snapTo(1f)
+        }
+    }
+    val lifts = edge && !motion.reduceMotion
     val density = LocalDensity.current
     val ringWidthPx = with(density) { shapes.focusBorderWidth.toPx() }
     val ringGapPx = with(density) { shapes.focusRingGap.toPx() }
     val edgeWidthPx = with(density) { 1.dp.toPx() }
     val shadowPx = with(density) { 18.dp.toPx() }
+    val igniteOutsetPx = with(density) { 4.dp.toPx() }
     val edgeColor = colors.onBackground
     val ringColor = colors.focusRing
     val latestFocused = rememberUpdatedState(onFocused)
@@ -142,10 +162,16 @@ fun Modifier.velaFocusable(
             val s = scale.value
             scaleX = s
             scaleY = s
+            // Artwork rises as it grows, as if picked up from the shelf.
+            if (lifts) translationY = -(s - 1f) * size.height * 0.32f
             // Focused items draw above their neighbours while scaled.
-            shadowElevation = if (focusedState.value && effects.cardShadow) shadowPx else 0f
-            spotShadowColor = glow
-            ambientShadowColor = glow
+            val lit = focusedState.value && effects.cardShadow
+            shadowElevation = if (lit) shadowPx * (if (edge) 1.6f else 1f) else 0f
+            // Only the focused item follows the animated tint: reading it everywhere would repaint
+            // every card on screen for each frame of a colour change.
+            val shadow = if (lit) tint?.value ?: themeGlow else themeGlow
+            spotShadowColor = shadow
+            ambientShadowColor = shadow
             this.shape = shape
             clip = false
         }
@@ -153,6 +179,7 @@ fun Modifier.velaFocusable(
             val r = ring.value
             val outline = if (r > 0f || edge) shape.createOutline(size, layoutDirection, this) else null
             if (outline != null && r > 0f && effects.focusGlow) {
+                val glow = tint?.value ?: themeGlow
                 drawOutline(
                     outline,
                     brush = Brush.radialGradient(
@@ -169,11 +196,30 @@ fun Modifier.velaFocusable(
                 if (r > 0f) {
                     // On artwork (cards, tiles) a gap lets the ring float outside, so it never covers
                     // the cover; rows and buttons keep it on their edge, inside the list's bounds.
-                    drawBorder(outline, ringColor.copy(alpha = r), ringWidthPx, outset = if (edge && ringGapPx > 0f) ringGapPx + ringWidthPx else 0f)
+                    // It ignites from slightly wider and closes onto the art.
+                    val ignite = if (edge) (1f - r) * igniteOutsetPx else 0f
+                    drawBorder(outline, ringColor.copy(alpha = r), ringWidthPx, outset = (if (edge && ringGapPx > 0f) ringGapPx + ringWidthPx else 0f) + ignite)
                     // Specular sheen along the top edge while focused.
                     drawOutline(
                         outline,
                         brush = Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.14f * r), Color.Transparent), endY = size.height * 0.45f),
+                    )
+                }
+                val w = sweep.value
+                if (w < 1f && r > 0f) {
+                    // A diagonal band of light crossing the art from left to right.
+                    val band = size.width * 0.45f
+                    val x = -band + (size.width + 2 * band) * w
+                    val fade = if (w > 0.75f) (1f - w) / 0.25f else 1f
+                    drawOutline(
+                        outline,
+                        brush = Brush.linearGradient(
+                            0f to Color.Transparent,
+                            0.5f to Color.White.copy(alpha = 0.32f * fade * r),
+                            1f to Color.Transparent,
+                            start = Offset(x - band / 2, 0f),
+                            end = Offset(x + band / 2, size.height * 0.35f),
+                        ),
                     )
                 }
             }
@@ -213,6 +259,7 @@ private fun DrawScope.drawBorder(outline: Outline, color: Color, width: Float, o
 }
 
 private const val LONG_PRESS_MS = 450L
+private const val SWEEP_MS = 560
 
 @Composable
 fun rememberFocusState(interactionSource: MutableInteractionSource): State<Boolean> = interactionSource.collectIsFocusedAsState()
@@ -227,7 +274,11 @@ fun Modifier.focusScale(focused: Boolean, durationMs: Int, scale: Float): Modifi
 @Composable
 fun focusBleed(): Dp {
     val ring = if (VelaTheme.shapes.focusRingGap.value > 0f) VelaTheme.shapes.focusRingGap.value + VelaTheme.shapes.focusBorderWidth.value else 0f
-    return (VelaTheme.dimens.cardWidth.value * (VelaTheme.motion.focusScale - 1f) / 2f + 6f + ring).dp
+    // Scale grows the card by half the extra on each side; the lift raises it by a third of its
+    // extra height (see velaFocusable).
+    val grow = VelaTheme.dimens.cardWidth.value * (VelaTheme.motion.focusScale - 1f)
+    val lift = grow * 0.32f / VelaTheme.dimens.boxArtAspect.coerceAtLeast(0.3f)
+    return (grow / 2f + lift + 6f + ring).dp
 }
 
 

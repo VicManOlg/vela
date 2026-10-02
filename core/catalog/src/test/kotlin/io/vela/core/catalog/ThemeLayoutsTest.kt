@@ -28,7 +28,7 @@ class ThemeLayoutsTest {
             t.layout.libraryLayout?.let { assertThat(libraryKeys).contains(it) }
             t.layout.libraryView?.let { assertThat(viewKeys).contains(it) }
             assertThat(listOf("focused", "always", "never")).contains(t.layout.cardLabels)
-            assertThat(listOf("artwork", "hero", "platform", "static")).contains(t.background.mode)
+            assertThat(listOf("artwork", "hero", "stage", "platform", "static")).contains(t.background.mode)
             assertThat(listOf("systematic", "flatui", "monochrome", "none")).contains(t.platformIcons.set)
         }
     }

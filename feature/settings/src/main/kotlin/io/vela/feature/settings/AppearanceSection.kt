@@ -1,5 +1,7 @@
 package io.vela.feature.settings
 
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.focusProperties
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -85,6 +87,7 @@ private val backgroundSwatches = listOf(
 
 private val fontChoices = listOf("outfit" to "Outfit", "manrope" to "Manrope", "system" to "System", "serif" to "Serif", "mono" to "Monospace")
 private val backgroundModes = listOf(
+    Triple("stage", "Stage", "The focused game's scene on the right, its blurred colours everywhere"),
     Triple("hero", "Hero", "Sharp scene of the focused game with a slow drift"),
     Triple("artwork", "Blurred art", "Heavily blurred cover of the focused game"),
     Triple("platform", "System colour", "Gradient in the focused system's colour"),
@@ -151,6 +154,9 @@ internal fun LazyListScope.appearanceSection(vm: SettingsViewModel, settings: Ap
     item(key = "row7") {
         TriSwitch("Colour from artwork", "Glows and rings take the focused game's colour instead of the accent", o.dynamicAccent, base.effects.dynamicAccent) { v -> set { it.copy(dynamicAccent = v) } }
     }
+    item(key = "row7tint") {
+        TriSwitch("Tint from artwork", "The focused game's colour washes the background and the focus halo", o.artworkTint, base.effects.artworkTint) { v -> set { it.copy(artworkTint = v) } }
+    }
 
     // ---- Background
     item(key = "row8") { SectionHeader("Background") }
@@ -162,7 +168,7 @@ internal fun LazyListScope.appearanceSection(vm: SettingsViewModel, settings: Ap
             onChange = { v -> set { it.copy(backgroundMode = v) } },
         )
     }
-    val sceneHasArt = eff.background.mode == "hero" || eff.background.mode == "artwork"
+    val sceneHasArt = eff.background.mode == "hero" || eff.background.mode == "artwork" || eff.background.mode == "stage"
     item(key = "row10") {
         StepperSetting("Blur", "Softens the scene; 0 keeps it sharp", eff.background.blurRadius, o.backgroundBlur != null, base.background.blurRadius, 0f..60f, 4f, { "${it.roundToInt()}" }, enabled = sceneHasArt, presets = listOf(0f, 12f, 24f, 40f, 60f)) { v -> set { it.copy(backgroundBlur = v) } }
     }
@@ -283,7 +289,7 @@ internal fun LazyListScope.appearanceSection(vm: SettingsViewModel, settings: Ap
 }
 
 private fun countOverrides(o: AppearanceOverrides): Int = listOf(
-    o.accent, o.accentSecondary, o.backgroundColor, o.dynamicAccent, o.backgroundMode, o.backgroundBlur, o.backgroundDim,
+    o.accent, o.accentSecondary, o.backgroundColor, o.dynamicAccent, o.artworkTint, o.backgroundMode, o.backgroundBlur, o.backgroundDim,
     o.backgroundSaturation, o.cardWidth, o.boxArtAspect, o.cardRadius, o.cardLabels, o.focusScale, o.gridColumns, o.displayFont,
     o.bodyFont, o.fontScale, o.glassPanels, o.panelAlpha, o.cardShadow, o.focusGlow, o.platformIconSet, o.showButtonHints, o.screenPadding,
 ).count { it != null }
@@ -415,7 +421,13 @@ private fun ThemeCarousel(themes: List<ThemeSpec>, selectedId: String, onSelect:
     Column {
         SectionHeader("Theme")
         LazyRow(
-            Modifier.fillMaxWidth().focusRestorer().focusGroup(),
+            Modifier
+                .fillMaxWidth()
+                // Right past the last theme stays put: the nearest thing to the right would be a
+                // tab in the top bar, and focus would jump out of Settings.
+                .focusProperties { onExit = { if (requestedFocusDirection == FocusDirection.Right) cancelFocusChange() } }
+                .focusRestorer()
+                .focusGroup(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         ) {

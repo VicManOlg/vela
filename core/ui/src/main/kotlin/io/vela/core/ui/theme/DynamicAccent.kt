@@ -2,7 +2,9 @@ package io.vela.core.ui.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
@@ -11,6 +13,13 @@ import androidx.compose.ui.graphics.Color
  * theme accent.
  */
 val LocalDynamicAccent = compositionLocalOf<Color?> { null }
+
+/**
+ * The focused game's colour, animated, for themes with `artworkTint`: the background wash and the
+ * focus halo and shadow follow it. A [State] read only in draw lambdas, so a colour change repaints
+ * without recomposing anything. Null when the theme does not tint.
+ */
+val LocalStageTint = staticCompositionLocalOf<State<Color>?> { null }
 
 /** The accent to use right now: the artwork's when there is one, the theme's otherwise. */
 val VelaTheme.liveAccent: Color

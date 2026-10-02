@@ -110,6 +110,7 @@ data class VelaEffects(
     val videoPreviews: Boolean,
     val videoPreviewDelayMs: Int,
     val dynamicAccent: Boolean,
+    val artworkTint: Boolean,
 )
 
 @Immutable
@@ -258,7 +259,7 @@ fun resolveTheme(spec: ThemeSpec, uiScale: Float = 1f, reduceMotion: Boolean = f
         staticColor = b.staticColor?.let { Color.fromArgbHex(it) },
     )
     val e = spec.effects
-    val effects = VelaEffects(e.glassPanels, e.panelAlpha, e.cardShadow, e.focusGlow, e.videoPreviews, e.videoPreviewDelayMs, e.dynamicAccent)
+    val effects = VelaEffects(e.glassPanels, e.panelAlpha, e.cardShadow, e.focusGlow, e.videoPreviews, e.videoPreviewDelayMs, e.dynamicAccent, e.artworkTint)
     val pi = spec.platformIcons
     val platformIcons = VelaPlatformIcons(pi.set, pi.tint, pi.alpha.coerceIn(0f, 1f))
     return VelaThemeValues(spec, colors, typography, shapes, dimens, motion, background, effects, platformIcons)

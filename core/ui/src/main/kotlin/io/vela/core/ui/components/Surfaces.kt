@@ -1,5 +1,11 @@
 package io.vela.core.ui.components
 
+import io.vela.core.ui.theme.LocalStageTint
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -78,8 +84,10 @@ object SailShape : Shape {
 
 /**
  * Full-screen background driven by the focused item's artwork. Mode `artwork` blurs it heavily;
- * `hero` shows the scene almost sharp with a slow Ken Burns drift; both dim, saturate and
- * cross-fade when the art changes. Falls back to a platform-tinted gradient.
+ * `hero` shows the scene almost sharp with a slow Ken Burns drift; `stage` lays the sharp scene on
+ * the right, fading into its own colours spread across the screen. All dim, saturate and
+ * cross-fade when the art changes. Falls back to a platform-tinted gradient. With `artworkTint`
+ * the focused game's colour washes up from the bottom-left corner.
  */
 @Composable
 fun DynamicBackground(
@@ -95,7 +103,9 @@ fun DynamicBackground(
         if (style.mode != "static") {
             Crossfade(targetState = artwork to accent, animationSpec = tween(motion.backgroundCrossfadeMs), label = "background") { (art, tint) ->
                 Box(Modifier.fillMaxSize()) {
-                    if (art != null && (style.mode == "artwork" || style.mode == "hero")) {
+                    if (art != null && style.mode == "stage") {
+                        StageScene(art, drifting = !motion.reduceMotion, saturation = style.saturation)
+                    } else if (art != null && (style.mode == "artwork" || style.mode == "hero")) {
                         val hero = style.mode == "hero"
                         // Read inside graphicsLayer only: the 26 s drift must never recompose the scene.
                         val drift = rememberDrift(enabled = hero && !motion.reduceMotion)
@@ -143,6 +153,22 @@ fun DynamicBackground(
                 }
             }
         }
+        val tint = if (VelaTheme.effects.artworkTint) LocalStageTint.current else null
+        if (tint != null && style.mode != "static") {
+            // The game's colour rising from the corner the titles sit on; drawn from the animated
+            // State, so a new colour repaints this box and nothing else.
+            Box(
+                Modifier.fillMaxSize().drawBehind {
+                    drawRect(
+                        Brush.radialGradient(
+                            listOf(tint.value.copy(alpha = 0.42f), tint.value.copy(alpha = 0.12f), Color.Transparent),
+                            center = Offset(size.width * 0.08f, size.height * 1.02f),
+                            radius = size.maxDimension * 0.62f,
+                        ),
+                    )
+                },
+            )
+        }
         if (style.mode == "hero" || style.mode == "artwork") {
             // Depth: the scene stays brightest around where the focused art sits and falls off into a vignette.
             Box(
@@ -173,6 +199,65 @@ fun DynamicBackground(
                 .fillMaxSize()
                 .background(Brush.verticalGradient(listOf(Color.Transparent, colors.background.copy(alpha = 0.9f)), startY = 900f)),
         )
+    }
+}
+
+/**
+ * The `stage` scene in two layers. Far: the same art decoded at a few dozen pixels and stretched to
+ * the whole screen, which blurs it for free on every Android version (no RenderEffect, nothing
+ * to recompute per frame). Key: the art sharp on the right two thirds, faded into the far layer
+ * on its left and bottom edges, with the slow Ken Burns drift.
+ */
+@Composable
+private fun StageScene(art: String, drifting: Boolean, saturation: Float) {
+    val context = LocalContext.current
+    val drift = rememberDrift(enabled = drifting)
+    val filter = remember(saturation) { ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(saturation) }) }
+    val far = remember(art, context) {
+        ImageRequest.Builder(context).data(artworkModel(art)).size(24).precision(Precision.INEXACT).crossfade(false).build()
+    }
+    val key = remember(art, context) {
+        ImageRequest.Builder(context).data(artworkModel(art)).size(1280).precision(Precision.INEXACT).crossfade(false).build()
+    }
+    Box(Modifier.fillMaxSize()) {
+        AsyncImage(
+            model = far,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            colorFilter = filter,
+            filterQuality = FilterQuality.Medium,
+            modifier = Modifier.fillMaxSize().graphicsLayer { alpha = 0.7f },
+        )
+        Box(
+            Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(0.7f)
+                .align(Alignment.CenterEnd)
+                // Offscreen so the fade masks the art only, not the far layer under it.
+                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                .drawWithContent {
+                    drawContent()
+                    drawRect(Brush.horizontalGradient(0f to Color.Transparent, 0.42f to Color.Black), blendMode = BlendMode.DstIn)
+                    // Clear of the status bar at the top, melting into the rail at the bottom.
+                    drawRect(Brush.verticalGradient(0f to Color.Transparent, 0.2f to Color.Black, 0.55f to Color.Black, 1f to Color.Transparent), blendMode = BlendMode.DstIn)
+                },
+        ) {
+            AsyncImage(
+                model = key,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                colorFilter = filter,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        val d = drift.value
+                        val zoom = 1.04f + 0.06f * d
+                        scaleX = zoom
+                        scaleY = zoom
+                        translationX = (d - 0.5f) * size.width * 0.03f
+                    },
+            )
+        }
     }
 }
 

@@ -30,6 +30,8 @@ data class AppearanceOverrides(
     val backgroundColor: String? = null,
     /** Glows and rings take the focused game's colour instead of the accent. */
     val dynamicAccent: Boolean? = null,
+    /** The focused game's colour washes the background and tints the focus halo. */
+    val artworkTint: Boolean? = null,
     // Background scene
     val backgroundMode: String? = null,
     val backgroundBlur: Float? = null,
@@ -113,6 +115,7 @@ fun ThemeSpec.applying(o: AppearanceOverrides): ThemeSpec {
             cardShadow = o.cardShadow ?: effects.cardShadow,
             focusGlow = o.focusGlow ?: effects.focusGlow,
             dynamicAccent = o.dynamicAccent ?: effects.dynamicAccent,
+            artworkTint = o.artworkTint ?: effects.artworkTint,
         ),
         platformIcons = when (o.platformIconSet) {
             null -> platformIcons

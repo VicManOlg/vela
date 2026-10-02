@@ -1,7 +1,6 @@
 package io.vela.core.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -62,7 +61,7 @@ fun SystemCard(
     val iconStyle = VelaTheme.platformIcons
     val focused by rememberFocusState(interactionSource)
     // Read in draw and layer phases only, so the glow animates without recomposing the card.
-    val glow = animateFloatAsState(if (focused) 1f else 0.5f, tween(450), label = "systemGlow")
+    val glow = animateFloatAsState(if (focused) 1f else 0.5f, VelaSprings.effectsSlow(), label = "systemGlow")
 
     Box(
         modifier

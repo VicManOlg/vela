@@ -37,8 +37,9 @@
     "focusBorderWidth": 3,
     "focusRingGap": 4
   },
+  "motion": { "focusScale": 1.1, "backgroundCrossfadeMs": 520 },
   "layout": { "homeLayout": "spotlight", "railSpacing": 18, "cardLabels": "never" },
-  "background": { "mode": "hero", "blurRadius": 0, "dim": 0.5, "saturation": 1.15 },
-  "effects": { "glassPanels": true, "panelAlpha": 0.62, "focusGlow": true, "videoPreviews": true, "dynamicAccent": false },
+  "background": { "mode": "stage", "blurRadius": 0, "dim": 0.32, "saturation": 1.15 },
+  "effects": { "glassPanels": true, "panelAlpha": 0.62, "focusGlow": true, "videoPreviews": true, "dynamicAccent": false, "artworkTint": true },
   "platformIcons": { "set": "systematic" }
 }

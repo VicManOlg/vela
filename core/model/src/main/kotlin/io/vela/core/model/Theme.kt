@@ -144,4 +144,9 @@ data class ThemeEffects(
     val videoPreviewDelayMs: Int = 1200,
     /** Glows, rings and progress bars follow the focused game's artwork colour instead of the accent. */
     val dynamicAccent: Boolean = true,
+    /**
+     * The focused game's colour washes the background and tints the focus halo and shadow; the
+     * focus ring keeps the theme colour so it reads on any cover.
+     */
+    val artworkTint: Boolean = false,
 )
