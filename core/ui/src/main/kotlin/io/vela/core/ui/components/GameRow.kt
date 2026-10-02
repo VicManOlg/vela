@@ -1,5 +1,12 @@
 package io.vela.core.ui.components
 
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -95,7 +102,10 @@ fun GameRow(
     }
 }
 
-/** Right-hand panel of the list view: big art plus a facts line for the focused game. */
+/**
+ * Right-hand panel of the list view: big art plus a facts line for the focused game. A new game's
+ * cover pops in on the fast spatial spring; it is the cover that flies into the detail screen.
+ */
 @Composable
 fun GamePreviewPanel(
     game: GameSummary?,
@@ -104,20 +114,39 @@ fun GamePreviewPanel(
     platformLabel: String? = null,
 ) {
     val colors = VelaTheme.colors
+    val reduce = VelaTheme.motion.reduceMotion
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-            if (game != null) {
+        AnimatedContent(
+            targetState = game,
+            contentKey = { it?.id },
+            transitionSpec = {
+                if (reduce) {
+                    EnterTransition.None togetherWith ExitTransition.None
+                } else {
+                    (fadeIn(VelaSprings.effects()) + scaleIn(VelaSprings.spatialFast(), initialScale = 0.92f)) togetherWith fadeOut(VelaSprings.effectsFast())
+                }
+            },
+            label = "previewCover",
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) { shown ->
+            // A Box so the cover gets loose constraints: AnimatedContent passes its own minimum
+            // width on, and aspectRatio would honour it by stretching the cover to the panel.
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            if (shown != null) {
                 FittedArtwork(
-                    model = game.imageModel(),
-                    contentDescription = game.title,
+                    model = shown.imageModel(),
+                    contentDescription = shown.title,
                     modifier = Modifier
                         .fillMaxHeight()
                         .aspectRatio(VelaTheme.dimens.boxArtAspect)
+                        .sharedCover(shown.id.value, VelaTheme.shapes.card)
                         .clip(VelaTheme.shapes.card)
                         .background(colors.surface),
                     accent = accent,
-                    placeholder = { TitlePlaceholder(game.title, accent) },
+                    placeholder = { TitlePlaceholder(shown.title, accent) },
                 )
+            }
             }
         }
         Spacer(Modifier.height(14.dp))

@@ -1,5 +1,21 @@
 package io.vela.ui
 
+import coil3.request.ImageRequest
+import coil3.compose.AsyncImage
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.animation.core.Animatable
+import io.vela.core.ui.components.LocalNavAnimatedScope
+import io.vela.core.ui.components.LocalSharedTransitionScope
+import androidx.compose.animation.SharedTransitionLayout
+import io.vela.core.ui.theme.LocalStageTint
+import io.vela.core.ui.components.VelaSprings
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.animateColorAsState
 import io.vela.core.ui.components.LocalControllerLayout
 import io.vela.core.ui.components.LocalHapticsEnabled
 import androidx.compose.animation.AnimatedVisibility
@@ -122,7 +138,12 @@ fun VelaApp(
     val prefs = settings ?: return
 
     VelaTheme(spec = theme, uiScale = prefs.uiScale, reduceMotion = prefs.reduceMotion, showClock = prefs.showClock, showBattery = prefs.showBattery) {
+        // The focused game's colour (its platform's when the art has no vivid one), eased from one
+        // game to the next. Handed down as a State and read only while drawing.
+        val tintTarget = backdrop.dynamicAccent?.let(::Color) ?: Color(backdrop.accent)
+        val stageTint = animateColorAsState(tintTarget, if (VelaTheme.motion.reduceMotion) snap() else VelaSprings.effectsSlow(), label = "stageTint")
         CompositionLocalProvider(
+            LocalStageTint provides if (VelaTheme.effects.artworkTint) stageTint else null,
             LocalGamepad provides gamepad,
             LocalUiSounds provides sounds,
             LocalDynamicAccent provides if (VelaTheme.effects.dynamicAccent) backdrop.dynamicAccent?.let(::Color) else null,
@@ -147,6 +168,10 @@ fun VelaApp(
             val short = (t * 0.56f).toInt()
             Box(Modifier.fillMaxSize().background(VelaTheme.colors.background)) {
                 DynamicBackground(artwork = backdrop.artwork, accent = Color(backdrop.accent))
+                // Covers fly between screens (a card into the detail's box art and back); every
+                // destination hands its enter/exit scope down so cards need no extra parameters.
+                SharedTransitionLayout {
+                CompositionLocalProvider(LocalSharedTransitionScope provides this) {
                 NavHost(
                     navController = navController,
                     startDestination = startDestination,
@@ -159,9 +184,12 @@ fun VelaApp(
                         SetupScreen(onDone = whileResumed { navController.navigate(ShellRoute) { popUpTo<SetupRoute> { inclusive = true } } })
                     }
                     composable<ShellRoute> {
+                        CompositionLocalProvider(LocalNavAnimatedScope provides this) {
                         Shell(navController, viewModel, swapped = prefs.confirmButton == ConfirmButton.B, tabBar = prefs.tabBar)
+                        }
                     }
                     composable<GameGridRoute> {
+                        CompositionLocalProvider(LocalNavAnimatedScope provides this) {
                         Column(Modifier.fillMaxSize()) {
                             GameGridScreen(
                                 onOpenGame = whileResumed { id: GameId -> navController.navigate(GameDetailRoute(id.value)) },
@@ -170,8 +198,10 @@ fun VelaApp(
                             )
                             ButtonHints(listOf(ButtonHint(GamepadButton.A, "Play"), ButtonHint(GamepadButton.X, "Menu"), ButtonHint(GamepadButton.Y, "Sort"), ButtonHint(GamepadButton.START, "View"), ButtonHint(GamepadButton.B, "Back")), swapped = prefs.confirmButton == ConfirmButton.B)
                         }
+                        }
                     }
                     composable<AndroidRoute> {
+                        CompositionLocalProvider(LocalNavAnimatedScope provides this) {
                         Column(Modifier.fillMaxSize()) {
                             AndroidScreen(
                                 onOpenGame = whileResumed { id: GameId -> navController.navigate(GameDetailRoute(id.value)) },
@@ -180,8 +210,10 @@ fun VelaApp(
                             )
                             ButtonHints(listOf(ButtonHint(GamepadButton.A, "Launch"), ButtonHint(GamepadButton.X, "Games"), ButtonHint(GamepadButton.Y, "Apps"), ButtonHint(GamepadButton.B, "Back")), swapped = prefs.confirmButton == ConfirmButton.B)
                         }
+                        }
                     }
                     composable<GameDetailRoute> {
+                        CompositionLocalProvider(LocalNavAnimatedScope provides this) {
                         Column(Modifier.fillMaxSize()) {
                             GameDetailScreen(
                                 onBack = whileResumed { navController.popBackStack() },
@@ -191,7 +223,10 @@ fun VelaApp(
                             )
                             ButtonHints(listOf(ButtonHint(GamepadButton.A, "Select"), ButtonHint(GamepadButton.X, "Menu"), ButtonHint(GamepadButton.Y, "Favorite"), ButtonHint(GamepadButton.B, "Back")), swapped = prefs.confirmButton == ConfirmButton.B)
                         }
+                        }
                     }
+                }
+                }
                 }
                 LaunchOverlay(viewModel)
                 MessageToast(viewModel)
@@ -332,8 +367,9 @@ private fun Shell(navController: NavHostController, appViewModel: AppViewModel, 
 }
 
 /**
- * Full-screen hand-off while the emulator starts: the game's logo or title, which player is
- * launching, and a pulsing accent bar. It fades out once the app has left and come back, or
+ * Full-screen hand-off while the emulator starts, staged like a console powering on: the game's
+ * own colours spread across the screen, its cover rising to the centre on a slow spring, the
+ * logo or title under it, which player is launching, and a pulsing bar in the game's colour. It fades out once the app has left and come back, or
  * after a safety timeout if the emulator never took the screen.
  */
 @Composable
@@ -346,32 +382,83 @@ private fun LaunchOverlay(viewModel: AppViewModel) {
     LifecycleEventEffect(Lifecycle.Event.ON_PAUSE) { viewModel.onUiPaused() }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onUiResumed() }
 
+    // The last launch, kept while the overlay fades out so the cover does not vanish first.
+    var shown by remember { mutableStateOf(launching) }
+    if (launching != null) shown = launching
     AnimatedVisibility(visible = launching != null, enter = fadeIn(tween(220)), exit = fadeOut(tween(450))) {
-        val game = launching?.game
-        val player = launching?.playerName
+        val game = shown?.game
+        val player = shown?.playerName
         // Read in the draw phase only: the pulse must not recompose the overlay 60 times a second.
         val pulse = rememberInfiniteTransition(label = "launchPulse").animateFloat(
             initialValue = 0.25f, targetValue = 1f,
             animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "launchPulseValue",
         )
-        Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = 0.96f)), contentAlignment = Alignment.Center) {
+        val reduce = VelaTheme.motion.reduceMotion
+        // The cover rises from slightly small and below, then keeps a slow push-in while waiting.
+        val rise = remember { Animatable(if (reduce) 1f else 0f) }
+        LaunchedEffect(game?.id) { if (!reduce) rise.animateTo(1f, VelaSprings.spatialSlow()) }
+        val tint = LocalStageTint.current
+        val accent = VelaTheme.liveAccent
+        Box(Modifier.fillMaxSize().background(colors.background), contentAlignment = Alignment.Center) {
+            val art = game?.background ?: game?.boxArt
+            if (art != null) {
+                // The art at a few dozen pixels, stretched: its colours as a soft glow, no blur pass.
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current).data(artworkModel(art)).size(24).build(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    filterQuality = FilterQuality.Medium,
+                    modifier = Modifier.fillMaxSize().graphicsLayer { alpha = 0.5f },
+                )
+            }
+            Box(
+                Modifier.fillMaxSize().drawBehind {
+                    val glow = tint?.value ?: accent
+                    drawRect(Brush.radialGradient(listOf(glow.copy(alpha = 0.28f), colors.background.copy(alpha = 0.55f), colors.background.copy(alpha = 0.92f)), center = Offset(size.width / 2f, size.height * 0.42f), radius = size.maxDimension * 0.6f))
+                },
+            )
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                val cover = game?.boxArt
+                val coverShape = VelaTheme.shapes.card
+                if (cover != null) {
+                    Box(
+                        Modifier
+                            .height(170.dp)
+                            .aspectRatio(VelaTheme.dimens.boxArtAspect)
+                            .graphicsLayer {
+                                val r = rise.value
+                                val s = 0.8f + 0.2f * r
+                                scaleX = s
+                                scaleY = s
+                                translationY = (1f - r) * 40.dp.toPx()
+                                alpha = r.coerceIn(0f, 1f)
+                                shadowElevation = 24.dp.toPx()
+                                val glow = tint?.value ?: accent
+                                spotShadowColor = glow
+                                ambientShadowColor = glow
+                                shape = coverShape
+                                clip = true
+                            },
+                    ) {
+                        VelaImage(model = artworkModel(cover), contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop, placeholder = {})
+                    }
+                    Spacer(Modifier.height(22.dp))
+                }
                 if (game?.logo != null) {
                     VelaImage(
                         model = artworkModel(game.logo),
                         contentDescription = game.title,
-                        modifier = Modifier.height(120.dp).fillMaxWidth(0.5f),
+                        modifier = Modifier.height(if (cover != null) 64.dp else 120.dp).fillMaxWidth(0.5f),
                         contentScale = ContentScale.Fit,
                         placeholder = {},
                     )
                 } else {
-                    Text(game?.title ?: "", style = VelaTheme.typography.display, color = colors.onBackground, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(0.7f))
+                    Text(game?.title ?: "", style = if (cover != null) VelaTheme.typography.title else VelaTheme.typography.display, color = colors.onBackground, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(0.7f))
                 }
                 Spacer(Modifier.height(18.dp))
                 Text(if (player != null) "Launching in $player…" else "Launching…", style = VelaTheme.typography.body, color = colors.muted)
                 Spacer(Modifier.height(26.dp))
-                val pulseColor = VelaTheme.liveAccent
-                Box(Modifier.width(180.dp).height(3.dp).clip(VelaTheme.shapes.chip).drawBehind { drawRect(pulseColor.copy(alpha = pulse.value)) })
+                Box(Modifier.width(180.dp).height(3.dp).clip(VelaTheme.shapes.chip).drawBehind { drawRect((tint?.value ?: accent).copy(alpha = pulse.value)) })
             }
         }
     }

@@ -70,6 +70,7 @@ fun GameCard(
         modifier
             .then(if (width != null) Modifier.width(width) else Modifier)
             .aspectRatio(VelaTheme.dimens.boxArtAspect)
+            .sharedCover(game.id.value, shape)
             .velaFocusable(shape, interactionSource, onClick, onLongPress, onFocused, edge = true)
             .clip(shape)
             .background(colors.surface),

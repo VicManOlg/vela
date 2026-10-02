@@ -1,5 +1,7 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.components.sharedCoversEnabled
+import io.vela.core.ui.components.sharedCover
 import io.vela.core.model.GameMenuEvent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -114,6 +116,8 @@ fun GameDetailScreen(
     val padding = VelaTheme.dimens.screenPadding
     val motion = VelaTheme.motion
     val entrance = remember { Animatable(0f) }
+    // The cover arrives from the card that was opened; it does not also fade and grow.
+    val coverFlies = sharedCoversEnabled
     val slide = with(LocalDensity.current) { 32.dp.toPx() }
     LaunchedEffect(game.id) {
         if (motion.reduceMotion) entrance.snapTo(1f) else { entrance.snapTo(0f); entrance.animateTo(1f, tween(motion.transitionDurationMs + 160, easing = FastOutSlowInEasing)) }
@@ -129,7 +133,9 @@ fun GameDetailScreen(
             Modifier
                 .fillMaxHeight(0.78f)
                 .aspectRatio(if (isApp && game.artwork[ArtworkType.BOX_FRONT] == null) 1f else VelaTheme.dimens.boxArtAspect)
+                .sharedCover(game.id.value, VelaTheme.shapes.tile)
                 .graphicsLayer {
+                    if (coverFlies) return@graphicsLayer
                     val grow = 0.94f + 0.06f * entrance.value
                     scaleX = grow
                     scaleY = grow
