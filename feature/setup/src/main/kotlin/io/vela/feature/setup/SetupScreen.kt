@@ -1,5 +1,6 @@
 package io.vela.feature.setup
 
+import io.vela.core.ui.components.pageEntrance
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.activity.compose.BackHandler
 import android.content.Intent
@@ -131,7 +132,8 @@ fun SetupScreen(onDone: () -> Unit, modifier: Modifier = Modifier, viewModel: Se
     BackHandler(enabled = step != SetupStep.WELCOME && step != SetupStep.SCANNING) { viewModel.back() }
     Box(modifier.fillMaxSize().padding(VelaTheme.dimens.screenPadding), contentAlignment = Alignment.Center) {
         GlassPanel(Modifier.fillMaxWidth(0.72f).fillMaxHeight(0.92f)) {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
+            // Each step slides in from the right, the way the flow moves forward.
+            Column(Modifier.pageEntrance(step, dx = 32f, dy = 0f).verticalScroll(rememberScrollState())) {
                 when (step) {
                 SetupStep.WELCOME -> Welcome { viewModel.goTo(SetupStep.STORAGE) }
                 SetupStep.STORAGE -> Storage(viewModel) { viewModel.goTo(SetupStep.FOLDERS) }

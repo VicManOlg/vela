@@ -1,5 +1,6 @@
 package io.vela.core.ui.components
 
+import androidx.compose.ui.focus.focusProperties
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -192,14 +193,18 @@ fun SwatchPickerDialog(
         Box(
             Modifier
                 .fillMaxSize()
-                .background(colors.background.copy(alpha = 0.55f))
+                .animatedScrim(colors.background.copy(alpha = 0.55f))
+                // Taps outside close the dialog; never a focus target (it would hold an invisible focus).
+                .focusProperties { canFocus = false }
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { sounds?.play(UiSound.BACK); onDismiss() },
             contentAlignment = Alignment.CenterEnd,
         ) {
             GlassPanel(
                 Modifier
                     .padding(end = VelaTheme.dimens.screenPadding)
+                    .panelEntrance()
                     .widthIn(min = 360.dp, max = 480.dp)
+                    .focusProperties { canFocus = false }
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
             ) {
                 Column {

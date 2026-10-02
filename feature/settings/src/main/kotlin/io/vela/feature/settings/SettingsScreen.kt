@@ -1,5 +1,6 @@
 package io.vela.feature.settings
 
+import io.vela.core.ui.components.pageEntrance
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.rememberCoroutineScope
@@ -129,7 +130,8 @@ fun SettingsScreen(
         Spacer(Modifier.width(32.dp))
         Column(Modifier.weight(1f).fillMaxHeight()) {
             Spacer(Modifier.height(12.dp))
-            LazyColumn(Modifier.fillMaxSize().focusRestorer().focusGroup(), verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = 80.dp)) {
+            // A new section rises into place, so L2/R2 read as turning a page.
+            LazyColumn(Modifier.fillMaxSize().pageEntrance(section).focusRestorer().focusGroup(), verticalArrangement = Arrangement.spacedBy(2.dp), contentPadding = PaddingValues(bottom = 80.dp)) {
                 when (section) {
                     SettingsSection.LIBRARY -> librarySection(viewModel, settings)
                     SettingsSection.PLATFORMS -> platformsSection(viewModel)

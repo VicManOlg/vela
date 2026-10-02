@@ -1,5 +1,6 @@
 package io.vela.core.ui.components
 
+import androidx.compose.ui.focus.focusProperties
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -111,15 +112,19 @@ fun VelaMenuDialog(
         Box(
             Modifier
                 .fillMaxSize()
-                .background(colors.background.copy(alpha = 0.55f))
+                .animatedScrim(colors.background.copy(alpha = 0.55f))
+                // Taps outside close the dialog; never a focus target (it would hold an invisible focus).
+                .focusProperties { canFocus = false }
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { sounds?.play(UiSound.BACK); onDismiss() },
             contentAlignment = Alignment.CenterEnd,
         ) {
             GlassPanel(
                 Modifier
                     .padding(end = VelaTheme.dimens.screenPadding)
+                    .panelEntrance()
                     .widthIn(min = 320.dp, max = 440.dp)
                     .heightIn(max = dialogMaxHeight())
+                    .focusProperties { canFocus = false }
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
             ) {
                 Column {
@@ -171,8 +176,8 @@ fun ConfirmDialog(
         ImmersiveDialogWindow()
         BackHandler(onBack = onDismiss)
         GamepadHandler { true }
-        Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
-            GlassPanel(Modifier.widthIn(min = 360.dp, max = 520.dp)) {
+        Box(Modifier.fillMaxSize().animatedScrim(colors.background.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
+            GlassPanel(Modifier.panelEntrance(fromSide = false).widthIn(min = 360.dp, max = 520.dp)) {
                 Column {
                     Text(title, style = VelaTheme.typography.title, color = colors.onBackground)
                     Spacer(Modifier.height(8.dp))
@@ -207,8 +212,8 @@ fun TextInputDialog(
         ImmersiveDialogWindow()
         BackHandler(onBack = onDismiss)
         GamepadHandler { true }
-        Box(Modifier.fillMaxSize().background(colors.background.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
-            GlassPanel(Modifier.widthIn(min = 360.dp, max = 520.dp)) {
+        Box(Modifier.fillMaxSize().animatedScrim(colors.background.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
+            GlassPanel(Modifier.panelEntrance(fromSide = false).widthIn(min = 360.dp, max = 520.dp)) {
                 Column {
                     Text(title, style = VelaTheme.typography.title, color = colors.onBackground)
                     Spacer(Modifier.height(14.dp))

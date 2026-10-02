@@ -1,5 +1,6 @@
 package io.vela.core.ui.components
 
+import androidx.compose.ui.focus.focusProperties
 import kotlinx.coroutines.launch
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -274,6 +275,9 @@ fun ButtonHints(hints: List<ButtonHint>, modifier: Modifier = Modifier, swapped:
                 modifier = Modifier
                     .padding(start = 10.dp)
                     .clip(VelaTheme.shapes.chip)
+                    // Touch targets only: once the D-pad is used Android makes a clickable focusable,
+                    // and focus could sink into the hint bar where no ring shows it.
+                    .focusProperties { canFocus = false }
                     .clickable(enabled = gamepad != null) {
                         // A and B make their own sound downstream; the rest chime here.
                         if (hint.button != GamepadButton.A && hint.button != GamepadButton.B) sounds?.play(UiSound.CONFIRM)
