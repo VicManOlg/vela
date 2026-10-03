@@ -133,7 +133,8 @@ fun SetupScreen(onDone: () -> Unit, modifier: Modifier = Modifier, viewModel: Se
     Box(modifier.fillMaxSize().padding(VelaTheme.dimens.screenPadding), contentAlignment = Alignment.Center) {
         GlassPanel(Modifier.fillMaxWidth(0.72f).fillMaxHeight(0.92f)) {
             // Each step slides in from the right, the way the flow moves forward.
-            Column(Modifier.pageEntrance(step, dx = 32f, dy = 0f).verticalScroll(rememberScrollState())) {
+            // Bottom room inside the scroll: it clips, and would cut the focused button's glow.
+            Column(Modifier.pageEntrance(step, dx = 32f, dy = 0f).verticalScroll(rememberScrollState()).padding(bottom = 40.dp)) {
                 when (step) {
                 SetupStep.WELCOME -> Welcome { viewModel.goTo(SetupStep.STORAGE) }
                 SetupStep.STORAGE -> Storage(viewModel) { viewModel.goTo(SetupStep.FOLDERS) }
