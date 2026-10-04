@@ -548,7 +548,8 @@
       "microsoft xbox 360"
     ],
     "defaultPlayers": [
-      "ax360e"
+      "ax360e",
+      "x360mobile"
     ],
     "screenScraperId": 33,
     "igdbId": 12,

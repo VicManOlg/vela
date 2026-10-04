@@ -268,8 +268,13 @@ private fun Shell(navController: NavHostController, appViewModel: AppViewModel, 
             sounds?.play(UiSound.TAB)
         }
     }
-    // Back from any other tab lands on Home; from Home it leaves the app as usual.
+    // Back from any other tab lands on Home. From Home it leaves the way a console does: Vela
+    // goes to the background, alive, instead of being finished. A finished activity rebuilds
+    // every screen on return, and on a device short of memory (whose image cache Android has
+    // just made us empty) every cover then reloads in front of the user.
+    val activity = LocalContext.current as? android.app.Activity
     BackHandler(enabled = tab != ShellTab.HOME) { appViewModel.selectTab(ShellTab.HOME) }
+    BackHandler(enabled = tab == ShellTab.HOME && activity != null) { activity?.moveTaskToBack(true) }
 
     GamepadHandler { button ->
         when (button) {

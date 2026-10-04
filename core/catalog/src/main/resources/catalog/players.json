@@ -1135,5 +1135,25 @@
     ],
     "website": "https://play.google.com/store/apps/details?id=aenu.ax360e",
     "notes": "ISO, XEX and ZAR files. Xbox 360 emulation on Android is early; only some games run."
+  },
+  {
+    "id": "x360mobile",
+    "name": "X360 Mobile",
+    "packages": [
+      "emu.x360mobile.com"
+    ],
+    "activity": "emu.x360mobile.com.MainActivity",
+    "action": "android.intent.action.VIEW",
+    "delivery": "CONTENT_URI_DATA",
+    "mimeType": "application/octet-stream",
+    "platforms": [
+      "xbox360"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP",
+      "FLAG_GRANT_READ_URI_PERMISSION"
+    ],
+    "notes": "Recipe from the app's own manifest (read on an Odin 3, 2026-10-04): MainActivity handles VIEW on content:// and file:// for application/octet-stream, x-iso9660-image, x-xex and x-xbox360-stfs. Daijishō only knows its launch-URL recipe."
   }
 ]
