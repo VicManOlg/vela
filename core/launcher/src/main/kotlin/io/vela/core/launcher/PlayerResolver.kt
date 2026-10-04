@@ -99,11 +99,14 @@ class PlayerResolver @Inject constructor(
 
     fun resolve(game: Game, settings: PlatformSettings?): PlayerResolution {
         val platform = platforms[game.platformId] ?: return PlayerResolution.NoCandidate
-        val explicit = game.playerOverride ?: settings?.playerId
+        // A per-game choice always wins. The system's choice applies to the formats it handles:
+        // an ISO recipe picked for PS3 must not receive a game kept as a folder.
+        val platformChoice = settings?.playerId?.takeIf { id -> definition(id)?.handles(game.extension) == true }
+        val explicit = game.playerOverride ?: platformChoice
         val candidates: List<PlayerDefinition> = buildList {
             explicit?.let { id -> definition(id)?.let(::add) }
-            addAll(players.forPlatform(platform.id, platform.defaultPlayers))
-            addAll(catalogCandidates(platform))
+            addAll(players.forPlatform(platform.id, platform.defaultPlayers).filter { it.handles(game.extension) })
+            addAll(catalogCandidates(platform).filter { it.handles(game.extension) })
         }.distinct()
 
         if (candidates.isEmpty()) return PlayerResolution.NoCandidate

@@ -452,7 +452,8 @@
     "family": "SONY",
     "extensions": [
       "iso",
-      "ps3"
+      "ps3",
+      "ps3dir"
     ],
     "folderAliases": [
       "ps3",
@@ -462,6 +463,7 @@
     ],
     "defaultPlayers": [
       "aps3e",
+      "aps3e_folder",
       "aps3e_installed"
     ],
     "screenScraperId": 59,
@@ -1326,7 +1328,8 @@
       "desktop",
       "exe",
       "lnk",
-      "bat"
+      "bat",
+      "steamappid"
     ],
     "folderAliases": [
       "windows",

@@ -58,6 +58,34 @@ class PlayerResolverTest {
         location = GameLocation.File("/storage/emulated/0/ROMs/$platform/Game.bin"), fileName = "Game.bin", addedAt = 0,
     )
 
+    private fun ps3Game(fileName: String, extension: String) = game("ps3").copy(
+        location = GameLocation.File("/storage/emulated/0/ROMs/ps3/$fileName"), fileName = fileName, extension = extension,
+    )
+
+    @Test
+    fun `aPS3e gets each PS3 format through its own recipe`() {
+        val aps3e = players[PlayerId("aps3e")]!!
+        install(aps3e.packages.last(), aps3e.activity!!)
+
+        fun playerFor(fileName: String, extension: String) =
+            (resolver.resolve(ps3Game(fileName, extension), null) as PlayerResolution.Ready).player.definition.id.value
+
+        assertThat(playerFor("Demon's Souls.iso", "iso")).isEqualTo("aps3e")
+        assertThat(playerFor("Demon's Souls [BLUS30443]", "ps3dir")).isEqualTo("aps3e_folder")
+        assertThat(playerFor("BLUS30443.ps3", "ps3")).isEqualTo("aps3e_installed")
+    }
+
+    @Test
+    fun `the system's player is skipped for a format it does not handle`() {
+        val aps3e = players[PlayerId("aps3e")]!!
+        install(aps3e.packages.last(), aps3e.activity!!)
+        val settings = io.vela.core.model.PlatformSettings(PlatformId("ps3"), playerId = PlayerId("aps3e"))
+
+        val r = resolver.resolve(ps3Game("Demon's Souls [BLUS30443]", "ps3dir"), settings) as PlayerResolution.Ready
+
+        assertThat(r.player.definition.id.value).isEqualTo("aps3e_folder")
+    }
+
     @Test
     fun `nothing installed resolves to not installed, never to a catalogue player`() {
         val r = resolver.resolve(game("nds"), null)

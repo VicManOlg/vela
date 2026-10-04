@@ -71,6 +71,28 @@ class LibraryScannerTest {
     }
 
     @Test
+    fun `PS3 games kept as folders are one game each and are not walked into`() = runTest {
+        // A disc dump and a game installed from a PKG; neither has an ISO.
+        file("ps3/Demon's Souls [BLUS30443]/PS3_GAME/PARAM.SFO")
+        file("ps3/Demon's Souls [BLUS30443]/PS3_GAME/USRDIR/EBOOT.BIN")
+        file("ps3/Demon's Souls [BLUS30443]/PS3_DISC.SFB")
+        file("ps3/NPUB30123/PARAM.SFO")
+        file("ps3/NPUB30123/USRDIR/EBOOT.BIN")
+        file("ps3/Folder of extras/readme.txt")
+        addSource()
+
+        scanner.scanAll()
+
+        val games = db.gameDao().observeRecentlyAdded(10).first()
+        assertThat(games.map { it.platformId }.distinct()).containsExactly("ps3")
+        assertThat(games.map { it.title }).containsExactly("Demon's Souls", "NPUB30123")
+        val stored = games.map { db.gameDao().byId(it.id)!! }
+        assertThat(stored.map { it.extension }.distinct()).containsExactly(PS3_FOLDER_EXTENSION)
+        // The game is the folder itself: that is the path aPS3e receives as game_dir.
+        assertThat(stored.map { File(it.locationValue).name }).containsExactly("Demon's Souls [BLUS30443]", "NPUB30123")
+    }
+
+    @Test
     fun `second scan is incremental and detects removals`() = runTest {
         val a = file("gba/A.gba")
         file("gba/B.gba")

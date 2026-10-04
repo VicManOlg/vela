@@ -28,11 +28,29 @@ data class ScannedFile(
     val parentFolder: String? get() = folderChain.lastOrNull()
 }
 
+/**
+ * Extension given to a PS3 game kept as a folder, so the folder goes through platform detection
+ * and player choice like a file ("Demon's Souls [BLUS30443].ps3dir").
+ */
+const val PS3_FOLDER_EXTENSION = "ps3dir"
+
+/**
+ * A PS3 game stored as a folder: a disc dump (PS3_GAME/ with PARAM.SFO inside) or an installed
+ * game (PARAM.SFO next to USRDIR/). [names] are the folder's direct children.
+ */
+internal fun isPs3FolderGame(names: Collection<String>): Boolean {
+    val upper = names.mapTo(HashSet()) { it.uppercase() }
+    return "PS3_GAME" in upper || ("PARAM.SFO" in upper && "USRDIR" in upper)
+}
+
 /** Abstraction over java.io.File and SAF so the scanner is storage-agnostic. */
 interface FileSystemSource {
     val access: SourceAccess
 
-    /** Emits every regular file under [rootUri]; directories in [ignoredFolders] are skipped. */
+    /**
+     * Emits every regular file under [rootUri]; directories in [ignoredFolders] are skipped. A PS3
+     * game kept as a folder is emitted once, as the folder, and not walked into.
+     */
     fun walk(rootUri: String, recursive: Boolean, ignoredFolders: Set<String>): Flow<ScannedFile>
 
     /** Reads a small text file (m3u playlists) or null if unreadable. */
@@ -52,6 +70,10 @@ class FileTreeSource : FileSystemSource {
         while (queue.isNotEmpty()) {
             val (dir, chain) = queue.removeFirst()
             val children = dir.listFiles() ?: continue
+            if (chain.isNotEmpty() && isPs3FolderGame(children.map { it.name })) {
+                emit(ScannedFile("${dir.name}.$PS3_FOLDER_EXTENSION", dir.absolutePath, 0L, dir.lastModified(), chain.dropLast(1)))
+                continue
+            }
             for (child in children) {
                 val name = child.name
                 if (name.startsWith('.')) continue
@@ -111,22 +133,32 @@ class DocumentTreeSource(private val context: Context) : FileSystemSource {
                 Timber.w(e, "SAF query failed for %s", childrenUri)
                 null
             } ?: continue
-            cursor.use { c ->
-                while (c.moveToNext()) {
-                    val childId = c.getString(0)
-                    val name = c.getString(1) ?: continue
-                    if (name.startsWith('.')) continue
-                    val mime = c.getString(2)
-                    if (mime == DocumentsContract.Document.MIME_TYPE_DIR) {
-                        if (recursive && name.lowercase() !in ignoredFolders) queue.add(childId to chain + name)
-                    } else {
-                        val uri = DocumentsContract.buildDocumentUriUsingTree(treeUri, childId)
-                        emit(ScannedFile(name, uri.toString(), c.getLong(3), c.getLong(4), chain))
+            val rows = cursor.use { c ->
+                buildList {
+                    while (c.moveToNext()) {
+                        val name = c.getString(1) ?: continue
+                        if (name.startsWith('.')) continue
+                        add(SafRow(c.getString(0), name, c.getString(2), c.getLong(3), c.getLong(4)))
                     }
+                }
+            }
+            if (chain.isNotEmpty() && isPs3FolderGame(rows.map { it.name })) {
+                val uri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
+                emit(ScannedFile("${chain.last()}.$PS3_FOLDER_EXTENSION", uri.toString(), 0L, 0L, chain.dropLast(1)))
+                continue
+            }
+            for (row in rows) {
+                if (row.mime == DocumentsContract.Document.MIME_TYPE_DIR) {
+                    if (recursive && row.name.lowercase() !in ignoredFolders) queue.add(row.id to chain + row.name)
+                } else {
+                    val uri = DocumentsContract.buildDocumentUriUsingTree(treeUri, row.id)
+                    emit(ScannedFile(row.name, uri.toString(), row.size, row.modified, chain))
                 }
             }
         }
     }
+
+    private class SafRow(val id: String, val name: String, val mime: String?, val size: Long, val modified: Long)
 
     override fun readText(location: String, maxBytes: Int): String? = runCatching {
         context.contentResolver.openInputStream(Uri.parse(location))?.use { it.readBounded(maxBytes) }

@@ -76,6 +76,11 @@ data class PlayerDefinition(
     val flags: List<String> = listOf("FLAG_ACTIVITY_NEW_TASK", "FLAG_ACTIVITY_CLEAR_TOP"),
     /** Platforms this player can run. Empty = generic (any). */
     val platforms: List<PlatformId> = emptyList(),
+    /**
+     * File extensions this recipe handles (lower case, no dot); empty = every game of its
+     * platforms. Lets one emulator have a recipe per game format (aPS3e: ISO, folder, installed).
+     */
+    val extensions: List<String> = emptyList(),
     /** Per-platform libretro cores; key is platform id. Only for libretro-style players. */
     val cores: Map<String, List<CoreOption>> = emptyMap(),
     /** Template for `{core.path}`, e.g. `/data/data/{package}/cores/{core.file}`. */
@@ -86,6 +91,9 @@ data class PlayerDefinition(
     val notes: String? = null,
 ) {
     fun supports(platformId: PlatformId): Boolean = platforms.isEmpty() || platformId in platforms
+
+    /** An unknown extension (games stored before it was recorded) is accepted, as it always was. */
+    fun handles(extension: String): Boolean = extensions.isEmpty() || extension.isEmpty() || extension.lowercase() in extensions
 
     fun coresFor(platformId: PlatformId): List<CoreOption> = cores[platformId.value].orEmpty()
 }

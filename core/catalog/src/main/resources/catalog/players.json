@@ -1002,17 +1002,22 @@
     "delivery": "EXTRAS_ONLY",
     "extras": [
       {
-        "key": "game_source",
-        "value": "steam"
+        "key": "app_id",
+        "value": "{rom.stem}",
+        "type": "INT"
       },
       {
-        "key": "app_id",
-        "value": "{rom.stem}"
+        "key": "game_source",
+        "value": "STEAM"
       }
     ],
     "platforms": [
       "pc"
-    ]
+    ],
+    "extensions": [
+      "steamappid"
+    ],
+    "notes": "Steam games installed in GameNative. GameNative has no library other apps can read: add an empty file named after the game's Steam app id, e.g. 1145360.steamappid, to your PC folder. app_id is an int and game_source STEAM, as in Daijishō's recipe (esdeVerified)."
   },
   {
     "id": "aps3e",
@@ -1039,7 +1044,40 @@
       "FLAG_GRANT_READ_URI_PERMISSION"
     ],
     "website": "https://github.com/aenu1/aps3e",
-    "notes": "Boots a PS3 ISO. Games installed inside aPS3e (folder or PKG) use 'aPS3e (installed)' instead."
+    "notes": "Boots a PS3 ISO. Games installed inside aPS3e (folder or PKG) use 'aPS3e (installed)' instead.",
+    "extensions": [
+      "iso"
+    ]
+  },
+  {
+    "id": "aps3e_folder",
+    "name": "aPS3e (folder)",
+    "packages": [
+      "aenu.aps3e.premium",
+      "aenu.aps3e"
+    ],
+    "activity": "aenu.aps3e.EmulatorActivity",
+    "action": "aenu.intent.action.APS3E",
+    "delivery": "NONE",
+    "extras": [
+      {
+        "key": "game_dir",
+        "value": "{rom.path}"
+      }
+    ],
+    "platforms": [
+      "ps3"
+    ],
+    "extensions": [
+      "ps3dir"
+    ],
+    "flags": [
+      "FLAG_ACTIVITY_NEW_TASK",
+      "FLAG_ACTIVITY_CLEAR_TOP"
+    ],
+    "requiresFilePath": true,
+    "website": "https://github.com/aenu1/aps3e",
+    "notes": "PS3 games kept as folders (a disc dump with PS3_GAME/, or PARAM.SFO next to USRDIR/); Vela finds them while scanning. game_dir takes the folder path, as in Daijishō's 'aPS3e (Folder Style)' recipe (esdeVerified). Needs All files access."
   },
   {
     "id": "aps3e_installed",
@@ -1065,7 +1103,10 @@
       "FLAG_ACTIVITY_CLEAR_TOP"
     ],
     "website": "https://github.com/aenu1/aps3e",
-    "notes": "For games installed in aPS3e: create an empty file named after the game serial, e.g. BLUS30443.ps3, in your PS3 folder."
+    "notes": "For games installed in aPS3e: create an empty file named after the game serial, e.g. BLUS30443.ps3, in your PS3 folder.",
+    "extensions": [
+      "ps3"
+    ]
   },
   {
     "id": "ax360e",
