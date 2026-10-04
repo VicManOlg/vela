@@ -70,7 +70,9 @@ class ScrapeService @Inject constructor(
         val wantsLogos = providers.all.any { it.isAvailable(prefs) && ArtworkType.LOGO in it.info.artworkTypes }
         // Games tried earlier in this pass (and still lacking art) wait for the next pass, or a
         // provider error would make every batch retry them and the chain never end.
-        val ids = gameDao.idsNeedingScrape(wantsLogos).filterNot { it in notFound || it in attemptedThisPass }
+        // A game with box art but no background is asked again, once a week: providers gain art.
+        val ids = gameDao.idsNeedingScrape(wantsLogos, retryBefore = System.currentTimeMillis() - BACKGROUND_RETRY_MS)
+            .filterNot { it in notFound || it in attemptedThisPass }
         Timber.i("Scrape queue: %d games", ids.size)
         scrapeGames(ids.map(::GameId), deadlineMs) == BatchEnd.DEADLINE
     }
@@ -224,6 +226,11 @@ class ScrapeService @Inject constructor(
             }
         }
 
+        // Stamp the attempt, so a game no provider has a background for waits a week, not a pass.
+        val now = System.currentTimeMillis()
+        if (metadataDao.touchScraped(game.id, now) == 0) {
+            metadataDao.upsertMetadata(GameMetadataEntity(gameId = game.id, providerId = metadataProvider?.info?.id ?: "none", scrapedAt = now))
+        }
         if (!stored) notFound += game.id
         return Outcome.success(stored)
     }
@@ -252,3 +259,5 @@ class ScrapeService @Inject constructor(
         const val REQUEST_SPACING_MS = 350L
     }
 }
+
+private const val BACKGROUND_RETRY_MS = 7L * 24 * 60 * 60 * 1000

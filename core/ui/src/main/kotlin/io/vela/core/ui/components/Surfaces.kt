@@ -1,5 +1,6 @@
 package io.vela.core.ui.components
 
+import coil3.SingletonImageLoader
 import io.vela.core.ui.theme.LocalStageTint
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
@@ -110,12 +111,11 @@ fun DynamicBackground(
                         // Read inside graphicsLayer only: the 26 s drift must never recompose the scene.
                         val drift = rememberDrift(enabled = hero && !motion.reduceMotion)
                         val request = remember(art, hero, context) {
-                            ImageRequest.Builder(context)
-                                .data(artworkModel(art))
-                                .size(if (hero) 1280 else 480)
-                                .precision(Precision.INEXACT)
-                                .crossfade(false)
-                                .build()
+                            if (hero) {
+                                backdropRequests(context, art)[1]
+                            } else {
+                                ImageRequest.Builder(context).data(artworkModel(art)).size(480).precision(Precision.INEXACT).crossfade(false).build()
+                            }
                         }
                         val saturation = remember(style.saturation) { ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(style.saturation) }) }
                         AsyncImage(
@@ -213,12 +213,7 @@ private fun StageScene(art: String, drifting: Boolean, saturation: Float) {
     val context = LocalContext.current
     val drift = rememberDrift(enabled = drifting)
     val filter = remember(saturation) { ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(saturation) }) }
-    val far = remember(art, context) {
-        ImageRequest.Builder(context).data(artworkModel(art)).size(24).precision(Precision.INEXACT).crossfade(false).build()
-    }
-    val key = remember(art, context) {
-        ImageRequest.Builder(context).data(artworkModel(art)).size(1280).precision(Precision.INEXACT).crossfade(false).build()
-    }
+    val (far, key) = remember(art, context) { backdropRequests(context, art) }
     Box(Modifier.fillMaxSize()) {
         AsyncImage(
             model = far,
@@ -257,6 +252,33 @@ private fun StageScene(art: String, drifting: Boolean, saturation: Float) {
                         translationX = (d - 0.5f) * size.width * 0.03f
                     },
             )
+        }
+    }
+}
+
+/**
+ * The decodes behind the stage and hero backgrounds: the art at 24 px (the far, blurred layer)
+ * and at 1280 px (the scene). [rememberBackdropPrefetch] issues the very same requests, so a
+ * prefetch lands in the memory cache under the keys the background will ask for.
+ */
+private fun backdropRequests(context: android.content.Context, art: String): List<ImageRequest> = listOf(
+    ImageRequest.Builder(context).data(artworkModel(art)).size(24).precision(Precision.INEXACT).crossfade(false).build(),
+    ImageRequest.Builder(context).data(artworkModel(art)).size(1280).precision(Precision.INEXACT).crossfade(false).build(),
+)
+
+/**
+ * Decodes a game's background before it is focused: call it with the neighbours of the focused
+ * item, and the scene is in memory when the D-pad gets there instead of loading behind it.
+ */
+@Composable
+fun rememberBackdropPrefetch(): (String?) -> Unit {
+    val context = LocalContext.current
+    return remember(context) {
+        { art: String? ->
+            if (art != null) {
+                val loader = SingletonImageLoader.get(context)
+                backdropRequests(context, art).forEach { loader.enqueue(it) }
+            }
         }
     }
 }

@@ -57,6 +57,19 @@ class GameDaoTest {
     }
 
     @Test
+    fun `a game with box art but no background is scraped again once its last try is old`() = runTest {
+        val id = db.gameDao().insertIgnore(game("Chrono Trigger"))
+        db.metadataDao().upsertArtwork(ArtworkEntity(gameId = id, type = "BOX_FRONT", localPath = "/art/ct.png", updatedAt = 1))
+        db.metadataDao().upsertMetadata(GameMetadataEntity(gameId = id, title = "Chrono Trigger", scrapedAt = 1_000))
+
+        assertThat(db.gameDao().idsNeedingScrape(needLogo = false, retryBefore = 2_000)).containsExactly(id)
+        assertThat(db.gameDao().idsNeedingScrape(needLogo = false, retryBefore = 500)).isEmpty()
+
+        db.metadataDao().upsertArtwork(ArtworkEntity(gameId = id, type = "SCREENSHOT", localPath = "/art/ct-shot.png", updatedAt = 1))
+        assertThat(db.gameDao().idsNeedingScrape(needLogo = false, retryBefore = 2_000)).isEmpty()
+    }
+
+    @Test
     fun `fts search finds partial titles`() = runTest {
         db.gameDao().insertIgnore(game("Super Metroid"))
         db.gameDao().insertIgnore(game("Super Mario World"))

@@ -1,5 +1,6 @@
 package io.vela.feature.library
 
+import io.vela.core.ui.components.rememberBackdropPrefetch
 import androidx.compose.ui.focus.focusProperties
 import io.vela.core.ui.theme.metaLine
 import io.vela.core.ui.components.rememberedItems
@@ -192,6 +193,7 @@ private fun GridContent(items: LazyPagingItems<GameSummary>, accent: Color, call
     val bleed = focusBleed()
     val memory = rememberFocusMemory()
     val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0), memory = memory)
+    val prefetch = rememberBackdropPrefetch()
     LazyVerticalGrid(
         state = gridState,
         columns = when {
@@ -216,7 +218,13 @@ private fun GridContent(items: LazyPagingItems<GameSummary>, accent: Color, call
                 width = null,
                 onClick = { callbacks.launch(game) },
                 onLongPress = { callbacks.menu(game) },
-                onFocused = { callbacks.focus(game) },
+                onFocused = {
+                    callbacks.focus(game)
+                    // Neighbours' scenes, decoded ahead; peek never makes the pager load a page.
+                    for (n in intArrayOf(index - 1, index + 1)) {
+                        if (n in 0 until items.itemCount) items.peek(n)?.let { prefetch(it.background ?: it.boxArt) }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth().staggeredEntrance(index, clock),
             )
         }

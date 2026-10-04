@@ -255,16 +255,20 @@ interface GameDao {
     )
     fun observePlatformArt(): Flow<List<PlatformArtRow>>
 
-    /** Games still lacking box art, never asked for metadata, or (when a logo source exists) lacking a logo. */
+    /**
+     * Games still lacking box art, never asked for metadata, (when a logo source exists) lacking a
+     * logo, or lacking any background (fanart, hero or screenshot) and not tried since [retryBefore].
+     */
     @Query(
         """SELECT s.id FROM game_summaries s
            WHERE s.hidden = 0 AND s.present = 1 AND s.kind = 'ROM'
              AND (s.boxArt IS NULL
                   OR NOT EXISTS (SELECT 1 FROM game_metadata m WHERE m.gameId = s.id)
-                  OR (:needLogo AND s.logo IS NULL))
+                  OR (:needLogo AND s.logo IS NULL)
+                  OR (s.background IS NULL AND NOT EXISTS (SELECT 1 FROM game_metadata m WHERE m.gameId = s.id AND m.scrapedAt > :retryBefore)))
            ORDER BY s.lastPlayedAt DESC, s.addedAt DESC""",
     )
-    suspend fun idsNeedingScrape(needLogo: Boolean): List<Long>
+    suspend fun idsNeedingScrape(needLogo: Boolean, retryBefore: Long): List<Long>
 
     @Query(
         """SELECT s.* FROM game_summaries s JOIN game_metadata m ON m.gameId = s.id

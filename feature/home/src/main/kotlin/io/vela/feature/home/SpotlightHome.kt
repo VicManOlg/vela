@@ -1,5 +1,6 @@
 package io.vela.feature.home
 
+import io.vela.core.ui.components.rememberBackdropPrefetch
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -55,6 +56,7 @@ fun SpotlightHome(
     val colors = VelaTheme.colors
     val games = remember(state) { state.spotlightGames() }
     val focusedGame = spotlight?.gameId?.let { id -> games.firstOrNull { it.id.value == id } }
+    val prefetch = rememberBackdropPrefetch()
 
     Column(modifier.fillMaxSize()) {
         // Title area takes whatever the rows leave; on short screens it drops to one line.
@@ -125,7 +127,13 @@ fun SpotlightHome(
                         width = VelaTheme.dimens.cardWidth * 0.9f,
                         onClick = { viewModel.launch(game) },
                         onLongPress = { viewModel.openMenu(game) },
-                        onFocused = { viewModel.spotlightGame(game) },
+                        onFocused = {
+                            viewModel.spotlightGame(game)
+                            // The next scene either way is decoded before the D-pad reaches it.
+                            val i = games.indexOf(game)
+                            prefetch(games.getOrNull(i + 1)?.let { it.background ?: it.boxArt })
+                            prefetch(games.getOrNull(i - 1)?.let { it.background ?: it.boxArt })
+                        },
                     )
                 }
             }

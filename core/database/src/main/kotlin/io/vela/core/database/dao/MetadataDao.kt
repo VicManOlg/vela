@@ -51,6 +51,10 @@ interface MetadataDao {
     @Query("SELECT COUNT(*) FROM artwork")
     suspend fun artworkCount(): Int
 
+    /** Records that the providers were asked about a game just now; 0 when it has no metadata row yet. */
+    @Query("UPDATE game_metadata SET scrapedAt = :now WHERE gameId = :gameId")
+    suspend fun touchScraped(gameId: Long, now: Long): Int
+
     @Query("SELECT localPath FROM artwork WHERE gameId NOT IN (SELECT id FROM games)")
     suspend fun orphanArtworkPaths(): List<String>
 }
