@@ -525,7 +525,8 @@
     "family": "SONY",
     "extensions": [
       "vpk",
-      "psvita"
+      "psvita",
+      "pkg"
     ],
     "folderAliases": [
       "psvita",

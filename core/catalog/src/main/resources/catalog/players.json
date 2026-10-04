@@ -830,7 +830,7 @@
     "extras": [
       {
         "key": "AppStartParameters",
-        "value": "-r,{rom.stem}",
+        "value": "-r,{rom.id}",
         "type": "STRING_ARRAY"
       }
     ],
@@ -841,7 +841,7 @@
       "FLAG_ACTIVITY_NEW_TASK",
       "FLAG_ACTIVITY_CLEAR_TOP"
     ],
-    "notes": "Vita games are launched by title id; name the .psvita placeholder file after the title id (e.g. PCSE00001.psvita)."
+    "notes": "Vita3K boots installed games by title id (-r <id>, as in Daijishō's esdeVerified recipe). Keep each game's .pkg, or an empty .psvita file, named with its id in brackets, e.g. 'Gravity Rush [PCSF00024].pkg'; install the pkg in Vita3K once."
   },
   {
     "id": "eden",

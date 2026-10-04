@@ -142,6 +142,18 @@ class LibraryScannerTest {
     }
 
     @Test
+    fun `Vita pkg files are Vita games named without their title id, zRIF notes are not games`() = runTest {
+        file("psvita/Gravity Rush [PCSF00024].pkg")
+        file("psvita/Gravity Rush [PCSF00024].zrif.txt")
+        file("psvita/LEEME.txt")
+        addSource()
+
+        scanner.scanAll()
+
+        assertThat(db.gameDao().observeRecentlyAdded(10).first().map { it.title to it.platformId }).containsExactly("Gravity Rush" to "psvita")
+    }
+
+    @Test
     fun `a game whose folder was renamed keeps its row, artwork and play time`() = runTest {
         file("snes/Chrono Trigger (USA).sfc")
         addSource()

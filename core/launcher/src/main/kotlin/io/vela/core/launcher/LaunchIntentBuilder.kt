@@ -38,6 +38,7 @@ data class LaunchContext(
         put("rom.path", romPath.orEmpty())
         put("rom.name", romName)
         put("rom.stem", romStem)
+        put("rom.id", romId(romStem))
         put("rom.dir", romDir.orEmpty())
         put("core.path", corePath.orEmpty())
         put("core.id", coreId.orEmpty())
@@ -46,6 +47,13 @@ data class LaunchContext(
         putAll(overrides)
     }
 }
+
+/**
+ * The game's id for emulators that launch installed games by id (Vita3K: PCSF00024): the code in
+ * the last [brackets] of the file name ("Gravity Rush [PCSF00024].pkg"), else the whole stem.
+ */
+internal fun romId(stem: String): String =
+    Regex("""\[([A-Za-z0-9_-]{4,})]""").findAll(stem).lastOrNull()?.groupValues?.get(1) ?: stem
 
 /** Result of template expansion, ready for `startActivity`. */
 data class PreparedLaunch(
