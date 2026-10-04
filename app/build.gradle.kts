@@ -13,8 +13,8 @@ android {
     defaultConfig {
         applicationId = "io.vela.frontend"
         // Bump both for every GitHub release: Obtainium updates only when versionCode grows.
-        versionCode = 8
-        versionName = "0.4.0"
+        versionCode = 9
+        versionName = "0.4.1"
     }
 
     // Release signing comes from the untracked secrets.properties (see README > Releases).
