@@ -285,7 +285,7 @@
     "libretroName": "Nintendo - Nintendo DS",
     "accentColor": "#FFB6B6B6",
     "sortOrder": 90,
-    "boxArtAspect": 0.9
+    "boxArtAspect": 1.1
   },
   {
     "id": "n3ds",
@@ -321,7 +321,7 @@
     "catalogIds": [
       "3ds"
     ],
-    "boxArtAspect": 0.9
+    "boxArtAspect": 1.1
   },
   {
     "id": "switch",
@@ -1391,6 +1391,7 @@
     "sortOrder": 925,
     "catalogIds": [
       "steam"
-    ]
+    ],
+    "boxArtAspect": 0.667
   }
 ]
