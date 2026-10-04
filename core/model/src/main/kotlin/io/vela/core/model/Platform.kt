@@ -46,6 +46,11 @@ data class Platform(
     val libretroName: String? = null,
     /** RetroArch assets icon name when it differs from [libretroName] (or there is none). */
     val iconName: String? = null,
+    /**
+     * Apps whose launcher icon stands for this system when it has no console icon (Steam: the
+     * GameNative or Steam Link icon); the first installed one is used.
+     */
+    val iconPackages: List<String> = emptyList(),
     /** Ids of this system in the generated emulator catalogue (Daijishō); empty means the same id. */
     val catalogIds: List<String> = emptyList(),
     /** Accent colour (ARGB) used by the theme for platform tiles. */

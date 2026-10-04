@@ -1,5 +1,7 @@
 package io.vela.core.data.repository
 
+import kotlinx.coroutines.flow.flowOn
+import io.vela.core.launcher.InstalledPackages
 import io.vela.core.catalog.PlatformCatalog
 import io.vela.core.common.DispatcherProvider
 import io.vela.core.data.mapper.toDomain
@@ -51,6 +53,7 @@ class LibraryRepository @Inject constructor(
     private val scanner: LibraryScanner,
     private val settingsRepository: SettingsRepository,
     private val platformIcons: PlatformIconStore,
+    private val installedPackages: InstalledPackages,
     private val dispatchers: DispatcherProvider,
 ) {
     val scanProgress: StateFlow<ScanProgress> = scanner.progress
@@ -73,10 +76,11 @@ class LibraryRepository @Inject constructor(
                     platform = p,
                     settings = settingsById[p.id.value]?.toDomain() ?: PlatformSettings(p.id),
                     gameCount = countById[p.id.value] ?: 0,
-                    iconPath = icons[p.id],
+                    // A system with no console icon of its own shows its launcher app's icon.
+                    iconPath = icons[p.id] ?: p.iconPackages.firstOrNull(installedPackages::isInstalled)?.let { "appicon://$it" },
                 )
             }
-        }.distinctUntilChanged()
+        }.flowOn(dispatchers.io).distinctUntilChanged()
 
     fun observePlatformArt(): Flow<Map<PlatformId, PlatformArt>> = gameDao.observePlatformArt().map { rows ->
         rows.groupBy { it.platformId }.mapKeys { PlatformId(it.key) }.mapValues { (_, list) ->
