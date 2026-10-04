@@ -20,7 +20,7 @@
   "shapes": { "cardRadius": 12, "tileRadius": 16, "chipRadius": 999, "focusBorderWidth": 3 },
   "layout": { "cardWidth": 160, "boxArtAspect": 1.0, "railSpacing": 14, "sectionSpacing": 32, "gridColumns": 5, "homeLayout": "strip", "libraryLayout": "showcase" },
   "motion": { "focusScale": 1.07, "focusDurationMs": 220, "transitionDurationMs": 360, "backgroundCrossfadeMs": 800, "parallax": true },
-  "background": { "mode": "hero", "blurRadius": 0, "dim": 0.58, "saturation": 1.1 },
+  "background": { "mode": "system", "blurRadius": 0, "dim": 0.58, "saturation": 1.1 },
   "effects": { "glassPanels": true, "panelAlpha": 0.5, "cardShadow": true, "focusGlow": true, "videoPreviews": true },
   "platformIcons": { "set": "monochrome", "tint": true, "alpha": 0.92 }
 }

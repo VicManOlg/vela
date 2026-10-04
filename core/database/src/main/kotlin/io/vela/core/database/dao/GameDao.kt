@@ -270,6 +270,17 @@ interface GameDao {
     )
     suspend fun idsNeedingScrape(needLogo: Boolean, retryBefore: Long): List<Long>
 
+    /** Visible games with a background, most played first: the first row per system is its scene. */
+    @Query(
+        """SELECT s.platformId AS platformId, s.background AS background FROM game_summaries s
+           WHERE s.present = 1 AND s.hidden = 0 AND s.background IS NOT NULL
+           ORDER BY s.totalPlayTimeMs DESC, s.playCount DESC, s.sortTitle""",
+    )
+    fun observeSceneCandidates(): Flow<List<PlatformSceneRow>>
+
+    @Query("SELECT id, platformId FROM games")
+    fun observeGamePlatforms(): Flow<List<GamePlatformRow>>
+
     @Query(
         """SELECT s.* FROM game_summaries s JOIN game_metadata m ON m.gameId = s.id
            WHERE m.franchise = :franchise AND s.id != :exceptId AND s.hidden = 0 AND s.present = 1
@@ -290,6 +301,10 @@ interface GameDao {
 
 /** Minimal row used by the incremental scanner to diff the filesystem against the database. */
 data class PlatformArtRow(val platformId: String, val boxArt: String?, val background: String?)
+
+data class PlatformSceneRow(val platformId: String, val background: String)
+
+data class GamePlatformRow(val id: Long, val platformId: String)
 
 data class FileSignature(
     val id: Long,

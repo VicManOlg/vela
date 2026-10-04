@@ -106,8 +106,9 @@ fun DynamicBackground(
                 Box(Modifier.fillMaxSize()) {
                     if (art != null && style.mode == "stage") {
                         StageScene(art, drifting = !motion.reduceMotion, saturation = style.saturation)
-                    } else if (art != null && (style.mode == "artwork" || style.mode == "hero")) {
-                        val hero = style.mode == "hero"
+                    } else if (art != null && (style.mode == "artwork" || style.mode == "hero" || style.mode == "system")) {
+                        // `system` shows one image per system, sharp like the hero scene.
+                        val hero = style.mode == "hero" || style.mode == "system"
                         // Read inside graphicsLayer only: the 26 s drift must never recompose the scene.
                         val drift = rememberDrift(enabled = hero && !motion.reduceMotion)
                         val request = remember(art, hero, context) {
@@ -169,7 +170,7 @@ fun DynamicBackground(
                 },
             )
         }
-        if (style.mode == "hero" || style.mode == "artwork") {
+        if (style.mode == "hero" || style.mode == "artwork" || style.mode == "system") {
             // Depth: the scene stays brightest around where the focused art sits and falls off into a vignette.
             Box(
                 Modifier.fillMaxSize().drawBehind {

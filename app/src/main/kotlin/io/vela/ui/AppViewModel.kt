@@ -1,5 +1,8 @@
 package io.vela.ui
 
+import kotlinx.coroutines.flow.flow
+import io.vela.core.data.system.StorageAccess
+import io.vela.core.data.repository.LibraryRepository
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -35,6 +38,8 @@ class AppViewModel @Inject constructor(
     settings: SettingsRepository,
     private val themes: ThemeRepository,
     private val actions: GameActions,
+    library: LibraryRepository,
+    storage: StorageAccess,
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings?> = settings.state
@@ -66,7 +71,30 @@ class AppViewModel @Inject constructor(
 
     private var paletteJob: Job? = null
 
-    fun setBackdrop(artwork: String?, accent: Long) {
+    // For the `system` background: the user's own art per system, else the scene of the system's
+    // most played game; and which system each game belongs to.
+    private val userSystemArt: StateFlow<Map<String, String>> = flow { emit(storage.systemArt()) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+    private val systemScenes: StateFlow<Map<String, String>> = library.observeSystemScenes()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+    private val gamePlatforms: StateFlow<Map<Long, String>> = library.observeGamePlatforms()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+    /**
+     * Screens hand over the focused game's art. With the `system` background it stands for its
+     * system's one image (game art lives in `artwork/<game id>/`), so moving between games of a
+     * system keeps the same picture: nothing to decode, nothing to fade. Art that is not a game's
+     * (a system tile's own image) passes through; a system without any image gets its colour.
+     */
+    private fun backdropArt(artwork: String?): String? {
+        if (theme.value.background.mode != SYSTEM_BACKGROUND || artwork == null) return artwork
+        val gameId = GAME_ART.find(artwork)?.groupValues?.get(1)?.toLongOrNull() ?: return artwork
+        val platform = gamePlatforms.value[gameId] ?: return artwork
+        return userSystemArt.value[platform.lowercase()] ?: systemScenes.value[platform]
+    }
+
+    fun setBackdrop(rawArtwork: String?, accent: Long) {
+        val artwork = backdropArt(rawArtwork)
         val current = _backdrop.value
         if (current.artwork == artwork && current.accent == accent) return
         _backdrop.value = Backdrop(artwork, accent, dynamicAccent = if (artwork == current.artwork) current.dynamicAccent else null)
@@ -81,5 +109,7 @@ class AppViewModel @Inject constructor(
 
     private companion object {
         const val TAB_KEY = "shellTab"
+        const val SYSTEM_BACKGROUND = "system"
+        val GAME_ART = Regex("""/artwork/(\d+)/""")
     }
 }

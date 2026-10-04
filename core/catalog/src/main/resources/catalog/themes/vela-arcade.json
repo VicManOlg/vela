@@ -50,7 +50,7 @@
     "parallax": true
   },
   "background": {
-    "mode": "artwork",
+    "mode": "system",
     "blurRadius": 24,
     "dim": 0.62,
     "saturation": 1.5

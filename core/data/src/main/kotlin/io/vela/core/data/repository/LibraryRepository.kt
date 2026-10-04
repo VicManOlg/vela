@@ -84,6 +84,18 @@ class LibraryRepository @Inject constructor(
         }
     }.distinctUntilChanged()
 
+    /**
+     * One fixed scene per system for the `system` background: the background (fanart, hero or
+     * screenshot) of its most played game, so browsing a system never changes or reloads it.
+     */
+    fun observeSystemScenes(): Flow<Map<String, String>> = gameDao.observeSceneCandidates().map { rows ->
+        rows.groupBy { it.platformId }.mapValues { (_, list) -> list.first().background }
+    }.distinctUntilChanged()
+
+    /** Every game's system, by game id. */
+    fun observeGamePlatforms(): Flow<Map<Long, String>> =
+        gameDao.observeGamePlatforms().map { rows -> rows.associate { it.id to it.platformId } }.distinctUntilChanged()
+
     fun observePlatform(id: PlatformId): Flow<PlatformEntry?> = observeAllPlatforms().map { list -> list.firstOrNull { it.id == id } }.distinctUntilChanged()
 
     fun platform(id: PlatformId): Platform? = catalog[id]

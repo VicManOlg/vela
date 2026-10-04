@@ -47,7 +47,7 @@
     "parallax": true
   },
   "background": {
-    "mode": "hero",
+    "mode": "system",
     "blurRadius": 0,
     "dim": 0.52,
     "saturation": 1.05

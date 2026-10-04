@@ -87,6 +87,7 @@ private val backgroundSwatches = listOf(
 
 private val fontChoices = listOf("outfit" to "Outfit", "manrope" to "Manrope", "system" to "System", "serif" to "Serif", "mono" to "Monospace")
 private val backgroundModes = listOf(
+    Triple("system", "System", "One image per system: yours, else its most played game's scene. Lightest"),
     Triple("stage", "Stage", "The focused game's scene on the right, its blurred colours everywhere"),
     Triple("hero", "Hero", "Sharp scene of the focused game with a slow drift"),
     Triple("artwork", "Blurred art", "Heavily blurred cover of the focused game"),
@@ -168,7 +169,7 @@ internal fun LazyListScope.appearanceSection(vm: SettingsViewModel, settings: Ap
             onChange = { v -> set { it.copy(backgroundMode = v) } },
         )
     }
-    val sceneHasArt = eff.background.mode == "hero" || eff.background.mode == "artwork" || eff.background.mode == "stage"
+    val sceneHasArt = eff.background.mode == "hero" || eff.background.mode == "artwork" || eff.background.mode == "stage" || eff.background.mode == "system"
     item(key = "row10") {
         StepperSetting("Blur", "Softens the scene; 0 keeps it sharp", eff.background.blurRadius, o.backgroundBlur != null, base.background.blurRadius, 0f..60f, 4f, { "${it.roundToInt()}" }, enabled = sceneHasArt, presets = listOf(0f, 12f, 24f, 40f, 60f)) { v -> set { it.copy(backgroundBlur = v) } }
     }
