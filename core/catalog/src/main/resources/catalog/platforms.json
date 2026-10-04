@@ -466,7 +466,8 @@
     "extensions": [
       "iso",
       "ps3",
-      "ps3dir"
+      "ps3dir",
+      "pkg"
     ],
     "folderAliases": [
       "ps3",

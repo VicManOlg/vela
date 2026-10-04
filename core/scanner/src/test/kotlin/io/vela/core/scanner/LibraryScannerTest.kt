@@ -146,11 +146,14 @@ class LibraryScannerTest {
         file("psvita/Gravity Rush [PCSF00024].pkg")
         file("psvita/Gravity Rush [PCSF00024].zrif.txt")
         file("psvita/LEEME.txt")
+        // A PS3 pkg in the PS3 folder stays PS3: .pkg is no longer Vita's alone.
+        file("ps3/How to survive [NPEB01387](axekin.com).pkg")
         addSource()
 
         scanner.scanAll()
 
-        assertThat(db.gameDao().observeRecentlyAdded(10).first().map { it.title to it.platformId }).containsExactly("Gravity Rush" to "psvita")
+        assertThat(db.gameDao().observeRecentlyAdded(10).first().map { it.title to it.platformId })
+            .containsExactly("Gravity Rush" to "psvita", "How to survive" to "ps3")
     }
 
     @Test

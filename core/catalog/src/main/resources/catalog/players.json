@@ -1093,7 +1093,7 @@
     "extras": [
       {
         "key": "game_dir",
-        "value": "/storage/emulated/0/Android/data/{package}/files/aps3e/config/dev_hdd0/game/{rom.stem}"
+        "value": "/storage/emulated/0/Android/data/{package}/files/aps3e/config/dev_hdd0/game/{rom.id}"
       }
     ],
     "platforms": [
@@ -1104,9 +1104,10 @@
       "FLAG_ACTIVITY_CLEAR_TOP"
     ],
     "website": "https://github.com/aenu1/aps3e",
-    "notes": "For games installed in aPS3e: create an empty file named after the game serial, e.g. BLUS30443.ps3, in your PS3 folder.",
+    "notes": "For games installed in aPS3e (from a .pkg or by hand): keep the .pkg, or an empty file, named with the title id in brackets or as the whole name, e.g. 'How to Survive [NPEB01387].pkg' or 'BLUS30443.ps3'. Install the pkg in aPS3e once.",
     "extensions": [
-      "ps3"
+      "ps3",
+      "pkg"
     ]
   },
   {
