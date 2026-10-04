@@ -94,7 +94,18 @@ private fun EntryIcon(entry: StageEntry, modifier: Modifier, tint: Color = VelaT
     }
 }
 
-private fun countLine(subtitle: String): String = subtitle.substringAfterLast("   ")
+/**
+ * The count part of a stage subtitle ("Nintendo   1996   5 games" -> "5 games"). Android's is
+ * two counts ("15 games   9 apps"): both are kept, or the tile would only say "9 apps".
+ */
+internal fun countLine(subtitle: String): String {
+    val parts = subtitle.split("   ")
+    // "5 games", "9 apps": a number and a word; a bare year ("1996") is not a count.
+    val counts = parts.takeLastWhile { COUNT.matches(it) }
+    return (counts.ifEmpty { parts.takeLast(1) }).joinToString(" · ")
+}
+
+private val COUNT = Regex("""\d+ \p{L}+""")
 
 // ---- Wheel ------------------------------------------------------------------------------------
 

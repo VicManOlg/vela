@@ -132,6 +132,9 @@ class GameRepository @Inject constructor(
         val args = mutableListOf<Any>()
         if (!q.showHidden) where += "hidden = 0"
         q.platformId?.let { where += "platformId = ?"; args += it.value }
+        // Every game, not every app: the browser, a file manager or an emulator only show under
+        // Android > Apps. Android games (platform android) stay.
+        if (q.platformId == null) { where += "platformId != ?"; args += PlatformId.ANDROID_APPS.value }
         if (q.favoritesOnly) where += "favorite = 1"
         q.completion?.let { where += "completion = ?"; args += it.name }
         q.genre?.let { where += "genres LIKE ?"; args += "%$it%" }

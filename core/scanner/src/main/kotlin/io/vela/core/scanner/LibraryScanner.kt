@@ -304,7 +304,18 @@ class LibraryScanner @Inject constructor(
     ): GameEntity {
         // A PS3 game folder is often named by its serial (NPUB30123); its PARAM.SFO knows the name.
         val sfoTitle = if (file.extension == PS3_FOLDER_EXTENSION && locationType == LocationType.FILE) ParamSfo.titleOfGameFolder(java.io.File(file.location)) else null
-        val title = sfoTitle ?: TitleCleaner.clean(file.name)
+        // A GameNative install folder is named after the game; its file name is only the app id.
+        val folderTitle = if (file.extension == STEAM_APP_EXTENSION && file.size == 0L && !file.location.endsWith(".$STEAM_APP_EXTENSION")) {
+            if (locationType == LocationType.FILE) {
+                java.io.File(file.location).name
+            } else {
+                // A SAF document id ends with the path: ".../steamapps/common/Darkwood".
+                java.net.URLDecoder.decode(file.location, "UTF-8").trimEnd('/').substringAfterLast('/')
+            }
+        } else {
+            null
+        }
+        val title = sfoTitle ?: folderTitle ?: TitleCleaner.clean(file.name)
         val sortTitle = TitleCleaner.sortKey(title)
         return GameEntity(
             platformId = platform.id.value,

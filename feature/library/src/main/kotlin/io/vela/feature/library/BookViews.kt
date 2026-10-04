@@ -216,7 +216,7 @@ private fun BookSystemCard(entry: StageEntry, width: androidx.compose.ui.unit.Dp
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(entry.title, style = VelaTheme.typography.title, color = colors.onBackground, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(entry.subtitle.substringAfterLast("   "), style = VelaTheme.typography.caption, color = colors.muted, maxLines = 1)
+                Text(countLine(entry.subtitle), style = VelaTheme.typography.caption, color = colors.muted, maxLines = 1)
             }
         }
     }

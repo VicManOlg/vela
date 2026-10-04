@@ -49,7 +49,9 @@ class PlatformCatalog(userJson: String? = null) {
     /** Platforms that accept the given extension, most specific first (fewest extensions). */
     fun byExtension(extension: String): List<Platform> {
         val ext = extension.lowercase().removePrefix(".")
-        return emulated.filter { ext in it.extensions }.sortedBy { it.extensions.size }
+        // Every system that holds files: emulated ones and PC launchers (a .steamappid is Steam
+        // wherever it sits). Android apps are not files.
+        return platforms.filter { it.kind != PlatformKind.ANDROID && ext in it.extensions }.sortedBy { it.extensions.size }
     }
 
     /** True when the extension is unambiguous across the catalog (e.g. `sfc`, `gba`, `nds`). */

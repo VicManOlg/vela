@@ -94,6 +94,24 @@ class LibraryScannerTest {
     }
 
     @Test
+    fun `a game GameNative installed is one Steam game named after its folder, not a DOS game`() = runTest {
+        // The folder added is GameNative's common/ itself: no "Steam" folder name to go by.
+        file("common/Darkwood/Darkwood.exe")
+        file("common/Darkwood/UnityCrashHandler64.exe")
+        file(
+            "common/Darkwood/.DepotDownloader/depot.config",
+            """{ "installedManifestIDs": { "228983": 1, "229002": 2, "274521": 3, "274524": 4 } }""",
+        )
+        addSource()
+
+        scanner.scanAll()
+
+        val games = db.gameDao().observeRecentlyAdded(10).first()
+        assertThat(games.map { it.title to it.platformId }).containsExactly("Darkwood" to "steam")
+        assertThat(db.gameDao().byId(games.single().id)!!.fileName).isEqualTo("274520.steamappid")
+    }
+
+    @Test
     fun `a PS3 folder named by its serial takes the name from PARAM SFO`() = runTest {
         File(root, "ps3/NPUB30123").mkdirs()
         File(root, "ps3/NPUB30123/USRDIR").mkdirs()

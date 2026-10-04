@@ -43,6 +43,26 @@ internal fun isPs3FolderGame(names: Collection<String>): Boolean {
     return "PS3_GAME" in upper || ("PARAM.SFO" in upper && "USRDIR" in upper)
 }
 
+/** Extension of a Steam game: a file (or a GameNative install folder) named after its app id. */
+const val STEAM_APP_EXTENSION = "steamappid"
+
+/** Where GameNative's downloader records the depots of an installed game. */
+internal const val GAMENATIVE_DEPOT_DIR = ".DepotDownloader"
+internal const val GAMENATIVE_DEPOT_CONFIG = "depot.config"
+
+/**
+ * The Steam app id of a game GameNative installed, from its depot.config: Steam numbers a game's
+ * own depots right after its app id (Darkwood 274520 -> depots 274521, 274524), and every game
+ * also carries the Steamworks redistributables (app 228980, depots 228981..229999). So the app
+ * id is the lowest depot outside that range, minus one. Null when the file says nothing usable.
+ */
+internal fun steamAppIdFromDepotConfig(text: String): Long? {
+    val depots = Regex(""""(\d+)"\s*:""").findAll(text).mapNotNull { it.groupValues[1].toLongOrNull() }
+        .filter { it !in 228_981L..229_999L }
+        .toList()
+    return depots.minOrNull()?.minus(1)?.takeIf { it > 0 }
+}
+
 /** Abstraction over java.io.File and SAF so the scanner is storage-agnostic. */
 interface FileSystemSource {
     val access: SourceAccess
@@ -73,6 +93,12 @@ class FileTreeSource : FileSystemSource {
             val children = dir.listFiles() ?: run { onUnreadable(dir.path); null } ?: continue
             if (chain.isNotEmpty() && isPs3FolderGame(children.map { it.name })) {
                 emit(ScannedFile("${dir.name}.$PS3_FOLDER_EXTENSION", dir.absolutePath, 0L, dir.lastModified(), chain.dropLast(1)))
+                continue
+            }
+            // A game GameNative installed: one Steam game, never its .exe files (they are not DOS games).
+            if (children.any { it.name == GAMENATIVE_DEPOT_DIR }) {
+                val appId = runCatching { File(dir, "$GAMENATIVE_DEPOT_DIR/$GAMENATIVE_DEPOT_CONFIG").readText() }.getOrNull()?.let(::steamAppIdFromDepotConfig)
+                if (appId != null) emit(ScannedFile("$appId.$STEAM_APP_EXTENSION", dir.absolutePath, 0L, dir.lastModified(), chain.dropLast(1)))
                 continue
             }
             for (child in children) {
@@ -134,14 +160,23 @@ class DocumentTreeSource(private val context: Context) : FileSystemSource {
                 Timber.w(e, "SAF query failed for %s", childrenUri)
                 null
             } ?: run { onUnreadable(childrenUri.toString()); null } ?: continue
+            var depotDirId: String? = null
             val rows = cursor.use { c ->
                 buildList {
                     while (c.moveToNext()) {
                         val name = c.getString(1) ?: continue
+                        if (name == GAMENATIVE_DEPOT_DIR) depotDirId = c.getString(0)
                         if (name.startsWith('.')) continue
                         add(SafRow(c.getString(0), name, c.getString(2), c.getLong(3), c.getLong(4)))
                     }
                 }
+            }
+            val depots = depotDirId
+            if (depots != null) {
+                val appId = depotConfigText(treeUri, depots)?.let(::steamAppIdFromDepotConfig)
+                val uri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
+                if (appId != null) emit(ScannedFile("$appId.$STEAM_APP_EXTENSION", uri.toString(), 0L, 0L, chain.dropLast(1)))
+                continue
             }
             if (chain.isNotEmpty() && isPs3FolderGame(rows.map { it.name })) {
                 val uri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
@@ -160,6 +195,17 @@ class DocumentTreeSource(private val context: Context) : FileSystemSource {
     }
 
     private class SafRow(val id: String, val name: String, val mime: String?, val size: Long, val modified: Long)
+
+    /** depot.config inside a GameNative .DepotDownloader folder, or null. */
+    private fun depotConfigText(treeUri: Uri, depotDirId: String): String? = runCatching {
+        val children = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, depotDirId)
+        val configId = context.contentResolver.query(children, projection, null, null, null)?.use { c ->
+            var found: String? = null
+            while (c.moveToNext()) if (c.getString(1) == GAMENATIVE_DEPOT_CONFIG) found = c.getString(0)
+            found
+        } ?: return@runCatching null
+        readText(DocumentsContract.buildDocumentUriUsingTree(treeUri, configId).toString())
+    }.getOrNull()
 
     override fun readText(location: String, maxBytes: Int): String? = runCatching {
         context.contentResolver.openInputStream(Uri.parse(location))?.use { it.readBounded(maxBytes) }
