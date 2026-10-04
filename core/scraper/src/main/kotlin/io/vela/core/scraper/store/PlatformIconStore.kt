@@ -89,7 +89,10 @@ class PlatformIconStore @Inject constructor(
     }
 
     private fun publish(dir: File) {
-        val files = dir.listFiles { f -> f.isFile && f.extension == "png" }.orEmpty()
+        // Only systems that still name a console icon: one that lost it (Steam used to borrow
+        // DOS's) must not keep showing the file an older version downloaded.
+        val withIcon = platforms.platforms.filter { (it.iconName ?: it.libretroName) != null }.mapTo(HashSet()) { it.id.value }
+        val files = dir.listFiles { f -> f.isFile && f.extension == "png" && f.nameWithoutExtension in withIcon }.orEmpty()
         _icons.value = files.associate { PlatformId(it.nameWithoutExtension) to it.absolutePath }
     }
 

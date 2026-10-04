@@ -70,7 +70,12 @@ import javax.inject.Inject
 /** Android shown as one more system: detected games plus pinned apps. */
 data class AndroidTile(val games: Int, val apps: Int, val accent: Long, val name: String) {
     val count: Int get() = games + apps
+
+    /** "1 game   9 apps": every Android subtitle, singular where it should be. */
+    val subtitle: String get() = "${plural(games, "game")}   ${plural(apps, "app")}"
 }
+
+private fun plural(n: Int, word: String) = if (n == 1) "1 $word" else "$n ${word}s"
 
 @HiltViewModel
 class PlatformsViewModel @Inject constructor(
@@ -138,7 +143,7 @@ fun PlatformsScreen(
 
     val allSpot = Spot("All games", "Every system   $total games", art.values.firstNotNullOfOrNull { it.background }, 0xFF7FD7FF)
     val favoritesSpot = Spot("Favorites", "Your picks", null, 0xFF3D7BFF)
-    val androidSpot = Spot(android.name, "${android.games} games   ${android.apps} apps", null, android.accent)
+    val androidSpot = Spot(android.name, android.subtitle, null, android.accent)
     fun spotOf(entry: PlatformEntry) = Spot(
         title = entry.displayName,
         subtitle = listOfNotNull(entry.platform.manufacturer, entry.platform.releaseYear?.toString(), if (entry.gameCount == 1) "1 game" else "${entry.gameCount} games").joinToString("   "),
@@ -178,7 +183,7 @@ fun PlatformsScreen(
                     val a = art[entry.id]
                     add(StageEntry(entry.id.value, entry.displayName, spotOf(entry).subtitle, entry.platform.accentColor, entry.iconPath, null, a?.covers.orEmpty(), systemArt[entry.id.value.lowercase()] ?: a?.background) { onOpenPlatform(entry.id) })
                 }
-                add(StageEntry("android", android.name, "${android.games} games   ${android.apps} apps", android.accent, null, Icons.Rounded.Android, emptyList(), systemArt["android"], onOpenAndroid))
+                add(StageEntry("android", android.name, android.subtitle, android.accent, null, Icons.Rounded.Android, emptyList(), systemArt["android"], onOpenAndroid))
             }
         }
         val firstSystem = if (platforms.isNotEmpty()) 2 else 0
@@ -268,7 +273,7 @@ private fun ShowcaseRow(
             }
             item(key = "android") {
                 SystemCard(
-                    name = android.name, subtitle = "${android.games} games   ${android.apps} apps", accent = Color(android.accent),
+                    name = android.name, subtitle = android.subtitle, accent = Color(android.accent),
                     iconVector = Icons.Rounded.Android, width = cardWidth,
                     onClick = onOpenAndroid, onFocused = { memory.onFocused("android"); onSpot(androidSpot) }, modifier = memory.item("android").staggeredEntrance(platforms.size + 2, clock),
                 )
