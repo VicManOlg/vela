@@ -28,7 +28,8 @@
     "igdbId": 18,
     "libretroName": "Nintendo - Nintendo Entertainment System",
     "accentColor": "#FFE4002B",
-    "sortOrder": 10
+    "sortOrder": 10,
+    "boxArtAspect": 0.72
   },
   {
     "id": "snes",
@@ -61,7 +62,8 @@
     "igdbId": 19,
     "libretroName": "Nintendo - Super Nintendo Entertainment System",
     "accentColor": "#FF6C5CE7",
-    "sortOrder": 20
+    "sortOrder": 20,
+    "boxArtAspect": 1.38
   },
   {
     "id": "n64",
@@ -92,7 +94,8 @@
     "igdbId": 4,
     "libretroName": "Nintendo - Nintendo 64",
     "accentColor": "#FF00A651",
-    "sortOrder": 30
+    "sortOrder": 30,
+    "boxArtAspect": 1.38
   },
   {
     "id": "gc",
@@ -126,7 +129,8 @@
     "igdbId": 21,
     "libretroName": "Nintendo - GameCube",
     "accentColor": "#FF6A5ACD",
-    "sortOrder": 40
+    "sortOrder": 40,
+    "boxArtAspect": 0.71
   },
   {
     "id": "wii",
@@ -158,7 +162,8 @@
     "igdbId": 5,
     "libretroName": "Nintendo - Wii",
     "accentColor": "#FF5FB4E8",
-    "sortOrder": 50
+    "sortOrder": 50,
+    "boxArtAspect": 0.71
   },
   {
     "id": "gb",
@@ -187,7 +192,8 @@
     "igdbId": 33,
     "libretroName": "Nintendo - Game Boy",
     "accentColor": "#FF8BAC0F",
-    "sortOrder": 60
+    "sortOrder": 60,
+    "boxArtAspect": 1.0
   },
   {
     "id": "gbc",
@@ -216,7 +222,8 @@
     "igdbId": 22,
     "libretroName": "Nintendo - Game Boy Color",
     "accentColor": "#FFB84DFF",
-    "sortOrder": 70
+    "sortOrder": 70,
+    "boxArtAspect": 1.0
   },
   {
     "id": "gba",
@@ -245,7 +252,8 @@
     "igdbId": 24,
     "libretroName": "Nintendo - Game Boy Advance",
     "accentColor": "#FF4A3CDB",
-    "sortOrder": 80
+    "sortOrder": 80,
+    "boxArtAspect": 1.0
   },
   {
     "id": "nds",
@@ -276,7 +284,8 @@
     "igdbId": 20,
     "libretroName": "Nintendo - Nintendo DS",
     "accentColor": "#FFB6B6B6",
-    "sortOrder": 90
+    "sortOrder": 90,
+    "boxArtAspect": 0.9
   },
   {
     "id": "n3ds",
@@ -311,7 +320,8 @@
     "sortOrder": 100,
     "catalogIds": [
       "3ds"
-    ]
+    ],
+    "boxArtAspect": 0.9
   },
   {
     "id": "switch",
@@ -342,7 +352,8 @@
     "screenScraperId": 225,
     "igdbId": 130,
     "accentColor": "#FFE60012",
-    "sortOrder": 110
+    "sortOrder": 110,
+    "boxArtAspect": 0.62
   },
   {
     "id": "virtualboy",
@@ -406,7 +417,8 @@
     "igdbId": 7,
     "libretroName": "Sony - PlayStation",
     "accentColor": "#FF9B9B9B",
-    "sortOrder": 200
+    "sortOrder": 200,
+    "boxArtAspect": 1.0
   },
   {
     "id": "ps2",
@@ -441,7 +453,8 @@
     "igdbId": 8,
     "libretroName": "Sony - PlayStation 2",
     "accentColor": "#FF2E5BFF",
-    "sortOrder": 210
+    "sortOrder": 210,
+    "boxArtAspect": 0.71
   },
   {
     "id": "ps3",
@@ -470,7 +483,8 @@
     "igdbId": 9,
     "libretroName": "Sony - PlayStation 3",
     "accentColor": "#FF0A4DA3",
-    "sortOrder": 215
+    "sortOrder": 215,
+    "boxArtAspect": 0.79
   },
   {
     "id": "psp",
@@ -499,7 +513,8 @@
     "igdbId": 38,
     "libretroName": "Sony - PlayStation Portable",
     "accentColor": "#FF1F1F1F",
-    "sortOrder": 220
+    "sortOrder": 220,
+    "boxArtAspect": 0.58
   },
   {
     "id": "psvita",
@@ -527,7 +542,8 @@
     "sortOrder": 230,
     "catalogIds": [
       "vita"
-    ]
+    ],
+    "boxArtAspect": 0.78
   },
   {
     "id": "xbox360",
@@ -555,7 +571,8 @@
     "igdbId": 12,
     "libretroName": "Microsoft - Xbox 360",
     "accentColor": "#FF107C10",
-    "sortOrder": 250
+    "sortOrder": 250,
+    "boxArtAspect": 0.71
   },
   {
     "id": "dreamcast",
@@ -587,7 +604,8 @@
     "igdbId": 23,
     "libretroName": "Sega - Dreamcast",
     "accentColor": "#FFFF6B00",
-    "sortOrder": 300
+    "sortOrder": 300,
+    "boxArtAspect": 1.0
   },
   {
     "id": "megadrive",
@@ -624,7 +642,8 @@
     "sortOrder": 310,
     "catalogIds": [
       "genesis"
-    ]
+    ],
+    "boxArtAspect": 0.72
   },
   {
     "id": "mastersystem",
@@ -656,7 +675,8 @@
     "sortOrder": 320,
     "catalogIds": [
       "master"
-    ]
+    ],
+    "boxArtAspect": 0.72
   },
   {
     "id": "gamegear",
@@ -683,7 +703,8 @@
     "screenScraperId": 21,
     "libretroName": "Sega - Game Gear",
     "accentColor": "#FF2B2B2B",
-    "sortOrder": 330
+    "sortOrder": 330,
+    "boxArtAspect": 0.73
   },
   {
     "id": "segacd",

@@ -1,5 +1,7 @@
 package io.vela.feature.library
 
+import androidx.compose.runtime.CompositionLocalProvider
+import io.vela.core.ui.theme.LocalVelaTheme
 import io.vela.core.ui.components.rememberBackdropPrefetch
 import androidx.compose.ui.focus.focusProperties
 import io.vela.core.ui.theme.metaLine
@@ -134,19 +136,27 @@ fun GameGridScreen(
             menu = viewModel::openMenu,
             focus = { viewModel.setFocused(it) },
         )
-        when (view) {
-            LibraryView.GRID -> GridContent(items, accent, callbacks, compact = false)
-            LibraryView.COMPACT -> GridContent(items, accent, callbacks, compact = true)
-            LibraryView.LIST -> ListContent(items, accent, callbacks, focused, showPlatform = viewModel.showsSeveralPlatforms, platformLabel = viewModel::platformLabel)
-            LibraryView.SHOWCASE -> ShowcaseContent(items, accent, callbacks, focused, platformLabel = if (viewModel.showsSeveralPlatforms) viewModel::platformLabel else { _ -> null })
-            LibraryView.HERO -> HeroContent(items, accent, callbacks, focused, platformLabel = if (viewModel.showsSeveralPlatforms) viewModel::platformLabel else { _ -> null })
-            LibraryView.WALL -> WallContent(items, accent, callbacks)
-            LibraryView.DETAILS -> DetailsContent(items, accent, callbacks, showPlatform = viewModel.showsSeveralPlatforms, platformLabel = viewModel::platformLabel)
-            LibraryView.BOOK -> {
-                val details by viewModel.focusedDetails.collectAsStateWithLifecycle()
-                BookContent(items, accent, callbacks, focused, details, showPlatform = viewModel.showsSeveralPlatforms, platformLabel = viewModel::platformLabel)
+        // Inside one system, cards take the shape of its boxes (wide SNES, square PlayStation,
+        // tall DVD cases), so covers fill them instead of sitting between blurred bands.
+        val theme = LocalVelaTheme.current
+        val shaped = remember(theme, header.boxArtAspect) {
+            header.boxArtAspect?.let { theme.copy(dimens = theme.dimens.copy(boxArtAspect = it)) } ?: theme
+        }
+        CompositionLocalProvider(LocalVelaTheme provides shaped) {
+            when (view) {
+                LibraryView.GRID -> GridContent(items, accent, callbacks, compact = false)
+                LibraryView.COMPACT -> GridContent(items, accent, callbacks, compact = true)
+                LibraryView.LIST -> ListContent(items, accent, callbacks, focused, showPlatform = viewModel.showsSeveralPlatforms, platformLabel = viewModel::platformLabel)
+                LibraryView.SHOWCASE -> ShowcaseContent(items, accent, callbacks, focused, platformLabel = if (viewModel.showsSeveralPlatforms) viewModel::platformLabel else { _ -> null })
+                LibraryView.HERO -> HeroContent(items, accent, callbacks, focused, platformLabel = if (viewModel.showsSeveralPlatforms) viewModel::platformLabel else { _ -> null })
+                LibraryView.WALL -> WallContent(items, accent, callbacks, tileAspect = header.boxArtAspect ?: 1f)
+                LibraryView.DETAILS -> DetailsContent(items, accent, callbacks, showPlatform = viewModel.showsSeveralPlatforms, platformLabel = viewModel::platformLabel)
+                LibraryView.BOOK -> {
+                    val details by viewModel.focusedDetails.collectAsStateWithLifecycle()
+                    BookContent(items, accent, callbacks, focused, details, showPlatform = viewModel.showsSeveralPlatforms, platformLabel = viewModel::platformLabel)
+                }
+                LibraryView.THEME -> GridContent(items, accent, callbacks, compact = false)
             }
-            LibraryView.THEME -> GridContent(items, accent, callbacks, compact = false)
         }
     }
 

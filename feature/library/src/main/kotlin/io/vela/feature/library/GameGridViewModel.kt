@@ -43,6 +43,8 @@ data class GameGridHeader(
     val accent: Long,
     val sort: GameSort,
     val count: Int,
+    /** The system's box shape, for a system's own grid; null in shared lists (all, favourites, collections). */
+    val boxArtAspect: Float? = null,
 )
 
 @HiltViewModel
@@ -95,6 +97,7 @@ class GameGridViewModel @Inject constructor(
             accent = collection?.accentColor ?: entry?.platform?.accentColor ?: 0xFF7FD7FF,
             sort = s,
             count = count,
+            boxArtAspect = entry?.platform?.boxArtAspect,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GameGridHeader(route.title ?: "", "", 0xFF7FD7FF, GameSort.TITLE, 0))
 

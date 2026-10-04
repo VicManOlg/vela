@@ -195,11 +195,12 @@ internal fun HeroContent(
 // ---- Wall -------------------------------------------------------------------------------------
 
 /**
- * Covers cropped square and packed edge to edge with no gaps and no titles, like a wall of
- * cartridges. The focused tile lifts above its neighbours; the header names the game.
+ * Covers packed edge to edge with no gaps and no titles, like a wall of cartridges: square in
+ * mixed lists, shaped like the system's boxes ([tileAspect]) inside one system, so nothing is
+ * cropped. The focused tile lifts above its neighbours; the header names the game.
  */
 @Composable
-internal fun WallContent(items: LazyPagingItems<GameSummary>, accent: Color, callbacks: GameCallbacks) {
+internal fun WallContent(items: LazyPagingItems<GameSummary>, accent: Color, callbacks: GameCallbacks, tileAspect: Float = 1f) {
     val memory = rememberFocusMemory()
     val autoFocus = rememberAutoFocus(keys = arrayOf(items.itemCount > 0), memory = memory)
     val clock = rememberEntranceClock()
@@ -211,13 +212,13 @@ internal fun WallContent(items: LazyPagingItems<GameSummary>, accent: Color, cal
     ) {
         rememberedItems(memory, count = items.itemCount, key = items.itemKey { it.id.value }) { index ->
             val game = items[index] ?: return@rememberedItems
-            WallTile(game, accent, callbacks, Modifier.staggeredEntrance(index, clock))
+            WallTile(game, accent, callbacks, tileAspect, Modifier.staggeredEntrance(index, clock))
         }
     }
 }
 
 @Composable
-private fun WallTile(game: GameSummary, accent: Color, callbacks: GameCallbacks, modifier: Modifier = Modifier) {
+private fun WallTile(game: GameSummary, accent: Color, callbacks: GameCallbacks, aspect: Float, modifier: Modifier = Modifier) {
     val colors = VelaTheme.colors
     val interaction = remember { MutableInteractionSource() }
     val focused by rememberFocusState(interaction)
@@ -225,7 +226,7 @@ private fun WallTile(game: GameSummary, accent: Color, callbacks: GameCallbacks,
         modifier
             // The focused tile scales past its neighbours; drawing it last keeps it on top.
             .zIndex(if (focused) 1f else 0f)
-            .aspectRatio(1f)
+            .aspectRatio(aspect)
             .velaFocusable(RectangleShape, interaction, { callbacks.launch(game) }, onLongPress = { callbacks.menu(game) }, onFocused = { callbacks.focus(game) })
             .background(colors.surface),
     ) {

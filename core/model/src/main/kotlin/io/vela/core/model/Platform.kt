@@ -51,6 +51,12 @@ data class Platform(
     /** Accent colour (ARGB) used by the theme for platform tiles. */
     @Serializable(with = ArgbHexSerializer::class)
     val accentColor: Long = 0xFF3D7BFF,
+    /**
+     * Width / height of this system's retail box (SNES and N64 boxes are wide, DVD cases tall,
+     * jewel cases square). A system's own game grid shapes its cards like it; shared lists keep
+     * the theme's shape. Null: the theme's.
+     */
+    val boxArtAspect: Float? = null,
     val sortOrder: Int = 1000,
 ) {
     fun accepts(extension: String): Boolean = extension.lowercase() in extensions
