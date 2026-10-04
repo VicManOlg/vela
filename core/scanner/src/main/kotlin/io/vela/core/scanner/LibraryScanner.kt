@@ -89,6 +89,7 @@ class LibraryScanner @Inject constructor(
                     errors += "${source.displayName}: ${e.message}"
                 }
             }
+            reattachMoved(start)
             // Never purge after a pass in which any source could not be read: that is exactly when
             // "missing" games are only temporarily out of reach.
             if (purgeMissing && errors.isEmpty()) {
@@ -107,6 +108,7 @@ class LibraryScanner @Inject constructor(
             val source = db.libraryDao().source(sourceId) ?: return@withContext ScanResult(0, 0, 0, 0, 0)
             val start = System.currentTimeMillis()
             val r = scanSourceInternal(source)
+            reattachMoved(start)
             r.copy(durationMs = System.currentTimeMillis() - start).also { _progress.value = ScanProgress.Finished(it) }
         }
     }
@@ -168,7 +170,8 @@ class LibraryScanner @Inject constructor(
             if (seenIds.size >= 500) { db.gameDao().markSeen(seenIds, generation); seenIds.clear() }
         }
 
-        fs.walk(source.uri, source.recursive, PlatformDetector.IGNORED_FOLDERS).collect { file ->
+        val unreadable = ArrayList<String>()
+        fs.walk(source.uri, source.recursive, PlatformDetector.IGNORED_FOLDERS, onUnreadable = { unreadable += it }).collect { file ->
             seenFiles++
             if (file.folderChain != currentDir) {
                 flushDir()
@@ -190,6 +193,14 @@ class LibraryScanner @Inject constructor(
         if (seenFiles == 0 && existing.isNotEmpty()) {
             Timber.w("Source %s returned no files; keeping its %d games untouched", source.displayName, existing.size)
             return ScanResult(0, 0, 0, 0, 0, errors = listOf("${source.displayName}: folder unreadable, library kept as it was"))
+        }
+
+        // A subfolder that could not be listed (a card still mounting, a permission hiccup) would
+        // make every game in it look deleted, and a purge would take their artwork with them.
+        if (unreadable.isNotEmpty()) {
+            Timber.w("Source %s: %d folders unreadable; nothing marked missing", source.displayName, unreadable.size)
+            db.libraryDao().recordScan(source.id, generation, (existing.size + added).coerceAtLeast(0))
+            return ScanResult(added, updated, 0, skipped, 0, errors = listOf("${source.displayName}: some folders could not be read, missing games kept"))
         }
 
         val removed = db.gameDao().markMissingForSource(source.id, generation)
@@ -219,6 +230,29 @@ class LibraryScanner @Inject constructor(
             }
             pruneOrphans()
         }
+    }
+
+    /**
+     * A game whose folder was moved or renamed shows up as a new file while the old one goes
+     * missing. Keep the old row (artwork, play time, rating, collections) at the new location and
+     * drop the fresh duplicate, which has nothing of its own yet.
+     */
+    private suspend fun reattachMoved(since: Long) {
+        val moves = db.gameDao().movedGames(since)
+        if (moves.isEmpty()) return
+        val usedOld = HashSet<Long>()
+        val usedNew = HashSet<Long>()
+        db.withTransaction {
+            for (move in moves) {
+                if (move.oldId in usedOld || move.newId in usedNew) continue
+                val fresh = db.gameDao().byId(move.newId) ?: continue
+                db.gameDao().deleteRow(fresh.id)
+                db.gameDao().relocate(move.oldId, fresh.locationType.name, fresh.locationValue, fresh.sourceId, fresh.lastModified, fresh.scanGeneration)
+                usedOld += move.oldId
+                usedNew += move.newId
+            }
+        }
+        Timber.i("Reattached %d moved games", usedOld.size)
     }
 
     /**
@@ -268,7 +302,9 @@ class LibraryScanner @Inject constructor(
         hidden: Boolean,
         generation: Long,
     ): GameEntity {
-        val title = TitleCleaner.clean(file.name)
+        // A PS3 game folder is often named by its serial (NPUB30123); its PARAM.SFO knows the name.
+        val sfoTitle = if (file.extension == PS3_FOLDER_EXTENSION && locationType == LocationType.FILE) ParamSfo.titleOfGameFolder(java.io.File(file.location)) else null
+        val title = sfoTitle ?: TitleCleaner.clean(file.name)
         val sortTitle = TitleCleaner.sortKey(title)
         return GameEntity(
             platformId = platform.id.value,

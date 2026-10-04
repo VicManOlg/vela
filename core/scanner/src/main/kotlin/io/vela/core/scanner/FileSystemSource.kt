@@ -49,9 +49,10 @@ interface FileSystemSource {
 
     /**
      * Emits every regular file under [rootUri]; directories in [ignoredFolders] are skipped. A PS3
-     * game kept as a folder is emitted once, as the folder, and not walked into.
+     * game kept as a folder is emitted once, as the folder, and not walked into. A directory that
+     * cannot be listed is reported to [onUnreadable]: its games are out of reach, not gone.
      */
-    fun walk(rootUri: String, recursive: Boolean, ignoredFolders: Set<String>): Flow<ScannedFile>
+    fun walk(rootUri: String, recursive: Boolean, ignoredFolders: Set<String>, onUnreadable: (String) -> Unit = {}): Flow<ScannedFile>
 
     /** Reads a small text file (m3u playlists) or null if unreadable. */
     fun readText(location: String, maxBytes: Int = 64 * 1024): String?
@@ -63,13 +64,13 @@ interface FileSystemSource {
 class FileTreeSource : FileSystemSource {
     override val access = SourceAccess.FILE
 
-    override fun walk(rootUri: String, recursive: Boolean, ignoredFolders: Set<String>): Flow<ScannedFile> = flow {
+    override fun walk(rootUri: String, recursive: Boolean, ignoredFolders: Set<String>, onUnreadable: (String) -> Unit): Flow<ScannedFile> = flow {
         val root = rootUri.toFileOrNull() ?: return@flow
         val queue = ArrayDeque<Pair<File, List<String>>>()
         queue.add(root to emptyList())
         while (queue.isNotEmpty()) {
             val (dir, chain) = queue.removeFirst()
-            val children = dir.listFiles() ?: continue
+            val children = dir.listFiles() ?: run { onUnreadable(dir.path); null } ?: continue
             if (chain.isNotEmpty() && isPs3FolderGame(children.map { it.name })) {
                 emit(ScannedFile("${dir.name}.$PS3_FOLDER_EXTENSION", dir.absolutePath, 0L, dir.lastModified(), chain.dropLast(1)))
                 continue
@@ -118,7 +119,7 @@ class DocumentTreeSource(private val context: Context) : FileSystemSource {
         DocumentsContract.Document.COLUMN_LAST_MODIFIED,
     )
 
-    override fun walk(rootUri: String, recursive: Boolean, ignoredFolders: Set<String>): Flow<ScannedFile> = flow {
+    override fun walk(rootUri: String, recursive: Boolean, ignoredFolders: Set<String>, onUnreadable: (String) -> Unit): Flow<ScannedFile> = flow {
         val treeUri = Uri.parse(rootUri)
         val rootDocId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull() ?: return@flow
         val queue = ArrayDeque<Pair<String, List<String>>>()
@@ -132,7 +133,7 @@ class DocumentTreeSource(private val context: Context) : FileSystemSource {
             } catch (e: Exception) {
                 Timber.w(e, "SAF query failed for %s", childrenUri)
                 null
-            } ?: continue
+            } ?: run { onUnreadable(childrenUri.toString()); null } ?: continue
             val rows = cursor.use { c ->
                 buildList {
                     while (c.moveToNext()) {

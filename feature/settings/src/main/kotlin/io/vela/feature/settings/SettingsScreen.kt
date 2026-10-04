@@ -253,7 +253,7 @@ private fun LibrarySources(vm: SettingsViewModel) {
         VelaMenuDialog(
             title = "System for ${source.displayName}",
             options = listOf(MenuOption("auto", "Detect from folder names", selected = source.platformId == null)) +
-                platforms.filter { it.platform.kind == PlatformKind.EMULATED }.map { MenuOption(it.id.value, it.displayName, selected = it.id == source.platformId) },
+                platforms.filter { it.platform.kind != PlatformKind.ANDROID }.map { MenuOption(it.id.value, it.displayName, selected = it.id == source.platformId) },
             onSelect = { opt ->
                 pendingPlatformFor = null
                 vm.setSourcePlatform(source, opt.id.takeIf { it != "auto" }?.let(::PlatformId))
@@ -279,9 +279,9 @@ private fun PlatformsList(vm: SettingsViewModel) {
     var pickingCoreFor by remember { mutableStateOf<Pair<PlatformEntry, PlayerStatus>?>(null) }
     Column {
         SectionHeader("Systems with games")
-        platforms.filter { it.gameCount > 0 && it.platform.kind == PlatformKind.EMULATED }.forEach { entry -> PlatformRow(entry, vm) { editing = it } }
+        platforms.filter { it.gameCount > 0 && it.platform.kind != PlatformKind.ANDROID }.forEach { entry -> PlatformRow(entry, vm) { editing = it } }
         SectionHeader("Other systems")
-        platforms.filter { it.gameCount == 0 && it.platform.kind == PlatformKind.EMULATED }.forEach { entry -> PlatformRow(entry, vm) { editing = it } }
+        platforms.filter { it.gameCount == 0 && it.platform.kind != PlatformKind.ANDROID }.forEach { entry -> PlatformRow(entry, vm) { editing = it } }
     }
     editing?.let { entry ->
         val loaded by produceState<List<PlayerStatus>?>(null, entry.id) { value = vm.playerOptions(entry) }

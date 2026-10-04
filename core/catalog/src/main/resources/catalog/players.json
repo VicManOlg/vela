@@ -1012,12 +1012,13 @@
       }
     ],
     "platforms": [
+      "steam",
       "pc"
     ],
     "extensions": [
       "steamappid"
     ],
-    "notes": "Steam games installed in GameNative. GameNative has no library other apps can read: add an empty file named after the game's Steam app id, e.g. 1145360.steamappid, to your PC folder. app_id is an int and game_source STEAM, as in Daijishō's recipe (esdeVerified)."
+    "notes": "Steam games installed in GameNative. GameNative keeps its library inside the app, so each game is an empty file named after its Steam app id, e.g. 1145360.steamappid, in a folder named Steam or GameNative. app_id is an int and game_source STEAM, as GameNative's IntentLaunchManager reads them (github.com/utkarshdalal/GameNative) and as Daijishō's recipe (esdeVerified)."
   },
   {
     "id": "aps3e",

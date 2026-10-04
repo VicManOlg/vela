@@ -56,6 +56,27 @@ interface GameDao {
     @Query("DELETE FROM games WHERE present = 0 AND playCount = 0 AND favorite = 0")
     suspend fun purgeMissingUnplayed(): Int
 
+    /**
+     * Games added since [since] that are the same file as a game now missing (same system, name and
+     * size): a folder was moved or renamed. The old row keeps the artwork, play time and collections.
+     */
+    @Query(
+        """SELECT n.id AS newId, o.id AS oldId FROM games n JOIN games o
+           ON o.platformId = n.platformId AND o.fileName = n.fileName AND o.fileSize = n.fileSize
+           WHERE n.addedAt >= :since AND n.present = 1 AND o.present = 0 AND o.id != n.id
+           ORDER BY o.lastPlayedAt DESC""",
+    )
+    suspend fun movedGames(since: Long): List<MovedGame>
+
+    @Query("DELETE FROM games WHERE id = :id")
+    suspend fun deleteRow(id: Long)
+
+    @Query(
+        """UPDATE games SET locationType = :locationType, locationValue = :locationValue, sourceId = :sourceId,
+           lastModified = :lastModified, present = 1, scanGeneration = :generation WHERE id = :id""",
+    )
+    suspend fun relocate(id: Long, locationType: String, locationValue: String, sourceId: Long?, lastModified: Long, generation: Long)
+
     @Query("UPDATE games SET favorite = :favorite WHERE id = :id")
     suspend fun setFavorite(id: Long, favorite: Boolean)
 
@@ -273,3 +294,6 @@ data class FileSignature(
     val lastModified: Long,
     val platformId: String,
 )
+
+/** A new row and the missing row it duplicates; see [GameDao.movedGames]. */
+data class MovedGame(val newId: Long, val oldId: Long)

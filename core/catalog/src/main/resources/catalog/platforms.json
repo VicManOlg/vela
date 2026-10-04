@@ -1328,18 +1328,15 @@
       "desktop",
       "exe",
       "lnk",
-      "bat",
-      "steamappid"
+      "bat"
     ],
     "folderAliases": [
       "windows",
       "winlator",
-      "pcgames",
-      "steam"
+      "pcgames"
     ],
     "defaultPlayers": [
-      "winlator_cmod",
-      "gamenative"
+      "winlator_cmod"
     ],
     "screenScraperId": 138,
     "igdbId": 6,
@@ -1347,6 +1344,31 @@
     "sortOrder": 920,
     "catalogIds": [
       "windows"
+    ]
+  },
+  {
+    "id": "steam",
+    "iconName": "DOS",
+    "name": "Steam",
+    "shortName": "Steam",
+    "manufacturer": "Valve",
+    "releaseYear": 2003,
+    "family": "PC",
+    "kind": "PC",
+    "extensions": [
+      "steamappid"
+    ],
+    "folderAliases": [
+      "steam",
+      "gamenative"
+    ],
+    "defaultPlayers": [
+      "gamenative"
+    ],
+    "accentColor": "#FF66C0F4",
+    "sortOrder": 925,
+    "catalogIds": [
+      "steam"
     ]
   }
 ]

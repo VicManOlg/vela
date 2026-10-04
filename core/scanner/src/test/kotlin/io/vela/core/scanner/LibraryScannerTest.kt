@@ -1,5 +1,6 @@
 package io.vela.core.scanner
 
+import io.vela.core.database.entity.ArtworkEntity
 import android.content.Context
 import androidx.room.Room
 import com.google.common.truth.Truth.assertThat
@@ -90,6 +91,72 @@ class LibraryScannerTest {
         assertThat(stored.map { it.extension }.distinct()).containsExactly(PS3_FOLDER_EXTENSION)
         // The game is the folder itself: that is the path aPS3e receives as game_dir.
         assertThat(stored.map { File(it.locationValue).name }).containsExactly("Demon's Souls [BLUS30443]", "NPUB30123")
+    }
+
+    @Test
+    fun `a PS3 folder named by its serial takes the name from PARAM SFO`() = runTest {
+        File(root, "ps3/NPUB30123").mkdirs()
+        File(root, "ps3/NPUB30123/USRDIR").mkdirs()
+        File(root, "ps3/NPUB30123/PARAM.SFO").writeBytes(sfo("TITLE" to "Flower™", "TITLE_ID" to "NPUB30123"))
+        addSource()
+
+        scanner.scanAll()
+
+        assertThat(db.gameDao().observeRecentlyAdded(10).first().map { it.title }).containsExactly("Flower")
+    }
+
+    /** A minimal PARAM.SFO: magic, header, one UTF-8 entry per pair. */
+    private fun sfo(vararg pairs: Pair<String, String>): ByteArray {
+        val keys = java.io.ByteArrayOutputStream()
+        val data = java.io.ByteArrayOutputStream()
+        val entries = java.nio.ByteBuffer.allocate(pairs.size * 16).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        for ((k, v) in pairs) {
+            val value = v.toByteArray(Charsets.UTF_8) + 0
+            entries.putShort(keys.size().toShort()).putShort(0x0204).putInt(value.size).putInt(value.size).putInt(data.size())
+            keys.write(k.toByteArray(Charsets.US_ASCII) + 0)
+            data.write(value)
+        }
+        val keyTable = 20 + pairs.size * 16
+        val dataTable = keyTable + keys.size()
+        val header = java.nio.ByteBuffer.allocate(20).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+            .put(byteArrayOf(0, 'P'.code.toByte(), 'S'.code.toByte(), 'F'.code.toByte())).putInt(0x101).putInt(keyTable).putInt(dataTable).putInt(pairs.size)
+        return header.array() + entries.array() + keys.toByteArray() + data.toByteArray()
+    }
+
+    @Test
+    fun `a game whose folder was renamed keeps its row, artwork and play time`() = runTest {
+        file("snes/Chrono Trigger (USA).sfc")
+        addSource()
+        scanner.scanAll()
+        val id = db.gameDao().observeRecentlyAdded(10).first().single().id
+        db.metadataDao().upsertArtwork(ArtworkEntity(gameId = id, type = "BOX_FRONT", localPath = "/art/ct.png", updatedAt = 1))
+        db.gameDao().touchScanned(id, 1, 1, 1, "snes", "Chrono Trigger (USA).sfc") // what any later scan writes
+
+        File(root, "snes").renameTo(File(root, "Super Nintendo"))
+        scanner.scanAll(purgeMissing = true)
+
+        val games = db.gameDao().observeRecentlyAdded(10).first()
+        assertThat(games.map { it.id }).containsExactly(id)
+        assertThat(games.single().boxArt).isEqualTo("/art/ct.png")
+        assertThat(File(db.gameDao().byId(id)!!.locationValue).parentFile!!.name).isEqualTo("Super Nintendo")
+    }
+
+    @Test
+    fun `a folder that cannot be read marks nothing missing and purges nothing`() = runTest {
+        file("snes/Chrono Trigger (USA).sfc")
+        file("gba/Metroid Fusion (Europe).gba")
+        addSource()
+        scanner.scanAll()
+        val gba = File(root, "gba")
+        gba.setReadable(false)
+        // Some file systems (Windows) ignore the flag; the case only means something where it holds.
+        org.junit.Assume.assumeTrue(gba.listFiles() == null)
+
+        val result = scanner.scanAll(purgeMissing = true)
+
+        assertThat(result.errors).isNotEmpty()
+        assertThat(db.gameDao().observeRecentlyAdded(10).first().map { it.title }).containsExactly("Chrono Trigger", "Metroid Fusion")
+        gba.setReadable(true)
     }
 
     @Test

@@ -59,14 +59,26 @@ class SteamGridDbProvider @Inject constructor(
     override suspend fun search(query: MetadataQuery, settings: ScrapingSettings): Outcome<List<MetadataMatch>> = withContext(dispatchers.io) {
         val key = keyFor(settings)
         try {
-            val results = when (val r = call("$BASE/search/autocomplete/${encode(query.title)}", key)) {
-                is Outcome.Failure -> return@withContext r
-                is Outcome.Success -> r.value.data()
+            // A Steam game (GameNative) is a file named after its app id: look the game up by that
+            // id, which also gives its real name, instead of searching for "1145360".
+            val steamAppId = query.fileName.substringBeforeLast('.').takeIf { query.platformId.value == STEAM_PLATFORM && it.isNotEmpty() && it.all(Char::isDigit) }
+            val picked = if (steamAppId != null) {
+                val game = when (val r = call("$BASE/games/steam/$steamAppId", key)) {
+                    is Outcome.Failure -> return@withContext r
+                    is Outcome.Success -> r.value["data"] as? JsonObject
+                } ?: return@withContext Outcome.success(emptyList())
+                val id = game.int("id") ?: return@withContext Outcome.success(emptyList())
+                Candidate(id, game.str("name") ?: query.title, verified = true)
+            } else {
+                val results = when (val r = call("$BASE/search/autocomplete/${encode(query.title)}", key)) {
+                    is Outcome.Failure -> return@withContext r
+                    is Outcome.Success -> r.value.data()
+                }
+                val games = results.mapNotNull { it as? JsonObject }
+                    .mapNotNull { g -> g.int("id")?.let { id -> Candidate(id, g.str("name") ?: return@mapNotNull null, g["verified"]?.jsonPrimitive?.booleanOrNull == true) } }
+                TitleSimilarity.best(query.title, games.sortedByDescending { it.verified }, threshold = 0.6f) { it.name }
+                    ?: return@withContext Outcome.success(emptyList())
             }
-            val games = results.mapNotNull { it as? JsonObject }
-                .mapNotNull { g -> g.int("id")?.let { id -> Candidate(id, g.str("name") ?: return@mapNotNull null, g["verified"]?.jsonPrimitive?.booleanOrNull == true) } }
-            val picked = TitleSimilarity.best(query.title, games.sortedByDescending { it.verified }, threshold = 0.6f) { it.name }
-                ?: return@withContext Outcome.success(emptyList())
 
             val artwork = ArrayList<ArtworkCandidate>(4)
             for ((path, type, extra) in ASSETS) {
@@ -81,8 +93,9 @@ class SteamGridDbProvider @Inject constructor(
                         providerId = ID,
                         providerGameId = picked.id.toString(),
                         title = picked.name,
-                        score = TitleSimilarity.score(query.title, picked.name),
-                        metadata = GameMetadata(),
+                        score = if (steamAppId != null) 1f else TitleSimilarity.score(query.title, picked.name),
+                        // The id lookup is exact, so its name can replace the file's number.
+                        metadata = if (steamAppId != null) GameMetadata(title = picked.name) else GameMetadata(),
                         artwork = artwork,
                     ),
                 ),
@@ -120,6 +133,7 @@ class SteamGridDbProvider @Inject constructor(
 
     companion object {
         const val ID = "steamgriddb"
+        private const val STEAM_PLATFORM = "steam"
         private const val BASE = "https://www.steamgriddb.com/api/v2"
         private val ASSETS = listOf(
             Triple("logos", ArtworkType.LOGO, ""),

@@ -56,9 +56,12 @@ class LibraryRepository @Inject constructor(
     val scanProgress: StateFlow<ScanProgress> = scanner.progress
     val isScanning: Boolean get() = scanner.isRunning
 
-    /** Emulated platforms that have at least one game, enabled, in catalog order. */
+    /**
+     * Systems with at least one game, enabled, in catalog order: emulated ones and PC launchers
+     * (Winlator, GameNative). Android apps have their own entry.
+     */
     fun observePlatformsWithGames(): Flow<List<PlatformEntry>> =
-        observeAllPlatforms().map { list -> list.filter { it.gameCount > 0 && it.settings.enabled && it.platform.kind == PlatformKind.EMULATED } }.distinctUntilChanged()
+        observeAllPlatforms().map { list -> list.filter { it.gameCount > 0 && it.settings.enabled && it.platform.kind != PlatformKind.ANDROID } }.distinctUntilChanged()
 
     /** Every catalog platform with its settings and count (Settings > Platforms). */
     fun observeAllPlatforms(): Flow<List<PlatformEntry>> =
